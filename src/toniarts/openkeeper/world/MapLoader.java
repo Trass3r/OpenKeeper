@@ -18,6 +18,8 @@ package toniarts.openkeeper.world;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.TextureKey;
+import com.jme3.light.Light;
+import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -93,6 +95,7 @@ public abstract class MapLoader implements ILoader<KwdFile> {
     private final AssetManager assetManager;
     private final EffectManagerState effectManager;
     private Node roomsNode;
+    private final Map<Point, Light> lightMap = new HashMap<>();
     private final WorldState worldState;
     private final ObjectLoader objectLoader;
     private final List<RoomInstance> rooms = new ArrayList<>(); // The list of rooms
@@ -205,6 +208,12 @@ public abstract class MapLoader implements ILoader<KwdFile> {
                 tileNode.removeFromParent();
                 ((BatchNode) pageNode.getChild(TOP_INDEX)).attachChildAt(new Node(tileNode.getName()), getTileNodeIndex(point));
                 nodesNeedBatching.add((BatchNode) pageNode.getChild(TOP_INDEX));
+            }
+
+            // Remove lights
+            Light light = lightMap.get(point);
+            if (light != null) {
+                map.removeLight(light);
             }
 
             // Reconstruct
@@ -510,6 +519,12 @@ public abstract class MapLoader implements ILoader<KwdFile> {
             spatial.setLocalTranslation(WorldUtils.pointToVector3f(tile.getLocation()).addLocal(position));
 
             ((Node) getTileNode(tile.getLocation(), (Node) pageNode.getChild(WALL_INDEX))).attachChild(spatial);
+
+            // Light
+            PointLight light = new PointLight(spatial.getLocalTranslation(), ColorRGBA.Orange, TILE_WIDTH * 2);
+            light.setName(tile.getX() + "-" + tile.getY());
+            map.addLight(light);
+            lightMap.put(new Point(tile.getX(), tile.getY()), light);
         }
     }
 
