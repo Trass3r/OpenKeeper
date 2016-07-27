@@ -30,9 +30,12 @@ import com.jme3.input.event.KeyInputEvent;
 import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.input.event.TouchEvent;
+import com.jme3.light.PointLight;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.AbstractControl;
 import com.simsilica.es.EntityData;
@@ -67,6 +70,9 @@ import toniarts.openkeeper.view.selection.SelectionArea;
 import toniarts.openkeeper.view.selection.SelectionHandler;
 import toniarts.openkeeper.view.text.TextParser;
 import toniarts.openkeeper.world.creature.CreatureControl;
+import toniarts.openkeeper.world.MapLoader;
+import static toniarts.openkeeper.world.MapLoader.TILE_WIDTH;
+import toniarts.openkeeper.world.TileData;
 
 /**
  * State for managing player interactions in the world. Heavily drawn from
@@ -108,6 +114,7 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
     private final Set<Integer> keys = new HashSet<>();
     private IEntityViewControl interactiveControl;
     private Label tooltip;
+    private PointLight keeperLight;
     private KeeperHandState keeperHandState;
     private PlayerEntityViewState playerEntityViewState;
 
@@ -236,6 +243,10 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
             this.stateManager.attach(cheatState);
         }
 
+        // Create Keeper light
+        keeperLight = new PointLight(Vector3f.ZERO, ColorRGBA.Orange, TILE_WIDTH * 2);
+        keeperLight.setName("Keeper Hand");
+
         // Add listener
         if (isEnabled()) {
             setEnabled(true);
@@ -247,9 +258,11 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
         super.setEnabled(enabled);
 
         if (enabled && !inputListenerAdded) {
+            app.getRootNode().addLight(keeperLight);
             app.getInputManager().addRawInputListener(inputListener);
             inputListenerAdded = true;
         } else if (!enabled && inputListenerAdded) {
+            app.getRootNode().removeLight(keeperLight);
             app.getInputManager().removeRawInputListener(inputListener);
             inputListenerAdded = false;
             keys.clear();
@@ -262,6 +275,7 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
         this.stateManager.detach(keeperHandState);
         keeperHandState = null;
         app.getInputManager().removeRawInputListener(inputListener);
+        app.getRootNode().removeLight(keeperLight);
         keys.clear();
         selectionHandler.cleanup();
         CheatState cheatState = this.stateManager.getState(CheatState.class);
@@ -544,6 +558,22 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
                 timeFromLastUpdate = 0;
                 updateStateFlags();
                 //updateCursor();
+
+                // Set the keeper light position
+                Vector2f pos = selectionHandler.getRoundedMousePos();
+                Camera cam = app.getCamera();
+                Vector3f camPos = cam.getLocation();
+                Vector3f tmp = cam.getWorldCoordinates(mousePosition, 0f).clone();
+                Vector3f dir = cam.getWorldCoordinates(mousePosition, 1f).subtractLocal(tmp).normalizeLocal();
+                dir.multLocal((MapLoader.TILE_HEIGHT - camPos.getY()) / dir.getY()).addLocal(camPos);
+
+                float lightHeight = MapLoader.TILE_HEIGHT / 2;
+                TileData tile = getWorldHandler().getMapData().getTile((int) pos.x, (int) pos.y);
+                if (tile.getTerrain().getFlags().contains(Terrain.TerrainFlag.SOLID)) {
+                    lightHeight += MapLoader.TILE_HEIGHT;
+                }
+
+                keeperLight.setPosition(new Vector3f(dir.getX(), lightHeight, dir.getZ()));
             }
 
             @Override
