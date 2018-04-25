@@ -596,7 +596,11 @@ public class Main extends SimpleApplication {
 
     @Override
     public void simpleRender(RenderManager rm) {
-        //TODO: add render code
+
+        // set the default light mode to single pass (only necessary for lighting.j3md, PBRLighting only uses single pass)
+        //renderManager.setPreferredLightMode(TechniqueDef.LightMode.SinglePass);
+        // Set the maximum number of light to handle in one pass per geometry.
+        //renderManager.setSinglePassLightBatchSize(5);
     }
 
     /**
