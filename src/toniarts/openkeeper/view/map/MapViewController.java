@@ -20,6 +20,8 @@ import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.TextureKey;
+import com.jme3.light.Light;
+import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -54,6 +56,7 @@ import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Room;
 import toniarts.openkeeper.tools.convert.map.Terrain;
 import toniarts.openkeeper.tools.convert.map.Thing;
+import toniarts.openkeeper.tools.convert.map.Variable;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.control.TorchControl;
@@ -101,6 +104,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
     private final Map<RoomInstance, Spatial> roomNodes = new HashMap<>(); // Room instances by node
     private final Map<RoomInstance, RoomConstructor> roomActuals = new HashMap<>(); // Rooms by room constructor
     private final Map<Point, EntityInstance<Terrain>> terrainBatchCoordinates = new HashMap<>(); // A quick glimpse whether terrain batch at specific coordinates is already "found"
+    private final Map<Point, Light> lightMap = new HashMap<>();
 
     public MapViewController(AssetManager assetManager, KwdFile kwdFile, IMapInformation mapClientService, short playerId) {
         this.kwdFile = kwdFile;
@@ -231,6 +235,12 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 tileNode.removeFromParent();
                 ((BatchNode) pageNode.getChild(TOP_INDEX)).attachChildAt(new Node(tileNode.getName()), getTileNodeIndex(point));
                 nodesNeedBatching.add((BatchNode) pageNode.getChild(TOP_INDEX));
+            }
+
+            // Remove lights
+            Light light = lightMap.get(point);
+            if (light != null) {
+                map.removeLight(light);
             }
 
             // Reconstruct
@@ -498,25 +508,27 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         String name = null;
         float angleY = 0;
         Vector3f position = Vector3f.ZERO;
+        Vector3f torchPosition = Vector3f.ZERO;
 
         if (tile.getY() % 2 == 0 && tile.getX() % 2 != 0 && canPlaceTorch(tile.getX(), tile.getY() - 1)) { // North
             name = "Torch1";
             angleY = -FastMath.HALF_PI;
             position = new Vector3f(0, WorldUtils.TORCH_HEIGHT, -WorldUtils.TILE_WIDTH / 2);
-
+            torchPosition = position.add(0, 0.5f, 0.25f);
         } else if (tile.getX() % 2 == 0 && tile.getY() % 2 == 0 && canPlaceTorch(tile.getX() - 1, tile.getY())) { // West
             name = "Torch1";
             position = new Vector3f(-WorldUtils.TILE_WIDTH / 2, WorldUtils.TORCH_HEIGHT, 0);
-
+            torchPosition = position.add(0.25f, 0.5f, 0);
         } else if (tile.getY() % 2 == 0 && tile.getX() % 2 != 0 && canPlaceTorch(tile.getX(), tile.getY() + 1)) { // South
             name = "Torch1";
             angleY = FastMath.HALF_PI;
             position = new Vector3f(0, WorldUtils.TORCH_HEIGHT, WorldUtils.TILE_WIDTH / 2);
-
+            torchPosition = position.add(0, 0.5f, -0.25f);
         } else if (tile.getX() % 2 == 0 && tile.getY() % 2 == 0 && canPlaceTorch(tile.getX() + 1, tile.getY())) { // East
             name = "Torch1";
             angleY = FastMath.PI;
             position = new Vector3f(WorldUtils.TILE_WIDTH / 2, WorldUtils.TORCH_HEIGHT, 0);
+            torchPosition = position.add(-0.25f, 0.5f, 0);
         }
 
         // Move to tile and right height
@@ -532,8 +544,21 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                     name = torch.getName();
                 }
             }
+
+            // Light
+            var light = new PointLight(WorldUtils.pointToVector3f(tile.getLocation()).addLocal(torchPosition), ColorRGBA.Orange, WorldUtils.TILE_WIDTH * 2);
+            light.setName(tile.getX() + "-" + tile.getY());
+            map.addLight(light);
+            lightMap.put(tile.getLocation(), light);
+
+            float intensity = kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_INTENSITY).getValue();
+            light.setColor(new ColorRGBA((kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RED).getValue() + intensity) / 255,
+                    (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_GREEN).getValue() + intensity) / 255,
+                    (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_BLUE).getValue() + intensity) / 255, 0));
+            light.setRadius(kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RADIUS_TILES).getValue());
+
             Spatial spatial = AssetUtils.loadModel(assetManager, name, null);
-            spatial.addControl(new TorchControl(kwdFile, assetManager, angleY));
+            spatial.addControl(new TorchControl(kwdFile, assetManager, angleY, light));
             spatial.rotate(0, angleY, 0);
             spatial.setLocalTranslation(WorldUtils.pointToVector3f(tile.getLocation()).addLocal(position));
 

@@ -22,11 +22,14 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
 import com.jme3.input.InputManager;
 import com.jme3.light.AmbientLight;
+import com.jme3.light.PointLight;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Matrix3f;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.Spatial.CullHint;
@@ -46,17 +49,20 @@ import java.util.Objects;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.game.component.InHand;
 import toniarts.openkeeper.game.component.ObjectViewState;
-import static toniarts.openkeeper.tools.convert.AssetsConverter.TEXTURES_FOLDER;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.tools.convert.map.ArtResource.ArtResourceType;
 import toniarts.openkeeper.tools.convert.map.Creature;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
+import toniarts.openkeeper.tools.convert.map.Variable.MiscVariable.MiscType;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.Utils;
+import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.animation.AnimationLoader;
 import toniarts.openkeeper.view.control.CreatureViewControl;
 import toniarts.openkeeper.view.control.IEntityViewControl;
 import toniarts.openkeeper.view.control.ObjectViewControl;
+
+import static toniarts.openkeeper.tools.convert.AssetsConverter.TEXTURES_FOLDER;
 
 /**
  * TODO I think we need to move cursor here
@@ -92,6 +98,7 @@ public abstract class KeeperHandState extends AbstractAppState {
     private final Node cursor;
     private final Node rootNode;
     private final InHandLoaderCreatureModelContainer inHandLoader;
+    private PointLight keeperLight;
 
     public KeeperHandState(int maxQueueSize, KwdFile kwdFile, EntityData entityData, short playerId) {
         this.queue = new ArrayList<>(maxQueueSize);
@@ -130,6 +137,17 @@ public abstract class KeeperHandState extends AbstractAppState {
 
         this.app.getGuiNode().attachChild(rootNode);
 
+        // Create Keeper light
+        final var variables = kwdFile.getVariables();
+        float intensity = variables.get(MiscType.DEFAULT_TORCH_LIGHT_INTENSITY).getValue();
+        var lightColor = new ColorRGBA(
+            (variables.get(MiscType.DEFAULT_TORCH_LIGHT_RED).getValue() + intensity) / 255,
+            (variables.get(MiscType.DEFAULT_TORCH_LIGHT_GREEN).getValue() + intensity) / 255,
+            (variables.get(MiscType.DEFAULT_TORCH_LIGHT_BLUE).getValue() + intensity) / 255, 0);
+        keeperLight = new PointLight(Vector3f.ZERO, lightColor, WorldUtils.TILE_WIDTH * 2);
+        keeperLight.setName("Keeper Hand");
+        this.app.getRootNode().addLight(keeperLight);
+
         // Start loading stuff (maybe we should do this earlier...)
         inHandLoader.start();
     }
@@ -147,6 +165,7 @@ public abstract class KeeperHandState extends AbstractAppState {
         inHandLoader.stop();
         queue.clear();
         app.getGuiNode().detachChild(rootNode);
+        app.getRootNode().removeLight(keeperLight);
 
         super.cleanup();
     }
@@ -187,6 +206,20 @@ public abstract class KeeperHandState extends AbstractAppState {
 
     public void setPosition(float x, float y) {
         rootNode.setLocalTranslation(x, y, 0);
+
+        if (!isInitialized())
+            return;
+
+        // Set the keeper light position
+        Camera cam = app.getCamera();
+        Vector3f camPos = cam.getLocation();
+        Vector3f tmp = cam.getWorldCoordinates(new Vector2f(x, y), 0f).clone();
+        Vector3f dir = cam.getWorldCoordinates(new Vector2f(x, y), 1f).subtractLocal(tmp).normalizeLocal();
+
+        final float lightHeight = WorldUtils.TORCH_HEIGHT + WorldUtils.TILE_HEIGHT;
+        dir.multLocal((lightHeight - camPos.getY()) / dir.getY()).addLocal(camPos);
+
+        keeperLight.setPosition(new Vector3f(dir.getX(), lightHeight, dir.getZ()));
     }
 
     private Picture getIcon(final ArtResource image) {
