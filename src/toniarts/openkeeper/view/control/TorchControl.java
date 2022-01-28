@@ -20,6 +20,7 @@ import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.DesktopAssetManager;
+import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.renderer.queue.RenderQueue;
@@ -54,16 +55,20 @@ public final class TorchControl extends BillboardControl {
     
     private static final Logger logger = System.getLogger(TorchControl.class.getName());
 
-    private final int frames = 20;
+    private final static int FRAMES = 20;
     private Material material;
     private Node torch;
     private final KwdFile kwdFile;
     private final AssetManager assetManager;
+    private final PointLight light;
+    private final float baseLightRadius;
     private static final AssetKey<Spatial> ASSET_KEY = new AssetKey<>("TorchFlame");
 
-    public TorchControl(KwdFile kwdFile, AssetManager assetManager, float angle) {
+    public TorchControl(KwdFile kwdFile, AssetManager assetManager, float angle, PointLight light) {
         this.kwdFile = kwdFile;
         this.assetManager = assetManager;
+        this.light = light;
+        baseLightRadius = light.getRadius();
         setAlignment(Alignment.AxialY);
     }
 
@@ -105,6 +110,16 @@ public final class TorchControl extends BillboardControl {
         }
 
         return null;
+    }
+
+    @Override
+    public void update(float tpf) {
+        super.update(tpf);
+
+        // TODO: flicker
+//        Random rand = new Random();
+//
+//        light.setRadius(baseLightRadius + (float) Math.sin(tpf * 0.3f) * rand.nextFloat());
     }
 
     /**
@@ -151,11 +166,11 @@ public final class TorchControl extends BillboardControl {
         BufferedImage img = AssetUtils.readImageFromAsset(assetManager.locateAsset(new AssetKey(AssetUtils.getCanonicalAssetKey("Textures/" + name + "0.png"))));
 
         // Create image big enough to fit all the frames
-        BufferedImage text = new BufferedImage(img.getWidth() * frames, img.getHeight(),
+        BufferedImage text = new BufferedImage(img.getWidth() * FRAMES, img.getHeight(),
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = text.createGraphics();
         g.drawImage(makeColorTransparent(img), 0, 0, null);
-        for (int x = 1; x < frames; x++) {
+        for (int x = 1; x < FRAMES; x++) {
             AssetInfo asset = assetManager.locateAsset(new AssetKey(AssetUtils.getCanonicalAssetKey("Textures/" + name + x + ".png")));
             img = AssetUtils.readImageFromAsset(asset);
             g.drawImage(makeColorTransparent(img), img.getWidth() * x, 0, null);
@@ -183,8 +198,8 @@ public final class TorchControl extends BillboardControl {
     private Material createMaterial() {
         Material result = new Material(assetManager, "MatDefs/LightingSprite.j3md");
 
-        result.setInt("NumberOfTiles", frames);
-        result.setInt("Speed", frames); // FIXME: correct value
+        result.setInt("NumberOfTiles", FRAMES);
+        result.setInt("Speed", FRAMES); // FIXME: correct value
 
         result.setTransparent(true);
         result.setFloat("AlphaDiscardThreshold", 0.1f);

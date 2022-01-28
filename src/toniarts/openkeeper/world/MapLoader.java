@@ -506,7 +506,7 @@ public abstract class MapLoader implements ILoader<KwdFile> {
                 }
             }
             Spatial spatial = AssetUtils.loadModel(assetManager, name, null);
-            spatial.addControl(new TorchControl(kwdFile, assetManager, angleY));
+            //spatial.addControl(new TorchControl(kwdFile, assetManager, angleY));
             spatial.rotate(0, angleY, 0);
             spatial.setLocalTranslation(WorldUtils.pointToVector3f(tile.getLocation()).addLocal(position));
 
