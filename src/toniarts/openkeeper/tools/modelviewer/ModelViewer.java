@@ -23,6 +23,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.audio.AudioNode;
+import com.jme3.environment.util.LightsDebugState;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
@@ -32,11 +33,15 @@ import com.jme3.light.LightProbe;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
+import com.jme3.math.Plane;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.niftygui.NiftyJmeDisplay;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
@@ -45,8 +50,13 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
+import com.jme3.util.SkyFactory;
 import com.jme3.util.TangentBinormalGenerator;
+import com.jme3.util.SkyFactory.EnvMapType;
 import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
+import com.jme3.water.SimpleWaterProcessor;
+import com.jme3.water.WaterFilter;
+
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.DropDown;
 import de.lessvoid.nifty.controls.ListBox;
@@ -296,7 +306,10 @@ public class ModelViewer extends SimpleApplication {
         return getNiftyDisplay().getNifty();
     }
 
+    private Node sceneNode;
     private void setupLighting() {
+        sceneNode = new Node("Scene");
+        rootNode.attachChild(sceneNode);
 
         // To make shadows, sun
         dl = new DirectionalLight();
@@ -326,8 +339,48 @@ public class ModelViewer extends SimpleApplication {
         rootNode.addLight(probe);
 
         // Light debug
-        //LightsDebugState debugState = new LightsDebugState();
-        //stateManager.attach(debugState);
+        var debugState = new LightsDebugState();
+        stateManager.attach(debugState);
+
+        sceneNode.attachChild(SkyFactory.createSky(assetManager, "FullskiesBlueClear03.dds", EnvMapType.CubeMap));
+
+        if (true)
+        {
+            // we create a water processor
+            var waterProcessor = new SimpleWaterProcessor(assetManager);
+            waterProcessor.setReflectionScene(sceneNode);
+
+            // we set the water plane
+            Vector3f waterLocation = new Vector3f(0, 0, 0);
+            waterProcessor.setPlane(new Plane(Vector3f.UNIT_Y, waterLocation.dot(Vector3f.UNIT_Y)));
+            viewPort.addProcessor(waterProcessor);
+
+            // we set wave properties
+            waterProcessor.setWaterDepth(40); // transparency of water
+            waterProcessor.setDistortionScale(0.05f); // strength of waves
+            waterProcessor.setWaveSpeed(0.05f); // speed of waves
+            waterProcessor.setDebug(true);
+
+            // we define the wave size by setting the size of the texture coordinates
+            Quad quad = new Quad(20, 20);
+            quad.scaleTextureCoordinates(new Vector2f(6f, 6f));
+
+            // we create the water geometry from the quad
+            Geometry water = new Geometry("water", quad);
+            water.setLocalRotation(new Quaternion().fromAngleAxis(-FastMath.HALF_PI, Vector3f.UNIT_X));
+            water.setLocalTranslation(-10, 0, 10);
+            water.setShadowMode(ShadowMode.Receive);
+            water.setMaterial(waterProcessor.getMaterial());
+            rootNode.attachChild(water);
+        }
+        else 
+        {
+            var fpp = new FilterPostProcessor(assetManager);
+            var water = new WaterFilter(rootNode, lightDir);
+            water.setWaterHeight(0);
+            fpp.addFilter(water);
+            viewPort.addProcessor(fpp);
+        }
     }
 
     private void setupFloor() {
@@ -569,10 +622,10 @@ public class ModelViewer extends SimpleApplication {
         spat.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
 
         // Remove the old model
-        rootNode.detachChildNamed(NODE_NAME);
+        sceneNode.detachChildNamed(NODE_NAME);
 
         // Attach the new model
-        rootNode.attachChild(spat);
+        sceneNode.attachChild(spat);
 
         // Wireframe status
         toggleWireframe();
