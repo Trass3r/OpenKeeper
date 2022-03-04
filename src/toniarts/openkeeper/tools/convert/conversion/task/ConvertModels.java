@@ -18,7 +18,7 @@ package toniarts.openkeeper.tools.convert.conversion.task;
 
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
-import com.jme3.export.binary.BinaryExporter;
+import com.jme3.export.xml.XMLExporter;
 import com.jme3.scene.Node;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -191,8 +191,8 @@ public class ConvertModels extends ConversionTask {
             // Handle the saving to the disk in own thread pool
             executorService.submit(() -> {
                 try {
-                    BinaryExporter exporter = BinaryExporter.getInstance();
-                    try (OutputStream out = Files.newOutputStream(Paths.get(destination, name.substring(0, name.length() - 4).concat(".j3o")));
+                    var exporter = XMLExporter.getInstance();
+                    try (OutputStream out = Files.newOutputStream(Paths.get(destination, name.substring(0, name.length() - 4).concat(".xml")));
                             BufferedOutputStream bout = new BufferedOutputStream(out)) {
                         exporter.save(n, bout);
                     }
