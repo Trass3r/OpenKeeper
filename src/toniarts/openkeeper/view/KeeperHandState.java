@@ -28,10 +28,14 @@ import com.jme3.math.Matrix3f;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.Camera;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.Spatial.CullHint;
+import com.jme3.shadow.SpotLightShadowFilter;
+import com.jme3.shadow.SpotLightShadowRenderer;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.ui.Picture;
@@ -148,6 +152,28 @@ public abstract class KeeperHandState extends AbstractAppState {
         keeperLight.setName("Keeper Hand");
         this.app.getRootNode().addLight(keeperLight);
 
+        var viewPort = this.app.getViewPort();
+
+        final int SHADOWMAP_SIZE = 512;
+
+        if (false) {
+        } else if (true) {
+        var sr = new SpotLightShadowRenderer(assetManager, SHADOWMAP_SIZE);
+        sr.setLight(keeperLight);
+        viewPort.addProcessor(sr);
+        } else {
+        var fpp = new FilterPostProcessor(assetManager);
+        var plsf = new SpotLightShadowFilter(assetManager, SHADOWMAP_SIZE) /*{
+            {
+                shadowRenderer.displayDebug();
+            }
+        }*/;
+        plsf.setLight(keeperLight);
+        plsf.setEnabled(true);
+        fpp.addFilter(plsf);
+        viewPort.addProcessor(fpp);
+        }
+        this.app.getRootNode().setShadowMode(ShadowMode.CastAndReceive);
         // Start loading stuff (maybe we should do this earlier...)
         inHandLoader.start();
     }
