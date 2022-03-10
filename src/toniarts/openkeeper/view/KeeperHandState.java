@@ -30,13 +30,17 @@ import com.jme3.math.Matrix3f;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.Camera;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.Spatial.CullHint;
 import com.jme3.scene.control.LightControl;
 import com.jme3.scene.shape.Sphere;
+import com.jme3.shadow.PointLightShadowFilter;
+import com.jme3.shadow.PointLightShadowRenderer;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.ui.Picture;
@@ -162,6 +166,28 @@ public abstract class KeeperHandState extends AbstractAppState {
         keeperLightDebug.addControl(lightControl);
         this.app.getRootNode().attachChild(keeperLightDebug);
 
+        var viewPort = this.app.getViewPort();
+
+        final int SHADOWMAP_SIZE = 256;
+
+        if (false) {
+        } else if (false) {
+        var plsr = new PointLightShadowRenderer(assetManager, SHADOWMAP_SIZE);
+        plsr.setLight(keeperLight);
+        viewPort.addProcessor(plsr);
+        } else {
+        var fpp = new FilterPostProcessor(assetManager);
+        var plsf = new PointLightShadowFilter(assetManager, SHADOWMAP_SIZE) /*{
+            {
+                shadowRenderer.displayDebug();
+            }
+        }*/;
+        plsf.setLight(keeperLight);
+        plsf.setEnabled(true);
+        fpp.addFilter(plsf);
+        viewPort.addProcessor(fpp);
+        }
+        this.app.getRootNode().setShadowMode(ShadowMode.CastAndReceive);
         // Start loading stuff (maybe we should do this earlier...)
         inHandLoader.start();
     }
