@@ -160,7 +160,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
 
         // Create the water
         if (!waterBatches.isEmpty()) {
-            map.attachChild(Water.construct(assetManager, waterBatches));
+            //map.attachChild(Water.construct(assetManager, waterBatches));
         }
 
         // And the lava

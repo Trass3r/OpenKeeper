@@ -29,12 +29,24 @@ import com.jme3.asset.TextureKey;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.light.AmbientLight;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Plane;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.ssao.SSAOFilter;
 import com.jme3.renderer.RenderManager;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
+import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
+import com.jme3.water.SimpleWaterProcessor;
+import com.jme3.water.WaterFilter;
+
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.render.batch.BatchRenderConfiguration;
 import java.awt.event.WindowAdapter;
@@ -80,6 +92,7 @@ import toniarts.openkeeper.tools.modelviewer.SoundsLoader;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.utils.SettingUtils;
 import toniarts.openkeeper.video.MovieState;
+import toniarts.openkeeper.view.map.MapViewController;
 
 /**
  * Main entry point of OpenKeeper
@@ -549,11 +562,12 @@ public class Main extends SimpleApplication {
 
         } catch (Exception e) {
             // Failed to restart
-//            initSettings(this);
-//            restart();
+            //            initSettings(this);
+            //            restart();
         }
     }
 
+    private Node realRootNode;
     /**
      * (re-)Sets scene processors to the view port
      */
@@ -570,6 +584,52 @@ public class Main extends SimpleApplication {
                     Settings.getInstance().getFloat(Settings.Setting.SSAO_SCALE),
                     Settings.getInstance().getFloat(Settings.Setting.SSAO_BIAS));
             fpp.addFilter(ssaoFilter);
+            viewPort.addProcessor(fpp);
+        }
+
+        if (true)
+        {
+            var sceneNode = new Node("Scene");
+            rootNode.attachChild(sceneNode);
+
+            // we create a water processor
+            var waterProcessor = new SimpleWaterProcessor(assetManager);
+            waterProcessor.setReflectionScene(sceneNode);
+
+            // we set the water plane
+            Vector3f waterLocation = new Vector3f(0, 0, 0);
+            waterProcessor.setPlane(new Plane(Vector3f.UNIT_Y, waterLocation.dot(Vector3f.UNIT_Y)));
+            viewPort.addProcessor(waterProcessor);
+
+            // we set wave properties
+            waterProcessor.setWaterDepth(40); // transparency of water
+            waterProcessor.setDistortionScale(0.05f); // strength of waves
+            waterProcessor.setWaveSpeed(0.05f); // speed of waves
+            waterProcessor.setDebug(true);
+
+            // we define the wave size by setting the size of the texture coordinates
+            Quad quad = new Quad(20, 20);
+            quad.scaleTextureCoordinates(new Vector2f(6f, 6f));
+
+            // we create the water geometry from the quad
+            Geometry water = new Geometry("water", quad);
+            water.setLocalRotation(new Quaternion().fromAngleAxis(-FastMath.HALF_PI, Vector3f.UNIT_X));
+            water.setLocalTranslation(-10, 0, 10);
+            water.setShadowMode(ShadowMode.Receive);
+            water.setMaterial(waterProcessor.getMaterial());
+            rootNode.attachChild(water);
+
+            realRootNode = rootNode;
+            rootNode = sceneNode;
+        }
+        else
+        {
+            var fpp = new FilterPostProcessor(assetManager);
+            var lightDir = new Vector3f(-1, -1, .5f).normalizeLocal();
+            var water = new WaterFilter(rootNode, lightDir);
+            water.setWaterHeight(-1);
+            water.setWaveScale(0.1f);
+            fpp.addFilter(water);
             viewPort.addProcessor(fpp);
         }
     }

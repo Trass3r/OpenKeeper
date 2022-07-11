@@ -25,14 +25,19 @@ import com.jme3.light.AmbientLight;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Matrix3f;
+import com.jme3.math.Plane;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.Spatial.CullHint;
+import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.ui.Picture;
+import com.jme3.water.SimpleWaterProcessor;
 import com.simsilica.es.Entity;
 import com.simsilica.es.EntityContainer;
 import com.simsilica.es.EntityData;
@@ -129,6 +134,43 @@ public abstract class KeeperHandState extends AbstractAppState {
         this.inputManager = this.app.getInputManager();
 
         this.app.getGuiNode().attachChild(rootNode);
+
+        var viewPort = this.app.getViewPort();
+
+        /*
+        //var fpp = new FilterPostProcessor(assetManager);
+        var water = new WaterFilter(rootNode, new Vector3f(-1, -1, .5f).normalizeLocal());
+        water.setWaterHeight(-0.1f);
+        fpp.addFilter(water);
+        viewPort.addProcessor(fpp);
+        */
+
+        // we create a water processor
+        var waterProcessor = new SimpleWaterProcessor(assetManager);
+        waterProcessor.setReflectionScene(rootNode);
+
+        // we set the water plane
+        Vector3f waterLocation = new Vector3f(0, 0, 0);
+        waterProcessor.setPlane(new Plane(Vector3f.UNIT_Y, waterLocation.dot(Vector3f.UNIT_Y)));
+        viewPort.addProcessor(waterProcessor);
+
+        // we set wave properties
+        waterProcessor.setWaterDepth(40); // transparency of water
+        waterProcessor.setDistortionScale(0.05f); // strength of waves
+        waterProcessor.setWaveSpeed(0.05f); // speed of waves
+        waterProcessor.setDebug(true);
+
+        // we define the wave size by setting the size of the texture coordinates
+        var quad = new Quad(20, 20);
+        quad.scaleTextureCoordinates(new Vector2f(6f, 6f));
+
+        // we create the water geometry from the quad
+        var water = new Geometry("water", quad);
+        water.setLocalRotation(new Quaternion().fromAngleAxis(-FastMath.HALF_PI, Vector3f.UNIT_X));
+        water.setLocalTranslation(-10, 0, 10);
+        water.setShadowMode(ShadowMode.Receive);
+        water.setMaterial(waterProcessor.getMaterial());
+        rootNode.attachChild(water);
 
         // Start loading stuff (maybe we should do this earlier...)
         inHandLoader.start();
