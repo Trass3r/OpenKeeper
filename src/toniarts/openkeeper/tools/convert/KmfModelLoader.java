@@ -240,6 +240,27 @@ public final class KmfModelLoader implements AssetLoader {
         root.attachChild(node);
     }
 
+    private static java.nio.ByteBuffer createFloat16Buffer(Vector2f... data) {
+        var buf = BufferUtils.createByteBuffer(2 * 2 * data.length);
+        for (Vector2f v : data) {
+            buf.putShort(FastMath.convertFloatToHalf(v.x));
+            buf.putShort(FastMath.convertFloatToHalf(v.y));
+        }
+        buf.flip();
+        return buf;
+    }
+
+    private static java.nio.ByteBuffer createFloat16Buffer(Vector3f... data) {
+        var buf = BufferUtils.createByteBuffer(3 * 2 * data.length);
+        for (Vector3f v : data) {
+            buf.putShort(FastMath.convertFloatToHalf(v.x));
+            buf.putShort(FastMath.convertFloatToHalf(v.y));
+            buf.putShort(FastMath.convertFloatToHalf(v.z));
+        }
+        buf.flip();
+        return buf;
+    }
+
     /**
      * Handle mesh creation
      *
@@ -436,6 +457,7 @@ public final class KmfModelLoader implements AssetLoader {
             //Set the buffers
             mesh.setBuffer(Type.Position, 3, BufferUtils.createFloatBuffer(vertices));
             mesh.setBuffer(Type.BindPosePosition, 3, BufferUtils.createFloatBuffer(vertices));
+            //mesh.setBuffer(Type.Position, 3, VertexBuffer.Format.Half, createFloat16Buffer(vertices));
             mesh.setBuffer(lodLevels[0]);
             mesh.setLodLevels(lodLevels);
             mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoord));
