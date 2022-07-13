@@ -43,8 +43,9 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
-import com.jme3.util.BufferUtils;
 import java.io.IOException;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import javax.annotation.Nullable;
 
@@ -132,11 +133,11 @@ public final class PoseTrack extends MorphTrack {
 
             // Poses come in pairs of two [startPose] + [endPose], weight tells us how close we are to the end
             // The pose pair must have the same vertices in the same order
-            applyPose(frame.poses[i * 2], frame.poses[i * 2 + 1], frame.weights[i], (FloatBuffer) pb.getData());
+            applyPose(frame.poses[i * 2], frame.poses[i * 2 + 1], frame.weights[i], pb.getData());
         }
 
         // force to re-upload data to gpu
-        pb.updateData(pb.getData());
+        pb.setUpdateNeeded();
     }
 
     /**
@@ -147,7 +148,7 @@ public final class PoseTrack extends MorphTrack {
      * @param weight weight on which to apply the interpolation
      * @param vertexBuffer the vertex buffer
      */
-    private void applyPose(@Nullable Pose startPose, Pose endPose, float weight, FloatBuffer vertexBuffer) {
+    private void applyPose(@Nullable Pose startPose, Pose endPose, float weight, Buffer vertexBuffer) {
         if (startPose == null) {
             // FIXME should we skip if null?
             return;
@@ -163,20 +164,35 @@ public final class PoseTrack extends MorphTrack {
             FastMath.interpolateLinear(weight, startOffset, endOffset, interpOffset);
 
             // Write modified vertex
-            BufferUtils.setInBuffer(interpOffset, vertexBuffer, vertIndex);
+            //BufferUtils.setInBuffer(interpOffset, vertexBuffer, vertIndex);
+            if (vertexBuffer instanceof ByteBuffer) {
+                ((ByteBuffer)vertexBuffer).putShort((vertIndex * 3) * 2, FastMath.convertFloatToHalf(interpOffset.x));
+                ((ByteBuffer)vertexBuffer).putShort((vertIndex * 3 + 1) * 2, FastMath.convertFloatToHalf(interpOffset.y));
+                ((ByteBuffer)vertexBuffer).putShort((vertIndex * 3 + 2) * 2, FastMath.convertFloatToHalf(interpOffset.z));
+            } else if (vertexBuffer instanceof FloatBuffer) {
+                ((FloatBuffer)vertexBuffer).put(vertIndex * 3, interpOffset.x);
+                ((FloatBuffer)vertexBuffer).put((vertIndex * 3) + 1, interpOffset.y);
+                ((FloatBuffer)vertexBuffer).put((vertIndex * 3) + 2, interpOffset.z);
+            } else {
+                throw new UnsupportedOperationException("Cannot get proper typed view of buffer type:" + vertexBuffer);
+            }
         }
     }
 
     @Override
-    public void getDataAtTime(double time, float[] store) {
+    public void getDataAtTime(double time, float[] weights) {
         Mesh mesh = getTarget().getMesh();
         VertexBuffer bindPos = mesh.getBuffer(Type.BindPosePosition);
         VertexBuffer pos = mesh.getBuffer(Type.Position);
-        FloatBuffer pb = (FloatBuffer) pos.getData();
-        FloatBuffer bpb = (FloatBuffer) bindPos.getData();
-        pb.clear();
-        bpb.clear();
-        pb.put(bpb).clear();
+        pos.getData().clear();
+        bindPos.getData().clear();
+        if (pos.getData() instanceof ByteBuffer) {
+            ((ByteBuffer)pos.getData()).put((ByteBuffer)bindPos.getData()).clear();
+        } else if (pos.getData() instanceof FloatBuffer) {
+            ((FloatBuffer)pos.getData()).put((FloatBuffer)bindPos.getData()).clear();
+        } else {
+            throw new UnsupportedOperationException("Cannot get proper typed view of buffer type:" + pos);
+        }
 
         if (time < getTimes()[0]) {
             applyFrame(mesh, 0);

@@ -27,6 +27,7 @@ import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.material.plugin.export.material.J3MExporter;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
@@ -444,6 +445,14 @@ public final class KmfModelLoader implements AssetLoader {
 
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, animSprite.getMaterialIndex());
+
+            // save some GPU memory by using float16 buffers
+            // FIXME: needs to be done after createGeometry cause various jME functions just assume float
+            mesh.getBuffer(Type.Position).convertToHalf();
+            mesh.getBuffer(Type.BindPosePosition).convertToHalf();
+            mesh.getBuffer(Type.TexCoord).convertToHalf();
+            mesh.getBuffer(Type.Normal).convertToHalf();
+            mesh.getBuffer(Type.BindPoseNormal).convertToHalf();
 
             // Create a pose track for this mesh
             var poseTrack = new PoseTrack(geom, times, poseFrames.toArray(new PoseFrame[0]));
