@@ -654,7 +654,12 @@ public final class KmfModelLoader implements AssetLoader {
 
             // Create the material
             if (material == null) {
-                material = new Material(assetInfo.getManager(), "Common/MatDefs/Light/Lighting.j3md");
+                String matTex = mat.getTextures().get(0);
+                String matDef = "Common/MatDefs/Light/Lighting.j3md";
+                if (matTex.startsWith("T_") || matTex.startsWith("DHeartFlr") || matTex.startsWith("D Heart") || matTex.contains("Claimed") || matTex.contains("Plaster") || matTex.contains("Floor") || matTex.contains("Brick")) {
+                    matDef = "MatDefs/Lighting.j3md";
+                }
+                material = new Material(assetInfo.getManager(), matDef);
                 material.setName(mat.getName());
             }
 

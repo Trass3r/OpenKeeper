@@ -30,6 +30,7 @@ import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.light.LightProbe;
 import com.jme3.material.Material;
+import com.jme3.material.TechniqueDef;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
@@ -277,6 +278,11 @@ public class ModelViewer extends SimpleApplication {
     @Override
     public void simpleRender(RenderManager rm) {
         //TODO: add render code
+
+        // set the default light mode to single pass (only necessary for lighting.j3md, PBRLighting only uses single pass)
+        renderManager.setPreferredLightMode(TechniqueDef.LightMode.SinglePass);
+        // Set the maximum number of light to handle in one pass per geometry.
+        renderManager.setSinglePassLightBatchSize(5);
     }
 
     private NiftyJmeDisplay getNiftyDisplay() {

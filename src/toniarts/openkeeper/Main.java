@@ -28,6 +28,7 @@ import com.jme3.asset.AssetManager;
 import com.jme3.asset.TextureKey;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.light.AmbientLight;
+import com.jme3.material.TechniqueDef;
 import com.jme3.math.ColorRGBA;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.post.FilterPostProcessor;
@@ -597,6 +598,11 @@ public class Main extends SimpleApplication {
     @Override
     public void simpleRender(RenderManager rm) {
         //TODO: add render code
+
+        // set the default light mode to single pass (only necessary for lighting.j3md, PBRLighting only uses single pass)
+        renderManager.setPreferredLightMode(TechniqueDef.LightMode.SinglePass);
+        // Set the maximum number of light to handle in one pass per geometry.
+        renderManager.setSinglePassLightBatchSize(5);
     }
 
     /**
