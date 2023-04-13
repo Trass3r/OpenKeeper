@@ -153,25 +153,27 @@ public final class ModelViewer extends SimpleApplication {
     private EffectManagerState effectManagerState;
     private MapLoaderAppState mapLoaderAppState;
 
-    private final ActionListener actionListener = new ActionListener() {
-        @Override
-        public void onAction(String name, boolean pressed, float tpf) {
-
-            // Toggle wireframe
-            if (KEY_MAPPING_TOGGLE_WIREFRAME.equals(name) && !pressed) {
-                wireframe = !wireframe;
-                toggleWireframe();
-            } // Toggle rotation
-            else if (KEY_MAPPING_TOGGLE_ROTATION.equals(name) && !pressed) {
-                rotate = !rotate;
-                toggleRotate();
-            } // Normals
-            else if (KEY_MAPPING_SHOW_NORMALS.equals(name) && !pressed) {
-                showNormals = !showNormals;
-                toggleShowNormals();
-            }
+    private final ActionListener actionListener = (name, pressed, tpf) -> {
+        if (pressed) {
+            return;
         }
-    };
+
+	    // Toggle wireframe
+        if (KEY_MAPPING_TOGGLE_WIREFRAME.equals(name)) {
+            wireframe = !wireframe;
+            toggleWireframe();
+        }
+        // Toggle rotation
+        else if (KEY_MAPPING_TOGGLE_ROTATION.equals(name)) {
+            rotate = !rotate;
+            toggleRotate();
+        }
+        // Normals
+	    else if (KEY_MAPPING_SHOW_NORMALS.equals(name)) {
+	        showNormals = !showNormals;
+	        toggleShowNormals();
+	    }
+	};
 
     public static void main(String[] args) {
 

@@ -67,7 +67,6 @@ import toniarts.openkeeper.tools.convert.kmf.MeshVertex;
 import toniarts.openkeeper.tools.convert.kmf.Triangle;
 import toniarts.openkeeper.tools.convert.kmf.Uv;
 import toniarts.openkeeper.tools.convert.kmf.Material.MaterialFlag;
-import toniarts.openkeeper.tools.modelviewer.ModelViewer;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.PathUtils;
 
@@ -86,7 +85,6 @@ public final class KmfModelLoader implements AssetLoader {
 
     /* Some textures are broken */
     private final static Map<String, String> textureFixes = Map.of("Goblinbak", "GoblinBack", "Goblin2", "GoblinFront");
-    private static String dkIIFolder;
 
     /**
      * If the material has multiple texture options, the material is named
@@ -103,22 +101,6 @@ public final class KmfModelLoader implements AssetLoader {
     /* Already saved materials are stored here */
     private static final Map<toniarts.openkeeper.tools.convert.kmf.Material, String> materialCache = new HashMap<>();
     private static final TextureSorter TEXTURE_SORTER = new TextureSorter();
-
-    public static void main(final String[] args) throws IOException {
-
-        //Take Dungeon Keeper 2 root folder as parameter
-        if (args.length != 2 || !Files.exists(Paths.get(args[1]))) {
-            dkIIFolder = PathUtils.getDKIIFolder();
-            if (dkIIFolder == null) {
-                throw new RuntimeException("Please provide file path to the model as a first parameter! Second parameter is the Dungeon Keeper II main folder (optional)");
-            }
-        } else {
-            dkIIFolder = PathUtils.fixFilePath(args[1]);
-        }
-
-        ModelViewer app = new ModelViewer(Paths.get(args[0]), dkIIFolder);
-        app.start();
-    }
 
     @Override
     public Object load(AssetInfo assetInfo) throws IOException {
