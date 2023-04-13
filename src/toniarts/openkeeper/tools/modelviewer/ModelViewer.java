@@ -41,7 +41,6 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
-import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
@@ -266,7 +265,7 @@ public final class ModelViewer extends SimpleApplication {
                 KmfAssetInfo asset = new KmfAssetInfo(assetManager, new AssetKey(kmfModel.toString()), kmf, false);
                 Node node = (Node) loader.load(asset);
                 setupModel(node, false);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 logger.log(Level.ERROR, "Failed to handle: " + kmfModel, e);
             }
         }
@@ -362,12 +361,9 @@ public final class ModelViewer extends SimpleApplication {
     private void toggleWireframe() {
         Spatial spat = rootNode.getChild(ModelViewer.NODE_NAME);
         if (spat != null) {
-            spat.depthFirstTraversal(new SceneGraphVisitor() {
-                @Override
-                public void visit(Spatial spatial) {
-                    if (spatial instanceof Geometry) {
-                        ((Geometry) spatial).getMaterial().getAdditionalRenderState().setWireframe(wireframe);
-                    }
+            spat.depthFirstTraversal((Spatial spatial) -> {
+                if (spatial instanceof Geometry g) {
+                    g.getMaterial().getAdditionalRenderState().setWireframe(wireframe);
                 }
             });
         }
@@ -386,10 +382,10 @@ public final class ModelViewer extends SimpleApplication {
     private void toggleShowNormals() {
         Spatial spat = rootNode.getChild(ModelViewer.NODE_NAME);
 
-        if (spat != null && spat instanceof Node) {
+        if (spat != null && spat instanceof Node node) {
 
             // See if it already has the normal meshes generated
-            Node normals = (Node) ((Node) spat).getChild(ModelViewer.NODE_NAME_NORMALS);
+            Node normals = (Node) node.getChild(ModelViewer.NODE_NAME_NORMALS);
             if (normals != null) {
                 normals.setCullHint(showNormals ? Spatial.CullHint.Never : Spatial.CullHint.Always);
             } else if (showNormals) {
@@ -417,8 +413,8 @@ public final class ModelViewer extends SimpleApplication {
                     }
                 });
                 nodeNormals.setCullHint(Spatial.CullHint.Never);
-                nodeNormals.setLocalTranslation(((Node) spat).getChild(0).getLocalTranslation());
-                ((Node) spat).attachChild(nodeNormals);
+                nodeNormals.setLocalTranslation(node.getChild(0).getLocalTranslation());
+                node.attachChild(nodeNormals);
             }
         }
     }
