@@ -20,12 +20,8 @@ import com.jme3.anim.AnimComposer;
 import com.jme3.anim.tween.Tweens;
 import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.app.SimpleApplication;
-import com.jme3.asset.AssetKey;
-import com.jme3.asset.plugins.FileLocator;
 import com.jme3.audio.AudioNode;
-import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
-import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.light.LightProbe;
@@ -38,19 +34,16 @@ import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
-import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.controls.DropDown;
 import de.lessvoid.nifty.controls.ListBox;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.System.Logger;
@@ -64,17 +57,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import toniarts.openkeeper.Main;
-import toniarts.openkeeper.audio.plugins.MP2Loader;
 import toniarts.openkeeper.game.data.ISoundable;
 import toniarts.openkeeper.game.sound.SoundCategory;
 import toniarts.openkeeper.game.sound.SoundFile;
 import toniarts.openkeeper.game.sound.SoundGroup;
-import toniarts.openkeeper.gui.CursorFactory;
 import toniarts.openkeeper.tools.convert.AssetsConverter;
-import toniarts.openkeeper.tools.convert.KmfAssetInfo;
 import toniarts.openkeeper.tools.convert.KmfModelLoader;
-import toniarts.openkeeper.tools.convert.kmf.KmfFile;
 import toniarts.openkeeper.tools.convert.map.Creature;
 import toniarts.openkeeper.tools.convert.map.Door;
 import toniarts.openkeeper.tools.convert.map.Effect;
@@ -264,7 +252,7 @@ public class ModelViewer extends SimpleApplication {
                 KmfAssetInfo asset = new KmfAssetInfo(assetManager, new AssetKey(kmfModel.toString()), kmf, false);
                 Node node = (Node) loader.load(asset);
                 setupModel(node, false);
-            } catch (Exception e) {
+            } catch (IOException e) {
                  logger.log(Level.ERROR, "Failed to handle: " + kmfModel, e);
             }
         }
@@ -360,12 +348,9 @@ public class ModelViewer extends SimpleApplication {
     private void toggleWireframe() {
         Spatial spat = rootNode.getChild(ModelViewer.NODE_NAME);
         if (spat != null) {
-            spat.depthFirstTraversal(new SceneGraphVisitor() {
-                @Override
-                public void visit(Spatial spatial) {
-                    if (spatial instanceof Geometry) {
-                        ((Geometry) spatial).getMaterial().getAdditionalRenderState().setWireframe(wireframe);
-                    }
+            spat.depthFirstTraversal((Spatial spatial) -> {
+                if (spatial instanceof Geometry g) {
+                    g.getMaterial().getAdditionalRenderState().setWireframe(wireframe);
                 }
             });
         }
@@ -384,10 +369,10 @@ public class ModelViewer extends SimpleApplication {
     private void toggleShowNormals() {
         Spatial spat = rootNode.getChild(ModelViewer.NODE_NAME);
 
-        if (spat != null && spat instanceof Node) {
+        if (spat != null && spat instanceof Node node) {
 
             // See if it already has the normal meshes generated
-            Node normals = (Node) ((Node) spat).getChild(ModelViewer.NODE_NAME_NORMALS);
+            Node normals = (Node) node.getChild(ModelViewer.NODE_NAME_NORMALS);
             if (normals != null) {
                 normals.setCullHint(showNormals ? Spatial.CullHint.Never : Spatial.CullHint.Always);
             } else if (showNormals) {
@@ -395,26 +380,23 @@ public class ModelViewer extends SimpleApplication {
                 // Generate
                 final Node nodeNormals = new Node(ModelViewer.NODE_NAME_NORMALS);
 
-                spat.depthFirstTraversal(new SceneGraphVisitor() {
-                    @Override
-                    public void visit(Spatial spatial) {
-                        if (spatial instanceof Geometry g) {
-                            Mesh normalMesh = TangentBinormalGenerator.genTbnLines(g.getMesh(), 0.1f);
-                            Geometry normalGeometry = new Geometry(g.getName() + "Normal", normalMesh);
-                            Material mat = new Material(assetManager,
-                                    "Common/MatDefs/Misc/Unshaded.j3md");
-                            mat.setColor("Color", ColorRGBA.Red);
-                            normalGeometry.setMaterial(mat);
-                            nodeNormals.attachChild(normalGeometry);
-                            
-                            g.setMaterial(new Material(assetManager,
-                                    "Common/MatDefs/Misc/ShowNormals.j3md"));
-                        }
+                spat.depthFirstTraversal((Spatial spatial) -> {
+                    if (spatial instanceof Geometry g) {
+                        Mesh normalMesh = TangentBinormalGenerator.genTbnLines(g.getMesh(), 0.1f);
+                        Geometry normalGeometry = new Geometry(g.getName() + "Normal", normalMesh);
+                        Material mat = new Material(assetManager,
+                                "Common/MatDefs/Misc/Unshaded.j3md");
+                        mat.setColor("Color", ColorRGBA.Red);
+                        normalGeometry.setMaterial(mat);
+                        nodeNormals.attachChild(normalGeometry);
+
+                        g.setMaterial(new Material(assetManager,
+                                "Common/MatDefs/Misc/ShowNormals.j3md"));
                     }
                 });
                 nodeNormals.setCullHint(Spatial.CullHint.Never);
-                nodeNormals.setLocalTranslation(((Node) spat).getChild(0).getLocalTranslation());
-                ((Node) spat).attachChild(nodeNormals);
+                nodeNormals.setLocalTranslation(node.getChild(0).getLocalTranslation());
+                node.attachChild(nodeNormals);
             }
         }
     }
