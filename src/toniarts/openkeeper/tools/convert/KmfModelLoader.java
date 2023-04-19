@@ -142,11 +142,8 @@ public final class KmfModelLoader implements AssetLoader {
             // Get the materials first
             Map<Integer, List<Material>> materials = getMaterials(kmfFile, generateMaterialFile, assetInfo);
 
-            //
-            // The meshes
-            //
-            for (toniarts.openkeeper.tools.convert.kmf.Mesh sourceMesh : kmfFile.getMeshes()) {
-                handleMesh(sourceMesh, materials, root);
+            if (kmfFile.getType() == KmfFile.Type.MESH) {
+                handleMesh(kmfFile.getMesh(), materials, root);
             }
             if (kmfFile.getType() == KmfFile.Type.ANIM) {
                 handleAnim(kmfFile.getAnim(), materials, root);
