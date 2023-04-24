@@ -18,6 +18,8 @@ package toniarts.openkeeper.tools.convert;
 
 import com.jme3.anim.AnimClip;
 import com.jme3.anim.AnimComposer;
+import com.jme3.anim.MorphControl;
+import com.jme3.anim.MorphTrack;
 import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetLoader;
 import com.jme3.asset.MaterialKey;
@@ -35,11 +37,12 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.VertexBuffer.Format;
 import com.jme3.scene.VertexBuffer.Type;
-import com.jme3.scene.control.LodControl;
+import com.jme3.scene.VertexBuffer.Usage;
+import com.jme3.scene.mesh.MorphTarget;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
-import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -57,9 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import toniarts.openkeeper.animation.Pose;
-import toniarts.openkeeper.animation.PoseTrack;
-import toniarts.openkeeper.animation.PoseTrack.PoseFrame;
 import toniarts.openkeeper.tools.convert.kmf.Anim;
 import toniarts.openkeeper.tools.convert.kmf.AnimSprite;
 import toniarts.openkeeper.tools.convert.kmf.AnimVertex;
@@ -219,7 +219,7 @@ public final class KmfModelLoader implements AssetLoader {
             //Set the buffers
             mesh.setBuffer(Type.Position, 3, BufferUtils.createFloatBuffer(vertices));
             mesh.setBuffer(lodLevels[0]);
-            mesh.setLodLevels(lodLevels);
+            //mesh.setLodLevels(lodLevels);
             mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoord));
             mesh.setBuffer(Type.Normal, 3, BufferUtils.createFloatBuffer(normals));
             mesh.setStatic();
@@ -250,201 +250,96 @@ public final class KmfModelLoader implements AssetLoader {
         node.setUserData(FRAME_FACTOR_FUNCTION, anim.getFrameFactorFunction().name());
         node.setLocalTranslation(new Vector3f(anim.getPos().x, -anim.getPos().z, anim.getPos().y));
 
-        // Create pose tracks for each mesh index
-        List<PoseTrack> poseTracks = new ArrayList<>(anim.getSprites().size());
+        // Create one track per submesh
+        List<MorphTrack> animTracks = new ArrayList<>(anim.getSprites().size());
 
-        // Create times (same for each pose track)
+        // Create times (same for all tracks)
         float[] times = new float[anim.getFrames()];
         for (int i = 0; i < anim.getFrames(); i++) {
             times[i] = (i + 1) / 30f;
         }
 
         int subMeshIndex = 0;
-        for (AnimSprite animSprite : anim.getSprites()) {
+        for (AnimSprite animSprite : anim.getSprites()) 
+        {
+            //Each submesh is its own geometry (+ mesh) since they each have their own material
+            var mesh = new Mesh();
 
-            // Animation
-            // Poses for each key frame (aproximate that every 1/3 is a key frame, pessimistic)
-            // Note that a key frame may not have all the vertices
-            Map<Integer, Map<FrameInfo, Pose>> poses = HashMap.newHashMap(anim.getFrames() / 3);
+            // Vertices, UVs (texture coordinates), normals
+            final int numVertices = animSprite.getVertices().size();
+            Vector3f[] vertices = new Vector3f[numVertices];
+            Vector2f[] texCoords = new Vector2f[numVertices];
+            Vector3f[] normals = new Vector3f[numVertices];
 
-            // Pose indices and indice offsets for each pose
-            Map<Integer, Map<FrameInfo, List<Integer>>> frameIndices = HashMap.newHashMap(anim.getFrames() / 3);
-            Map<Integer, Map<FrameInfo, List<Vector3f>>> frameOffsets = HashMap.newHashMap(anim.getFrames() / 3);
-
-            // For each frame, we need the previous key frame (pose) and the next, and the weights, for the pose frames
-            List<List<FrameInfo>> frameInfosList = new ArrayList<>(anim.getFrames());
-            for (int frame = 0; frame < anim.getFrames(); ++frame)
-                frameInfosList.add(new ArrayList<>());
-
-            //
-            //Each sprite represents a geometry (+ mesh) since they each have their own material
-            Mesh mesh = new Mesh();
-
-            //Vertices, UV (texture coordinates), normals
-            Vector3f[] vertices = new Vector3f[animSprite.getVertices().size()];
-            Vector2f[] texCoord = new Vector2f[animSprite.getVertices().size()];
-            Vector3f[] normals = new Vector3f[animSprite.getVertices().size()];
+            // first the UVs and normals since they are frame-independent
             int i = 0;
-            for (AnimVertex animVertex : animSprite.getVertices()) {
+            for (AnimVertex animVertex : animSprite.getVertices())
+            {
+                var uv = animVertex.getUv();
+                texCoords[i] = new Vector2f(uv.getUv()[0] / 32768f, uv.getUv()[1] / 32768f);
 
-                // Bind Pose
-                javax.vecmath.Vector3f baseCoord = null;
+                var v = animVertex.getNormal();
+                normals[i] = new Vector3f(v.x, -v.z, v.y);
 
-                // Keep the last frame for creating the target pose
-                KmfModelLoader.FrameInfo previousFrame = null;
+                ++i;
+            }
 
-                //Go through every frame
-                for (int frame = 0; frame < anim.getFrames(); frame++) {
-
-                    // Vertex
+            // now get the vertices for each frame
+            for (int frame = 0; frame < anim.getFrames(); ++frame)
+            {
+                i = 0;
+                for (AnimVertex animVertex : animSprite.getVertices())
+                {
+                    // the split into base + offset is just a file size optimization
                     int geomBase = anim.getItab()[frame >> 7][animVertex.getItabIndex()];
                     short geomOffset = anim.getOffsets()[animVertex.getItabIndex()][frame];
                     int geomIndex = geomBase + geomOffset;
 
-                    var animGeometries = anim.getGeometries();
-                    short frameBase = animGeometries.get(geomIndex).getFrameBase();
+                    var animGeometries  = anim.getGeometries();
+                    var coord           = animGeometries.get(geomIndex).getGeometry();
+                    short frameBase     = animGeometries.get(geomIndex).getFrameBase();
+                    var nextCoord       = animGeometries.get(geomIndex + 1).getGeometry();
                     short nextFrameBase = animGeometries.get(geomIndex + 1).getFrameBase();
                     float geomFactor = (float) ((frame & 0x7f) - frameBase) / (float) (nextFrameBase - frameBase);
-                    var coord = animGeometries.get(geomIndex).getGeometry();
 
-                    // Store the frame zero coord
-                    if (frame == 0) {
-                        baseCoord = coord;
-                    }
-
-                    // Create frame info
-                    int lastPose = ((frame >> 7) * 128 + frameBase);
-                    int nextPose = ((frame >> 7) * 128 + nextFrameBase);
-                    var frameInfos = frameInfosList.get(frame);
-                    var frameInfo = new FrameInfo(lastPose, nextPose, geomFactor);
-                    int x = Collections.binarySearch(frameInfos, frameInfo);
-                    if (x < 0) { // add if not in the list yet
-                        frameInfos.add(~x, frameInfo);
-                    }
-
-                    // Only make poses from key frames
-                    if (frame == lastPose || frame == nextPose) {
-                        var frameIndexMap  = frameIndices.computeIfAbsent(frame, f -> new HashMap<>());
-                        var frameOffsetMap = frameOffsets.computeIfAbsent(frame, f -> new HashMap<>());
-
-                        if (frame == nextPose) { // Last frame
-
-                            // Create a new frameInfo with weight as 1
-                            frameInfo = new KmfModelLoader.FrameInfo(frameInfo.previousPoseFrame, frameInfo.nextPoseFrame, 1f);
-                        }
-
-                        var indices = frameIndexMap.computeIfAbsent(frameInfo, s -> new ArrayList<>());
-                        var offsets = frameOffsetMap.computeIfAbsent(frameInfo, s -> new ArrayList<>());
-                        indices.add(i);
-                        offsets.add(new Vector3f(coord.x, -coord.z, coord.y));
-                    }
-
-                    // Add the pose target, we are in the last frame of the frame target
-                    if (previousFrame != null && !frameInfo.equals(previousFrame)) {
-                        var frameIndexMap  = frameIndices.computeIfAbsent(frame, f -> new HashMap<>());
-                        var frameOffsetMap = frameOffsets.computeIfAbsent(frame, f -> new HashMap<>());
-
-                        // Create a new frameInfo with weight as 1
-                        var fi = new FrameInfo(previousFrame.previousPoseFrame, previousFrame.nextPoseFrame, 1f);
-
-                        var indices = frameIndexMap.computeIfAbsent(fi, f -> new ArrayList<>());
-                        var offsets = frameOffsetMap.computeIfAbsent(fi, f -> new ArrayList<>());
-                        indices.add(i);
-                        offsets.add(new Vector3f(coord.x, -coord.z, coord.y));
-
-                        // Also add to the frame infos (otherwise it will never be applied fully with weight 1.0)
-                        x = Collections.binarySearch(frameInfos, fi);
-                        if (x < 0) {
-                            frameInfos.add(~x, fi);
-                        }
-                    }
-
-                    // Set the last frame
-                    previousFrame = frameInfo;
-                }
-                vertices[i] = new Vector3f(baseCoord.x, -baseCoord.z, baseCoord.y);
-
-                //Texture coordinate
-                Uv uv = animVertex.getUv();
-                texCoord[i] = new Vector2f(uv.getUv()[0] / 32768f, uv.getUv()[1] / 32768f);
-
-                //Normals
-                var v = animVertex.getNormal();
-                normals[i] = new Vector3f(v.x, -v.z, v.y);
-
-                i++;
-            }
-
-            // We have all the animation vertices from a single pose
-            for (int frame = 0; frame < anim.getFrames(); frame++) {
-                var indices = frameIndices.get(frame);
-                if (indices == null) {
-                    continue;
+                    // interpolate and convert to Y-up
+                    vertices[i] = new Vector3f(
+                        coord.x + (nextCoord.x - coord.x) * geomFactor,
+                      -(coord.z + (nextCoord.z - coord.z) * geomFactor),
+                        coord.y + (nextCoord.y - coord.y) * geomFactor);
+                    ++i;
                 }
 
-                if (!poses.containsKey(frame)) {
-                    poses.put(frame, new HashMap<>());
-                }
-
-                for (var entry : indices.entrySet()) {
-                    var frameInfo = entry.getKey();
-                    if (frameInfo.nextPoseFrame < frameInfo.previousPoseFrame) {
-                        continue; // Huh?, last frame effect
-                    }
-
-                    List<Integer> list = entry.getValue();
-                    var array = list.stream().mapToInt(Integer::intValue).toArray();
-                    var poseName = subMeshIndex + ": " + frame + ", " + frameInfo.previousPoseFrame + " - " + frameInfo.nextPoseFrame;
-                    var offsets = frameOffsets.get(frame).get(frameInfo).toArray(new Vector3f[0]);
-                    Pose p = new Pose(poseName, offsets, array);
-                    poses.get(frame).put(frameInfo, p);
-                }
-            }
-
-            // More animation, create the pose frames by the frame, mesh index specific
-            var poseFrames = new ArrayList<PoseFrame>(anim.getFrames());
-            for (var frameInfos : frameInfosList) {
-                // Loop through all the frame infos here
-                var p = new Pose[frameInfos.size() * 2];
-                var weights = new float[frameInfos.size()];
-                int x = 0;
-                for (FrameInfo frameInfo : frameInfos) {
-
-                    if (frameInfo.nextPoseFrame < frameInfo.previousPoseFrame) {
-                        continue; // Huh?, last frame effect
-                    }
-
-                    // The poses, always the start and the end
-                    p[x * 2] = poses.get(frameInfo.previousPoseFrame).get(frameInfo);
-                    p[x * 2 + 1] = poses.get(frameInfo.nextPoseFrame).get(frameInfo);
-
-                    // Weights
-                    weights[x] = frameInfo.weight;
-                    x++;
-                }
-                var f = new PoseFrame(p, weights);
-                poseFrames.add(f);
+                var morphTarget = new MorphTarget("submesh " + subMeshIndex + " frame " + frame);
+                morphTarget.setBuffer(Type.Position, BufferUtils.createFloatBuffer(vertices));
+                mesh.addMorphTarget(morphTarget);
             }
 
             // Create lod levels
             VertexBuffer[] lodLevels = createIndices(animSprite.getTriangles());
+            mesh.setBuffer(lodLevels[0]);
+            // mesh.setLodLevels(lodLevels);
 
             //Set the buffers
-            mesh.setBuffer(Type.Position, 3, BufferUtils.createFloatBuffer(vertices));
-            mesh.setBuffer(Type.BindPosePosition, 3, BufferUtils.createFloatBuffer(vertices));
-            mesh.setBuffer(lodLevels[0]);
-            mesh.setLodLevels(lodLevels);
-            mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoord));
-            mesh.setBuffer(Type.Normal, 3, BufferUtils.createFloatBuffer(normals));
-            mesh.setBuffer(Type.BindPoseNormal, 3, BufferUtils.createFloatBuffer(normals));
-            mesh.setStreamed();
+            var uvBuffer = new VertexBuffer(Type.TexCoord);
+            var normalBuffer = new VertexBuffer(Type.Normal);
+            uvBuffer.setupData(Usage.Static, 2, Format.Float, BufferUtils.createFloatBuffer(texCoords));
+            normalBuffer.setupData(Usage.Static, 3, Format.Float, BufferUtils.createFloatBuffer(normals));
+            //normalBuffer.convertToHalf();
+            mesh.setBuffer(uvBuffer);
+            mesh.setBuffer(normalBuffer);
 
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, animSprite.getMaterialIndex());
 
             // Create a pose track for this mesh
-            var poseTrack = new PoseTrack(geom, times, poseFrames.toArray(new PoseFrame[0]));
-            poseTracks.add(poseTrack);
+            var weights = new float[anim.getFrames() * anim.getFrames()];
+            // set up weights as identity matrix
+            for (i = 0; i < anim.getFrames(); ++i) {
+                weights[i * anim.getFrames() + i] = 1;
+            }
+            var morphTrack = new MorphTrack(geom, times, weights, anim.getFrames());
+            animTracks.add(morphTrack);
 
             //Attach the geometry to the node
             node.attachChild(geom);
@@ -452,12 +347,13 @@ public final class KmfModelLoader implements AssetLoader {
         }
 
         // Create the animation itself and attach the animation
-        var animation = new AnimClip(DUMMY_ANIM_CLIP_NAME);
-        animation.setTracks(poseTracks.toArray(new PoseTrack[0]));
+        var animClip = new AnimClip(DUMMY_ANIM_CLIP_NAME);
+        animClip.setTracks(animTracks.toArray(new MorphTrack[0]));
         var composer = new AnimComposer();
-        composer.addAnimClip(animation);
+        composer.addAnimClip(animClip);
         node.addControl(composer);
-        // we could also do setCurrentAction here but it wouldn't get serialized
+        node.addControl(new MorphControl());
+        // we could also do animComposer.setCurrentAction(DUMMY_ANIM_CLIP_NAME) here but it wouldn't get serialized
 
         //Attach the node to the root
         root.attachChild(node);
@@ -477,7 +373,8 @@ public final class KmfModelLoader implements AssetLoader {
         // replace runs of empty LODs with just a single empty level
         // LodControl would just skip them anyway
         for (int i = trianglesList.size() - 1; i > 0; --i)
-            if (trianglesList.get(i).isEmpty() && trianglesList.get(i - 1).isEmpty())
+            // commenting this out introduced a bug, all LOD levels > 0 are being removed
+            //if (trianglesList.get(i).isEmpty() && trianglesList.get(i - 1).isEmpty())
                 trianglesList.remove(i);
 
         var lodLevels = new VertexBuffer[trianglesList.size()];
@@ -518,8 +415,10 @@ public final class KmfModelLoader implements AssetLoader {
         var geom = new Geometry(meshName + '_' + subMeshIndex, mesh);
 
         //Add LOD control
-        LodControl lc = new LodControl();
+        /*
+        var lc = new LodControl();
         geom.addControl(lc);
+        */
 
         // Material, set the first
         geom.setMaterial(materials.get(materialIndex).get(0));
@@ -552,7 +451,7 @@ public final class KmfModelLoader implements AssetLoader {
 
         // Try to generate tangents
         try {
-            MikktspaceTangentGenerator.generate(geom);
+            //MikktspaceTangentGenerator.generate(geom);
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to generate tangents for " + meshName + "! ", e);
         }
