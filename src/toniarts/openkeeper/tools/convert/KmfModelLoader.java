@@ -191,9 +191,10 @@ public final class KmfModelLoader implements AssetLoader {
             Mesh mesh = new Mesh();
 
             //Vertices, UV (texture coordinates), normals
-            var vertices = new Vector3f[subMesh.getVertices().size()];
-            var texCoord = new Vector2f[subMesh.getVertices().size()];
-            var normals  = new Vector3f[subMesh.getVertices().size()];
+            final int numVertices = subMesh.getVertices().size();
+            var vertices = new Vector3f[numVertices];
+            var texCoord = new Vector2f[numVertices];
+            var normals  = new Vector3f[numVertices];
             int i = 0;
             for (var meshVertex : subMesh.getVertices()) {
 
@@ -272,9 +273,11 @@ public final class KmfModelLoader implements AssetLoader {
             var mesh = new Mesh();
 
             // Base Pose vertices, uvs, normals
-            var vertices = new Vector3f[subMesh.getVertices().size()];
-            var uvs      = new Vector2f[subMesh.getVertices().size()];
-            var normals  = new Vector3f[subMesh.getVertices().size()];
+            final int numVertices = subMesh.getVertices().size();
+            var baseVertices = new Vector3f[numVertices];
+            var vertices = new Vector3f[numVertices];
+            var uvs      = new Vector2f[numVertices];
+            var normals  = new Vector3f[numVertices];
 
             // first the UVs and normals since they are frame-independent
             int i = 0;
@@ -314,7 +317,16 @@ public final class KmfModelLoader implements AssetLoader {
                     ++i;
                 }
 
+                if (frame == 0) {
+                    // we need a valid position buffer for BVH generation etc.
+                    mesh.setBuffer(Type.Position, 3, BufferUtils.createFloatBuffer(vertices));
+                    for (i = 0; i < vertices.length; ++i)
+                        baseVertices[i] = new Vector3f(vertices[i]);
+                }
+                // create a relative morph target
                 var morphTarget = new MorphTarget("submesh " + subMeshIndex + " frame " + frame);
+                for (i = 0; i < vertices.length; ++i)
+                    vertices[i].subtractLocal(baseVertices[i]);
                 morphTarget.setBuffer(Type.Position, BufferUtils.createFloatBuffer(vertices));
                 mesh.addMorphTarget(morphTarget);
             }
@@ -327,6 +339,7 @@ public final class KmfModelLoader implements AssetLoader {
 
             mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(uvs));
             mesh.setBuffer(Type.Normal, 3, BufferUtils.createFloatBuffer(normals));
+            mesh.setStatic();
 
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, subMesh.getMaterialIndex());
