@@ -254,10 +254,16 @@ public final class KmfModelLoader implements AssetLoader {
         List<MorphTrack> animTracks = new ArrayList<>(anim.getSprites().size());
 
         // Create times (same for all tracks)
-        float[] times = new float[anim.getFrames()];
-        for (int i = 0; i < anim.getFrames(); i++) {
-            times[i] = (i + 1) / 30f;
-        }
+        // we subsample the frames to reduce the size
+        // always take the last frame
+        final int frameSubdiv = 2;
+        final int lastFrame = anim.getFrames() - 1;
+        assert lastFrame > 0;
+        final int numFrames = (lastFrame - 1) / frameSubdiv + 1 + 1; // ceiling division + 1
+        float[] times = new float[numFrames];
+        for (int i = 0; i < numFrames-1; ++i)
+            times[i] = (frameSubdiv * i) / 30f;
+        times[numFrames-1] = (lastFrame) / 30f;
 
         int subMeshIndex = 0;
         for (AnimSprite animSprite : anim.getSprites()) 
@@ -284,8 +290,8 @@ public final class KmfModelLoader implements AssetLoader {
                 ++i;
             }
 
-            // now get the vertices for each frame
-            for (int frame = 0; frame < anim.getFrames(); ++frame)
+            // now get the vertices for each frame, make sure we pick the last frame too
+            for (int frame = 0; frame < anim.getFrames(); frame += Math.max(1, Math.min(frameSubdiv, anim.getFrames() - frame - 1)))
             {
                 i = 0;
                 for (AnimVertex animVertex : animSprite.getVertices())
@@ -333,12 +339,12 @@ public final class KmfModelLoader implements AssetLoader {
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, animSprite.getMaterialIndex());
 
             // Create a pose track for this mesh
-            var weights = new float[anim.getFrames() * anim.getFrames()];
+            var weights = new float[numFrames * numFrames];
             // set up weights as identity matrix
-            for (i = 0; i < anim.getFrames(); ++i) {
-                weights[i * anim.getFrames() + i] = 1;
+            for (i = 1; i < numFrames; ++i) {
+                weights[i * numFrames + i] = 1;
             }
-            var morphTrack = new MorphTrack(geom, times, weights, anim.getFrames());
+            var morphTrack = new MorphTrack(geom, times, weights, numFrames);
             animTracks.add(morphTrack);
 
             //Attach the geometry to the node
