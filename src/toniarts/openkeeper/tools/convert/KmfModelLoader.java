@@ -43,6 +43,7 @@ import com.jme3.scene.VertexBuffer.Usage;
 import com.jme3.scene.mesh.MorphTarget;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
+import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -274,6 +275,7 @@ public final class KmfModelLoader implements AssetLoader {
             // Vertices, UVs (texture coordinates), normals
             final int numVertices = animSprite.getVertices().size();
             Vector3f[] vertices = new Vector3f[numVertices];
+            Vector3f[] baseVertices = vertices;
             Vector2f[] texCoords = new Vector2f[numVertices];
             Vector3f[] normals = new Vector3f[numVertices];
 
@@ -316,7 +318,19 @@ public final class KmfModelLoader implements AssetLoader {
                     ++i;
                 }
 
+                if (frame == 0) {
+                    // unfortunately we need a valid position buffer for BVH generation etc.
+                    var posBuffer = new VertexBuffer(Type.Position);
+                    posBuffer.setupData(Usage.Static, 3, Format.Float, BufferUtils.createFloatBuffer(vertices));
+                    mesh.setBuffer(posBuffer);
+                    baseVertices = vertices.clone();
+                    for (i = 0; i < vertices.length; ++i)
+                        baseVertices[i] = new Vector3f(vertices[i]);
+                }
+                // create a relative morph target
                 var morphTarget = new MorphTarget("submesh " + subMeshIndex + " frame " + frame);
+                for (i = 0; i < vertices.length; ++i)
+                    vertices[i].subtractLocal(baseVertices[i]);
                 morphTarget.setBuffer(Type.Position, BufferUtils.createFloatBuffer(vertices));
                 mesh.addMorphTarget(morphTarget);
             }
@@ -457,7 +471,7 @@ public final class KmfModelLoader implements AssetLoader {
 
         // Try to generate tangents
         try {
-            //MikktspaceTangentGenerator.generate(geom);
+            MikktspaceTangentGenerator.generate(geom);
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to generate tangents for " + meshName + "! ", e);
         }
