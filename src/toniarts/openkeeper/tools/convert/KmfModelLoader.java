@@ -340,10 +340,6 @@ public final class KmfModelLoader implements AssetLoader {
             // mesh.setLodLevels(lodLevels);
 
             //Set the buffers
-            //var posBuffer = new VertexBuffer(Type.Position);
-            //posBuffer.setupData(Usage.Static, 3, Format.Float, BufferUtils.createFloatBuffer(new Vector3f[vertices.length]));
-            //mesh.setBuffer(posBuffer);
-            //mesh.setBuffer(Type.BindPosePosition, 3, BufferUtils.createFloatBuffer(vertices));
             var uvBuffer = new VertexBuffer(Type.TexCoord);
             var normalBuffer = new VertexBuffer(Type.Normal);
             uvBuffer.setupData(Usage.Static, 2, Format.Float, BufferUtils.createFloatBuffer(texCoords));
@@ -351,7 +347,6 @@ public final class KmfModelLoader implements AssetLoader {
             //normalBuffer.convertToHalf();
             mesh.setBuffer(uvBuffer);
             mesh.setBuffer(normalBuffer);
-            //mesh.setBuffer(Type.BindPoseNormal, 3, BufferUtils.createFloatBuffer(normals));
 
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, animSprite.getMaterialIndex());

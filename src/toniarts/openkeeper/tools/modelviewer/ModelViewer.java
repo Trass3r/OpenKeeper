@@ -310,7 +310,6 @@ public class ModelViewer extends SimpleApplication {
         rootNode.addLight(al);
 
         /* Drop shadows */
-/*
         final int SHADOWMAP_SIZE = 1024;
         DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(getAssetManager(), SHADOWMAP_SIZE, 3);
         dlsr.setLight(dl);
@@ -318,7 +317,7 @@ public class ModelViewer extends SimpleApplication {
         dlsr.setShadowIntensity(0.6f);
         dlsr.setEdgeFilteringMode(EdgeFilteringMode.PCF8);
         getViewPort().addProcessor(dlsr);
-*/
+
         // Default light probe
         Spatial probeHolder = assetManager.loadModel("Models/ModelViewer/studio.j3o");
         LightProbe probe = (LightProbe) probeHolder.getLocalLightList().get(0);
