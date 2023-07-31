@@ -20,14 +20,20 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
+import com.jme3.input.KeyInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.KeyTrigger;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.util.BufferUtils;
 import com.simsilica.es.EntityData;
 import java.awt.Point;
 import java.lang.System.Logger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import jme3tools.savegame.SaveGame;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.game.listener.MapListener;
@@ -53,6 +59,9 @@ import toniarts.openkeeper.world.listener.TileChangeListener;
 public abstract class PlayerMapViewState extends AbstractAppState implements MapListener, PlayerActionListener {
     
     private static final Logger logger = System.getLogger(PlayerMapViewState.class.getName());
+    private static final String KEY_MAPPING_WIREFRAME = "key mapping wireframe";
+    private static final String KEY_MAPPING_VERTEX_LIGHTING = "key mapping vertex lighting";
+    private static final String KEY_MAPPING_SAVEGAME = "key mapping savegame";
 
     private Main app;
     private AppStateManager stateManager;
@@ -67,6 +76,30 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
     private Map<Short, List<RoomListener>> roomListeners;
     private final FlashTileViewState flashTileControl;
     private final MapRoomContainer mapRoomContainer;
+    private boolean wireframeMode = false;
+    private boolean vertexLightingMode = false;
+
+    private void toggleWireframe() {
+        wireframeMode = !wireframeMode;
+        worldNode.depthFirstTraversal(spatial -> {
+            if (spatial instanceof Geometry g) {
+                g.getMaterial().getAdditionalRenderState().setWireframe(wireframeMode);
+            }
+        });
+    }
+
+    private void toggleVertexLighting() {
+        vertexLightingMode = !vertexLightingMode;
+        worldNode.depthFirstTraversal(spatial -> {
+            if (spatial instanceof Geometry g && g.getMaterial().getMaterialDef().getMaterialParam("VertexLighting") != null) {
+                g.getMaterial().setBoolean("VertexLighting", vertexLightingMode);
+            }
+        });
+    }
+
+    private void saveGame() {
+        SaveGame.saveGame("OpenKeeper", "quicksave", app.getRootNode());
+    }
 
     public PlayerMapViewState(Main app, final KwdFile kwdFile, final AssetManager assetManager, Collection<Keeper> players, EntityData entityData, short playerId, ILoadCompleteNotifier loadCompleteNotifier) {
         this.app = app;
@@ -77,6 +110,24 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         worldNode = new Node("World");
         if (Main.isDebug()) {
             Debug.showNodeAxes(assetManager, worldNode, 10);
+            BufferUtils.setTrackDirectMemoryEnabled(true);
+
+            // TODO: MaterialDebugAppState for shader live update
+            ActionListener listener = (name, pressed, tpf) -> {
+                if (KEY_MAPPING_WIREFRAME.equals(name) && !pressed) {
+                    toggleWireframe();
+                }
+                else if (KEY_MAPPING_VERTEX_LIGHTING.equals(name) && !pressed) {
+                    toggleVertexLighting();
+                }
+                else if (KEY_MAPPING_SAVEGAME.equals(name) && !pressed) {
+                    saveGame();
+                }
+            };
+            app.getInputManager().addMapping(KEY_MAPPING_WIREFRAME, new KeyTrigger(KeyInput.KEY_T));
+            app.getInputManager().addMapping(KEY_MAPPING_VERTEX_LIGHTING, new KeyTrigger(KeyInput.KEY_V));
+            app.getInputManager().addMapping(KEY_MAPPING_SAVEGAME, new KeyTrigger(KeyInput.KEY_F8));
+            app.getInputManager().addListener(listener, KEY_MAPPING_WIREFRAME, KEY_MAPPING_VERTEX_LIGHTING, KEY_MAPPING_SAVEGAME);
         }
 
         // Load and update rooms
