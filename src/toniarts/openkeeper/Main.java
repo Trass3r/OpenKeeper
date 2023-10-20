@@ -28,6 +28,7 @@ import com.jme3.asset.AssetManager;
 import com.jme3.asset.TextureKey;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.light.AmbientLight;
+import com.jme3.material.TechniqueDef;
 import com.jme3.math.ColorRGBA;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.post.FilterPostProcessor;
@@ -424,8 +425,8 @@ public class Main extends SimpleApplication {
             public void onLoadComplete() {
 
                 // FIXME: We need ambient light, but it may be different for different states. There just seems to be a bug in BatchNodes concerning the removal of the light. So this is temporary perhaps
-                AmbientLight al = new AmbientLight();
-                al.setColor(ColorRGBA.White.multLocal(0.4f));
+                var al = new AmbientLight();
+                al.setColor(ColorRGBA.White.multLocal(0.25f).setAlpha(1));
                 rootNode.addLight(al);
 
                 if (params.containsKey("nomovies") || params.containsKey("level")) {
@@ -600,11 +601,10 @@ public class Main extends SimpleApplication {
 
     @Override
     public void simpleRender(RenderManager rm) {
-
-        // set the default light mode to single pass (only necessary for lighting.j3md, PBRLighting only uses single pass)
-        //renderManager.setPreferredLightMode(TechniqueDef.LightMode.SinglePass);
+        // set the default light mode
+        renderManager.setPreferredLightMode(TechniqueDef.LightMode.SinglePass);
         // Set the maximum number of light to handle in one pass per geometry.
-        //renderManager.setSinglePassLightBatchSize(5);
+        renderManager.setSinglePassLightBatchSize(4);
     }
 
     /**
