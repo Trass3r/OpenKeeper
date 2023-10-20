@@ -23,6 +23,7 @@ import com.jme3.asset.AssetManager;
 import com.jme3.input.InputManager;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.PointLight;
+import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Matrix3f;
@@ -30,9 +31,12 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.Spatial.CullHint;
+import com.jme3.scene.control.LightControl;
+import com.jme3.scene.shape.Sphere;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.ui.Picture;
@@ -99,6 +103,7 @@ public abstract class KeeperHandState extends AbstractAppState {
     private final Node rootNode;
     private final InHandLoaderCreatureModelContainer inHandLoader;
     private PointLight keeperLight;
+    private Geometry keeperLightDebug;
 
     public KeeperHandState(int maxQueueSize, KwdFile kwdFile, EntityData entityData, short playerId) {
         this.queue = new ArrayList<>(maxQueueSize);
@@ -146,7 +151,16 @@ public abstract class KeeperHandState extends AbstractAppState {
             (variables.get(MiscType.DEFAULT_TORCH_LIGHT_BLUE).getValue() + intensity) / 255, 0);
         keeperLight = new PointLight(Vector3f.ZERO, lightColor, WorldUtils.TILE_WIDTH * 3);
         keeperLight.setName("Keeper Hand");
+        keeperLightDebug = new Geometry("KeeperLightDebug", new Sphere(8, 8, 1f, false, true));
+        keeperLightDebug.setMaterial(new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"));
+        keeperLightDebug.setLocalScale(0.05f);
+        keeperLightDebug.getMaterial().setColor("Color", ColorRGBA.Green);
+        keeperLightDebug.setShadowMode(ShadowMode.Off);
+        //keeperLightDebug.addLight(keeperLight);
         this.app.getRootNode().addLight(keeperLight);
+        var lightControl = new LightControl(keeperLight, LightControl.ControlDirection.LightToSpatial);
+        keeperLightDebug.addControl(lightControl);
+        this.app.getRootNode().attachChild(keeperLightDebug);
 
         // Start loading stuff (maybe we should do this earlier...)
         inHandLoader.start();
@@ -166,6 +180,7 @@ public abstract class KeeperHandState extends AbstractAppState {
         queue.clear();
         app.getGuiNode().detachChild(rootNode);
         app.getRootNode().removeLight(keeperLight);
+        app.getRootNode().detachChild(keeperLightDebug);
 
         super.cleanup();
     }
