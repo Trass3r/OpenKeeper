@@ -212,10 +212,11 @@ public abstract class KeeperHandState extends AbstractAppState {
 
         // Set the keeper light position
         Camera cam = app.getCamera();
+        // vector from cursor to pointed at position
         Vector3f camPos = cam.getLocation();
-        Vector3f tmp = cam.getWorldCoordinates(new Vector2f(x, y), 0f).clone();
-        Vector3f dir = cam.getWorldCoordinates(new Vector2f(x, y), 1f).subtractLocal(tmp).normalizeLocal();
+        Vector3f dir = cam.getWorldCoordinates(new Vector2f(x, y), 1f).subtractLocal(camPos).normalizeLocal();
 
+        // calculate intersection point of mouse ray with plane at height lightHeight
         final float lightHeight = WorldUtils.TORCH_HEIGHT + WorldUtils.TILE_HEIGHT;
         dir.multLocal((lightHeight - camPos.getY()) / dir.getY()).addLocal(camPos);
 
