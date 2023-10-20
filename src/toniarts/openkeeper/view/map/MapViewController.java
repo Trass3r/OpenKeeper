@@ -484,7 +484,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
 
         // Torch (see https://github.com/tonihele/OpenKeeper/issues/128)
         if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)
-                && (tile.getX() % 2 == 0 || tile.getY() % 2 == 0)) {
+            && (tile.getX() % 2 != 0 ^ tile.getY() % 2 != 0)) {
             handleTorch(tile, pageNode);
         }
 
@@ -513,65 +513,66 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         // The rooms actually contain the torch model resource, but it is always the same,
         // and sometimes even null and there is still a torch. So I don't think they are used
         // Take the first direction where we can put a torch
-        String name = null;
+        String torchResourceName = null;
         float angleY = 0;
         Vector3f position = Vector3f.ZERO;
         Vector3f torchPosition = Vector3f.ZERO;
 
-        if (tile.getY() % 2 == 0 && tile.getX() % 2 != 0 && canPlaceTorch(tile.getX(), tile.getY() - 1)) { // North
-            name = "Torch1";
+        if (canPlaceTorch(tile.getX(), tile.getY() - 1)) { // North
+            torchResourceName = "Torch1";
             angleY = -FastMath.HALF_PI;
             position = new Vector3f(0, TORCH_HEIGHT, -TILE_WIDTH / 2);
             torchPosition = position.add(0, 0.5f, 0.25f);
-        } else if (tile.getX() % 2 == 0 && tile.getY() % 2 == 0 && canPlaceTorch(tile.getX() - 1, tile.getY())) { // West
-            name = "Torch1";
+        } else if (canPlaceTorch(tile.getX() - 1, tile.getY())) { // West
+            torchResourceName = "Torch1";
             position = new Vector3f(-TILE_WIDTH / 2, TORCH_HEIGHT, 0);
             torchPosition = position.add(0.25f, 0.5f, 0);
-        } else if (tile.getY() % 2 == 0 && tile.getX() % 2 != 0 && canPlaceTorch(tile.getX(), tile.getY() + 1)) { // South
-            name = "Torch1";
+        } else if (canPlaceTorch(tile.getX(), tile.getY() + 1)) { // South
+            torchResourceName = "Torch1";
             angleY = FastMath.HALF_PI;
             position = new Vector3f(0, TORCH_HEIGHT, TILE_WIDTH / 2);
             torchPosition = position.add(0, 0.5f, -0.25f);
-        } else if (tile.getX() % 2 == 0 && tile.getY() % 2 == 0 && canPlaceTorch(tile.getX() + 1, tile.getY())) { // East
-            name = "Torch1";
+        } else if (canPlaceTorch(tile.getX() + 1, tile.getY())) { // East
+            torchResourceName = "Torch1";
             angleY = FastMath.PI;
             position = new Vector3f(TILE_WIDTH / 2, TORCH_HEIGHT, 0);
             torchPosition = position.add(-0.25f, 0.5f, 0);
         }
 
         // Move to tile and right height
-        if (name != null) {
-            // if room get room torch
-            if (getTerrain(tile).getFlags().contains(Terrain.TerrainFlag.ROOM)) {
-                RoomInstance roomInstance = null;//roomCoordinates.get(tile.getLocation());
-                if (roomInstance != null) {
-                    ArtResource torch = roomInstance.getRoom().getTorch();
-                    if (torch == null) {
-                        return;
-                    }
-                    name = torch.getName();
+        if (torchResourceName == null)
+            return;
+
+        // if room get room torch
+        if (getTerrain(tile).getFlags().contains(Terrain.TerrainFlag.ROOM)) {
+            RoomInstance roomInstance = null;//roomCoordinates.get(tile.getLocation());
+            if (roomInstance != null) {
+                ArtResource torch = roomInstance.getRoom().getTorch();
+                if (torch == null) {
+                    return;
                 }
+                torchResourceName = torch.getName();
             }
-
-            // Light
-            var light = new PointLight(WorldUtils.pointToVector3f(tile.getLocation()).addLocal(torchPosition), ColorRGBA.Orange, TILE_WIDTH * 2);
-            light.setName(tile.getX() + "-" + tile.getY());
-            map.addLight(light);
-            lightMap.put(tile.getLocation(), light);
-
-            float intensity = kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_INTENSITY).getValue();
-            light.setColor(new ColorRGBA((kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RED).getValue() + intensity) / 255,
-                    (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_GREEN).getValue() + intensity) / 255,
-                    (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_BLUE).getValue() + intensity) / 255, 0));
-            light.setRadius(kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RADIUS_TILES).getValue());
-
-            Spatial spatial = AssetUtils.loadModel(assetManager, name, null);
-            spatial.addControl(new TorchControl(kwdFile, assetManager, angleY, light));
-            spatial.rotate(0, angleY, 0);
-            spatial.setLocalTranslation(WorldUtils.pointToVector3f(tile.getLocation()).addLocal(position));
-
-            ((Node) getTileNode(tile.getLocation(), (Node) pageNode.getChild(WALL_INDEX))).attachChild(spatial);
         }
+
+        // Light
+        var light = new PointLight(WorldUtils.pointToVector3f(tile.getLocation()).addLocal(torchPosition), ColorRGBA.Orange, TILE_WIDTH * 2);
+        light.setName(tile.getX() + "-" + tile.getY());
+        map.addLight(light);
+        lightMap.put(tile.getLocation(), light);
+
+        float intensity = kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_INTENSITY).getValue();
+        light.setColor(new ColorRGBA((kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RED).getValue() + intensity) / 255,
+                (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_GREEN).getValue() + intensity) / 255,
+                (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_BLUE).getValue() + intensity) / 255, 0));
+        light.setRadius(kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RADIUS_TILES).getValue());
+
+        Spatial spatial = AssetUtils.loadModel(assetManager, torchResourceName, null);
+        spatial.addControl(new TorchControl(kwdFile, assetManager, angleY, light));
+        spatial.rotate(0, angleY, 0);
+        spatial.setLocalTranslation(WorldUtils.pointToVector3f(tile.getLocation()).addLocal(position));
+
+        getTileNode(tile.getLocation(), (Node) pageNode.getChild(WALL_INDEX)).attachChild(spatial);
     }
 
     private boolean canPlaceTorch(int x, int y) {
