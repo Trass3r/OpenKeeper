@@ -437,7 +437,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
 
         // Torch (see https://github.com/tonihele/OpenKeeper/issues/128)
         if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)
-                && (tile.getX() % 2 == 0 || tile.getY() % 2 == 0)) {
+            && (p.x % 2 != 0 ^ p.y % 2 != 0)) {
             handleTorch(tile, pageNode);
         }
 
@@ -470,18 +470,18 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         Vector3f torchPosition = WorldUtils.pointToVector3f(tileLocation);
         Vector3f flameOffset;
 
-        if (tileLocation.y % 2 == 0 && tileLocation.x % 2 != 0 && canPlaceTorch(tileLocation.x, tileLocation.y - 1)) { // North
+        if (canPlaceTorch(tileLocation.x, tileLocation.y - 1)) { // North
             angleY = -FastMath.HALF_PI;
             torchPosition.addLocal(0, WorldUtils.TORCH_HEIGHT, -WorldUtils.TILE_WIDTH / 2);
             flameOffset = new Vector3f(0, 0.5f, 0.25f);
-        } else if (tileLocation.x % 2 == 0 && tileLocation.y % 2 == 0 && canPlaceTorch(tileLocation.x - 1, tileLocation.y)) { // West
+        } else if (canPlaceTorch(tileLocation.x - 1, tileLocation.y)) { // West
             torchPosition.addLocal(-WorldUtils.TILE_WIDTH / 2, WorldUtils.TORCH_HEIGHT, 0);
             flameOffset = new Vector3f(0.25f, 0.5f, 0);
-        } else if (tileLocation.y % 2 == 0 && tileLocation.x % 2 != 0 && canPlaceTorch(tileLocation.x, tileLocation.y + 1)) { // South
+        } else if (canPlaceTorch(tileLocation.x, tileLocation.y + 1)) { // South
             angleY = FastMath.HALF_PI;
             torchPosition.addLocal(0, WorldUtils.TORCH_HEIGHT, WorldUtils.TILE_WIDTH / 2);
             flameOffset = new Vector3f(0, 0.5f, -0.25f);
-        } else if (tileLocation.x % 2 == 0 && tileLocation.y % 2 == 0 && canPlaceTorch(tileLocation.x + 1, tileLocation.y)) { // East
+        } else if (canPlaceTorch(tileLocation.x + 1, tileLocation.y)) { // East
             angleY = FastMath.PI;
             torchPosition.addLocal(WorldUtils.TILE_WIDTH / 2, WorldUtils.TORCH_HEIGHT, 0);
             flameOffset = new Vector3f(-0.25f, 0.5f, 0);
