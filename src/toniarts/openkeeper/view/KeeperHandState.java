@@ -144,7 +144,7 @@ public abstract class KeeperHandState extends AbstractAppState {
             (variables.get(MiscType.DEFAULT_TORCH_LIGHT_RED).getValue() + intensity) / 255,
             (variables.get(MiscType.DEFAULT_TORCH_LIGHT_GREEN).getValue() + intensity) / 255,
             (variables.get(MiscType.DEFAULT_TORCH_LIGHT_BLUE).getValue() + intensity) / 255, 0);
-        keeperLight = new PointLight(Vector3f.ZERO, lightColor, WorldUtils.TILE_WIDTH * 2);
+        keeperLight = new PointLight(Vector3f.ZERO, lightColor, WorldUtils.TILE_WIDTH * 3);
         keeperLight.setName("Keeper Hand");
         this.app.getRootNode().addLight(keeperLight);
 
@@ -217,7 +217,8 @@ public abstract class KeeperHandState extends AbstractAppState {
         Vector3f dir = cam.getWorldCoordinates(new Vector2f(x, y), 1f).subtractLocal(camPos).normalizeLocal();
 
         // calculate intersection point of mouse ray with plane at height lightHeight
-        final float lightHeight = WorldUtils.TORCH_HEIGHT + WorldUtils.TILE_HEIGHT;
+        // position it right above the dungeon heart arcs, otherwise it looks weird
+        final float lightHeight = WorldUtils.TORCH_HEIGHT + WorldUtils.TILE_HEIGHT + 0.5f;
         dir.multLocal((lightHeight - camPos.getY()) / dir.getY()).addLocal(camPos);
 
         keeperLight.setPosition(new Vector3f(dir.getX(), lightHeight, dir.getZ()));
