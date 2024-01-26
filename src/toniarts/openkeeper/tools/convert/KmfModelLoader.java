@@ -261,6 +261,7 @@ public final class KmfModelLoader implements AssetLoader {
         final int lastFrame = anim.getFrames() - 1;
         assert lastFrame > 0;
         final int numFrames = (lastFrame - 1) / frameSubdiv + 1 + 1; // ceiling division + 1
+        final int numMorphTracks = numFrames - 1; // first frame doesn't need one
         float[] times = new float[numFrames];
         for (int i = 0; i < numFrames-1; ++i)
             times[i] = (frameSubdiv * i) / 30f;
@@ -291,6 +292,13 @@ public final class KmfModelLoader implements AssetLoader {
 
                 ++i;
             }
+
+            // set up weights as identity matrix
+            // frames are columns, morph targets are rows
+            // first column is 0
+            var weights = new float[numFrames * numMorphTracks];
+            for (i = 0; i < numMorphTracks; ++i)
+                weights[i * numFrames + i+1] = 1;
 
             // now get the vertices for each frame, make sure we pick the last frame too
             for (int frame = 0; frame < anim.getFrames(); frame += Math.max(1, Math.min(frameSubdiv, anim.getFrames() - frame - 1)))
@@ -330,6 +338,7 @@ public final class KmfModelLoader implements AssetLoader {
                     baseVertices = vertices.clone();
                     for (i = 0; i < vertices.length; ++i)
                         baseVertices[i] = new Vector3f(vertices[i]);
+                    continue;
                 }
                 // create a relative morph target
                 var morphTarget = new MorphTarget("submesh " + subMeshIndex + " frame " + frame);
@@ -357,12 +366,7 @@ public final class KmfModelLoader implements AssetLoader {
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, animSprite.getMaterialIndex());
 
             // Create a pose track for this mesh
-            var weights = new float[numFrames * numFrames];
-            // set up weights as identity matrix
-            for (i = 1; i < numFrames; ++i) {
-                weights[i * numFrames + i] = 1;
-            }
-            var morphTrack = new MorphTrack(geom, times, weights, numFrames);
+            var morphTrack = new MorphTrack(geom, times, weights, numMorphTracks);
             animTracks.add(morphTrack);
 
             //Attach the geometry to the node
