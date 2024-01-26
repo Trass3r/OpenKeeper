@@ -272,13 +272,15 @@ public final class KmfModelLoader implements AssetLoader {
 
         // Create times (same for all tracks)
         // we subsample the frames to reduce the size
+        // always take the last frame
         final int frameSubdiv = 2;
-        final int numFrames = (anim.getFrames() - 1 - 1) / frameSubdiv + 1 + 1;
+        final int lastFrame = anim.getFrames() - 1;
+        assert lastFrame > 0;
+        final int numFrames = (lastFrame - 1) / frameSubdiv + 1 + 1; // ceiling division + 1
         float[] times = new float[numFrames];
-        for (int i = 0; i < numFrames-1; ++i) {
-            times[i] = (frameSubdiv * i + 1) / 30f;
-        }
-        times[numFrames-1] = ((anim.getFrames()-1) + 1) / 30f;
+        for (int i = 0; i < numFrames-1; ++i)
+            times[i] = (frameSubdiv * i) / 30f;
+        times[numFrames-1] = (lastFrame) / 30f;
 
         var gltfModelBuilder = GltfModelBuilder.create();
         Map<String, DefaultImageModel> imageModels = HashMap.newHashMap(materials.size());
