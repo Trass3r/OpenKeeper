@@ -402,6 +402,7 @@ public final class KmfModelLoader implements AssetLoader {
             var material = materials.get(subMeshIndex).get(0);
             String materialName = material.getName();
             //meshPrimitiveModel.setName(materialName);
+            meshPrimitiveModel.setExtras(ImmutableMap.of("name", materialName));
             for (var accessorModel : meshPrimitiveModel.getAttributes().values()) {
                 ((DefaultAccessorModel) accessorModel).setName(materialName);
                 /* null
