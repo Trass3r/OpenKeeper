@@ -313,6 +313,14 @@ public final class KmfModelLoader implements AssetLoader {
             }
 
             // now get the vertices for each frame, make sure we pick the last frame too
+            final int numMorphTracks = numFrames - 1; // first frame doesn't need one
+            // set up weights as identity matrix
+            // frames are columns, morph targets are rows
+            // first column is 0
+            var weights = new float[numFrames * numMorphTracks];
+            for (i = 0; i < numMorphTracks; ++i)
+                weights[i * numFrames + i+1] = 1;
+
             for (int frame = 0; frame < anim.getFrames(); frame += Math.max(1, Math.min(frameSubdiv, anim.getFrames() - frame - 1)))
             {
                 i = 0;
@@ -342,7 +350,6 @@ public final class KmfModelLoader implements AssetLoader {
                     ++i;
                 }
 
-                // TODO: we don't need a morph target for frame 0
                 if (frame == 0) {
                     // unfortunately we need a valid position buffer for BVH generation etc.
                     var posBuffer = new VertexBuffer(Type.Position);
@@ -351,6 +358,7 @@ public final class KmfModelLoader implements AssetLoader {
                     baseVertices = vertices.clone();
                     for (i = 0; i < vertices.length; ++i)
                         baseVertices[i] = new Vector3f(vertices[i]);
+                    continue;
                 }
                 // create a relative morph target
                 var morphTarget = new MorphTarget("submesh " + subMeshIndex + " frame " + frame);
@@ -416,12 +424,7 @@ public final class KmfModelLoader implements AssetLoader {
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, animSprite.getMaterialIndex());
 
             // Create a pose track for this mesh
-            var weights = new float[numFrames * numFrames];
-            // set up weights as identity matrix
-            for (i = 1; i < numFrames; ++i) {
-                weights[i * numFrames + i] = 1;
-            }
-            var morphTrack = new MorphTrack(geom, times, weights, numFrames);
+            var morphTrack = new MorphTrack(geom, times, weights, numMorphTracks);
             animTracks.add(morphTrack);
 
             //Attach the geometry to the node
@@ -429,7 +432,7 @@ public final class KmfModelLoader implements AssetLoader {
             ++subMeshIndex;
         }
         // base pose weights are 0
-        meshModel.setWeights(new float[numFrames]);
+        meshModel.setWeights(new float[numMorphTracks]);
 
         var nodeModel = new DefaultNodeModel();
         nodeModel.addMeshModel(meshModel);
