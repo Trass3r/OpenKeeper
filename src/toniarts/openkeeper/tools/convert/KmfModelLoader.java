@@ -277,6 +277,7 @@ public final class KmfModelLoader implements AssetLoader {
         final int lastFrame = anim.getFrames() - 1;
         assert lastFrame > 0;
         final int numFrames = (lastFrame - 1) / frameSubdiv + 1 + 1; // ceiling division + 1
+        final int numMorphTracks = numFrames - 1; // first frame doesn't need one
         float[] times = new float[numFrames];
         for (int i = 0; i < numFrames-1; ++i)
             times[i] = (frameSubdiv * i) / 30f;
@@ -313,8 +314,6 @@ public final class KmfModelLoader implements AssetLoader {
                 ++i;
             }
 
-            // now get the vertices for each frame, make sure we pick the last frame too
-            final int numMorphTracks = numFrames - 1; // first frame doesn't need one
             // set up weights as identity matrix
             // frames are columns, morph targets are rows
             // first column is 0
@@ -322,6 +321,7 @@ public final class KmfModelLoader implements AssetLoader {
             for (i = 0; i < numMorphTracks; ++i)
                 weights[i * numFrames + i+1] = 1;
 
+            // now get the vertices for each frame, make sure we pick the last frame too
             for (int frame = 0; frame < anim.getFrames(); frame += Math.max(1, Math.min(frameSubdiv, anim.getFrames() - frame - 1)))
             {
                 i = 0;
