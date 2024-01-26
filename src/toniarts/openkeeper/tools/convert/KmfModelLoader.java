@@ -57,6 +57,7 @@ import de.javagl.jgltf.model.io.Buffers;
 import de.javagl.jgltf.model.io.GltfWriter;
 import de.javagl.jgltf.model.io.v2.*;
 import de.javagl.jgltf.model.v2.MaterialModelV2;
+import de.javagl.jgltf.model.v2.MaterialModelV2.AlphaMode;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -285,8 +286,9 @@ public final class KmfModelLoader implements AssetLoader {
         times[numFrames-1] = (lastFrame) / 30f;
 
         var gltfModelBuilder = GltfModelBuilder.create();
-        Map<String, DefaultImageModel> imageModels = HashMap.newHashMap(materials.size());
+        Map<String, DefaultTextureModel> textureModels = HashMap.newHashMap(materials.size());
         var meshModel = new DefaultMeshModel();
+        meshModel.setName(anim.getName());
 
         int subMeshIndex = 0;
         for (AnimSprite animSprite : anim.getSprites()) 
@@ -397,6 +399,7 @@ public final class KmfModelLoader implements AssetLoader {
             for (var morphTarget : mesh.getMorphTargets()) {
                 // inlined createAccessorModel:
                 var accessorModel = AccessorModels.createFloat3D(morphTarget.getBuffer(Type.Position));
+                accessorModel.setName(morphTarget.getName());
                 bufferBuilder.addAccessorModel("targets", accessorModel);
                 bufferBuilder.createArrayBufferViewModel("targets");
 
@@ -411,15 +414,38 @@ public final class KmfModelLoader implements AssetLoader {
             // set material
             // TODO: alternative textures (see index 0 below)
             var material = materials.get(subMeshIndex).get(0);
-            var materialName = material.getName();
+            String materialName = material.getName();
+            //meshPrimitiveModel.setName(materialName);
+            for (var accessorModel : meshPrimitiveModel.getAttributes().values()) {
+                ((DefaultAccessorModel) accessorModel).setName(materialName);
+                /* null
+                var bufferViewModel = (DefaultBufferViewModel)accessorModel.getBufferViewModel();
+                bufferViewModel.setName(materialName);
+                var bufferModel = (DefaultBufferModel) bufferViewModel.getBufferModel();
+                bufferModel.setName(materialName);
+                */
+            }
             MatParamTexture textureParam = material.getTextureParam("DiffuseMap");
-            String texturePath = "assets/Converted/" + textureParam.getTextureValue().getName();
-            DefaultImageModel imageModel = imageModels.computeIfAbsent(texturePath, key -> ImageModels.create(key, key));
-            var textureModel = new DefaultTextureModel();
-            textureModel.setImageModel(imageModel);
+            // get float param Shininess
+            float shininess = material.getParamValue("Shininess");
+            String textureName = textureParam.getTextureValue().getName();
+            var textureModel = textureModels.computeIfAbsent(textureName, key -> {
+                var imageModel = ImageModels.create("assets/Converted/" + key, key);
+                imageModel.setName(key);
+                var texModel = new DefaultTextureModel();
+                texModel.setName(key);
+                texModel.setImageModel(imageModel);
+                return texModel;
+            });
+
             var materialModel = new MaterialModelV2();
+            materialModel.setName(materialName);
             materialModel.setBaseColorTexture(textureModel);
-            materialModel.setMetallicFactor(0.0f);
+            materialModel.setMetallicFactor(shininess * 2); // the knight has the max, 0.5
+            if (shininess > 0)
+                materialModel.setRoughnessFactor(0.4f);
+            if (material.isTransparent())
+                materialModel.setAlphaMode(AlphaMode.BLEND);
             meshPrimitiveModel.setMaterialModel(materialModel);
             meshModel.addMeshPrimitiveModel(meshPrimitiveModel);
 
@@ -438,23 +464,35 @@ public final class KmfModelLoader implements AssetLoader {
         meshModel.setWeights(new float[numMorphTracks]);
 
         var nodeModel = new DefaultNodeModel();
+        nodeModel.setName(anim.getName());
         nodeModel.addMeshModel(meshModel);
         var scene = new DefaultSceneModel();
         scene.addNode(nodeModel);
         gltfModelBuilder.addSceneModel(scene);
 
         var animationModel = new DefaultAnimationModel();
+        animationModel.setName(anim.getName());
         var inputAccessorModel = AccessorModels.create(
             GltfConstants.GL_FLOAT, "SCALAR", false,
                 Buffers.createByteBufferFrom(FloatBuffer.wrap(times)));
+        inputAccessorModel.setName("times");
         var outputAccessorModel = AccessorModels.create(
             GltfConstants.GL_FLOAT, "SCALAR", false,
             Buffers.createByteBufferFrom(FloatBuffer.wrap(animTracks.get(0).getWeights())));
+        outputAccessorModel.setName("weights");
         var samplerModel = new DefaultSampler(inputAccessorModel, Interpolation.LINEAR, outputAccessorModel);
         var animationChannel = new DefaultChannel(samplerModel, nodeModel, "weights");
         animationModel.addChannel(animationChannel);
         gltfModelBuilder.addAnimationModel(animationModel);
         var gltfModel = gltfModelBuilder.build();
+
+        for (var accessorModel : gltfModel.getAccessorModels()) {
+            var bufferViewModel = (DefaultBufferViewModel)accessorModel.getBufferViewModel();
+            bufferViewModel.setName(accessorModel.getName());
+            // doesn't make too much sense, contains lots of different data
+            var bufferModel = (DefaultBufferModel)bufferViewModel.getBufferModel();
+            bufferModel.setName(accessorModel.getName());
+        }
 
         try {
             // normally we'd just do this:
@@ -462,7 +500,7 @@ public final class KmfModelLoader implements AssetLoader {
             //gltfWriter.writeEmbedded(gltfModel, outputFile);
 
             // but let's save images as refs only
-            var outputFile = new File(anim.getName() + ".gltf");
+            var outputFile = new File("assets/Converted/" + anim.getName() + ".gltf");
             try (var outputStream = new FileOutputStream(outputFile))
             {
                 // inline this:
