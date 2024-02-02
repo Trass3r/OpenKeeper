@@ -442,11 +442,12 @@ public final class KmfModelLoader implements AssetLoader {
             var materialModel = new MaterialModelV2();
             materialModel.setName(materialName);
             materialModel.setBaseColorTexture(textureModel);
-            materialModel.setMetallicFactor(shininess * 2); // the knight has the max, 0.5
-            if (shininess > 0)
-                materialModel.setRoughnessFactor(0.4f);
+            materialModel.setRoughnessFactor(shininess > 0 ? 1 - 2*shininess : 0.5f); // the knight has the max, 0.5
+            materialModel.setMetallicFactor(shininess > 0 ? 1 : 0);
             if (material.isTransparent())
                 materialModel.setAlphaMode(AlphaMode.BLEND);
+            if (material.getAdditionalRenderState().getFaceCullMode() != FaceCullMode.Back)
+                materialModel.setDoubleSided(true);
             meshPrimitiveModel.setMaterialModel(materialModel);
             meshModel.addMeshPrimitiveModel(meshPrimitiveModel);
 
