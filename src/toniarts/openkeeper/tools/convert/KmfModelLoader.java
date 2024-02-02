@@ -412,8 +412,7 @@ public final class KmfModelLoader implements AssetLoader {
         var lodLevels = new VertexBuffer[trianglesList.size()];
         int lod = 0;
         for (var triangles : trianglesList) {
-            // in case of an empty buffer, put one 0 there to prevent exception in LwjglRender.checkLimit
-            var indexes = new byte[Math.max(1, 3 * triangles.size())];
+            var indexes = new byte[3 * triangles.size()];
             int x = 0;
             for (Triangle triangle : triangles) {
                 indexes[x * 3] = triangle.getTriangle()[2];
