@@ -498,6 +498,7 @@ public final class KmfModelLoader implements AssetLoader {
                 GlTF gltf = gltfAsset.getGltf();
                 int i = 0;
                 for (var image : gltf.getImages()) {
+                    image.setName(gltfModel.getImageModel(i).getName());
                     image.setUri(gltfModel.getImageModel(i++).getUri());
                 }
                 GltfWriter gltfWriter = new GltfWriter();
