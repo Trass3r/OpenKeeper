@@ -204,6 +204,11 @@ public final class KmfModelLoader implements AssetLoader {
         Node node = new Node(sourceMesh.getName());
         node.setLocalTranslation(new Vector3f(sourceMesh.getPos().x, -sourceMesh.getPos().z, sourceMesh.getPos().y));
 
+        var gltfModelBuilder = GltfModelBuilder.create();
+        Map<String, DefaultTextureModel> textureModels = HashMap.newHashMap(materials.size());
+        var meshModel = new DefaultMeshModel();
+        meshModel.setName(sourceMesh.getName());
+
         int index = 0;
         for (MeshSprite meshSprite : sourceMesh.getSprites()) {
 
@@ -243,6 +248,52 @@ public final class KmfModelLoader implements AssetLoader {
             mesh.setBuffer(Type.Normal, 3, BufferUtils.createFloatBuffer(normals));
             mesh.setStatic();
 
+            var meshPrimitiveBuilder = MeshPrimitiveBuilder.create();
+            meshPrimitiveBuilder.setByteIndices((ByteBuffer) lodLevels[0].getData());
+            meshPrimitiveBuilder.addPositions3D((FloatBuffer) mesh.getBuffer(Type.Position).getData());
+            meshPrimitiveBuilder.addTexCoords02D((FloatBuffer) mesh.getBuffer(Type.TexCoord).getData());
+            // problem is they don't get animated anyways
+            //meshPrimitiveBuilder.addNormals3D((FloatBuffer) mesh.getBuffer(Type.Normal).getData());
+            var meshPrimitiveModel = meshPrimitiveBuilder.build();
+
+            // set material
+            var material = materials.get(meshSprite.getMaterialIndex()).get(0);
+            String materialName = material.getName();
+            //meshPrimitiveModel.setName(materialName);
+            meshPrimitiveModel.setExtras(ImmutableMap.of("name", materialName));
+            for (var accessorModel : meshPrimitiveModel.getAttributes().values()) {
+                ((DefaultAccessorModel) accessorModel).setName(materialName);
+            }
+            MatParamTexture textureParam = material.getTextureParam("DiffuseMap");
+            // get float param Shininess
+            float shininess = material.getParamValue("Shininess");
+            /*
+                "emissiveFactor": [ 0.5, 0.5, 0.5 ],
+                "emissiveTexture": { "index": 1 },
+            */
+
+            String textureName = textureParam.getTextureValue().getName();
+            var textureModel = textureModels.computeIfAbsent(textureName, key -> {
+                var imageModel = ImageModels.create(new File("assets/Converted/" + key).toURI().toString(), key); // handles spaces via toURI
+                imageModel.setName(key);
+                var texModel = new DefaultTextureModel();
+                texModel.setName(key);
+                texModel.setImageModel(imageModel);
+                return texModel;
+            });
+
+            var materialModel = new MaterialModelV2();
+            materialModel.setName(materialName);
+            materialModel.setBaseColorTexture(textureModel);
+            materialModel.setRoughnessFactor(shininess > 0 ? 1 - 2 * shininess : 0.5f);
+            materialModel.setMetallicFactor(shininess > 0 ? 1 : 0);
+            if (material.isTransparent())
+                materialModel.setAlphaMode(AlphaMode.BLEND);
+            if (material.getAdditionalRenderState().getFaceCullMode() != FaceCullMode.Back)
+                materialModel.setDoubleSided(true);
+            meshPrimitiveModel.setMaterialModel(materialModel);
+            meshModel.addMeshPrimitiveModel(meshPrimitiveModel);
+
             // Create geometry
             Geometry geom = createGeometry(index, sourceMesh.getName(), mesh, materials, meshSprite.getMaterialIndex());
 
@@ -253,6 +304,48 @@ public final class KmfModelLoader implements AssetLoader {
 
         //Attach the node to the root
         root.attachChild(node);
+
+        var nodeModel = new DefaultNodeModel();
+        nodeModel.setName(sourceMesh.getName());
+        nodeModel.addMeshModel(meshModel);
+        var scene = new DefaultSceneModel();
+        scene.addNode(nodeModel);
+        gltfModelBuilder.addSceneModel(scene);
+        var gltfModel = gltfModelBuilder.build();
+
+        for (var accessorModel : gltfModel.getAccessorModels()) {
+            var bufferViewModel = (DefaultBufferViewModel) accessorModel.getBufferViewModel();
+            bufferViewModel.setName(accessorModel.getName());
+            // doesn't make too much sense, contains lots of different data
+            var bufferModel = (DefaultBufferModel) bufferViewModel.getBufferModel();
+            bufferModel.setName(accessorModel.getName());
+        }
+
+        try {
+            // normally we'd just do this:
+            // var gltfWriter = new GltfModelWriter();
+            // gltfWriter.writeEmbedded(gltfModel, outputFile);
+
+            // but let's save images as refs only
+            var outputFile = new File("assets/Converted/" + sourceMesh.getName() + ".gltf");
+            try (var outputStream = new FileOutputStream(outputFile)) {
+                // inline this:
+                // var gltfWriter = new GltfModelWriterV2();
+                // gltfWriter.writeEmbedded(gltfModel, outputStream);
+
+                GltfAssetV2 gltfAsset = GltfAssetsV2.createEmbedded(gltfModel);
+                GlTF gltf = gltfAsset.getGltf();
+                int i = 0;
+                for (var image : gltf.getImages()) {
+                    image.setName(gltfModel.getImageModel(i).getName());
+                    //image.setUri(gltfModel.getImageModel(i++).getUri());
+                }
+                GltfWriter gltfWriter = new GltfWriter();
+                gltfWriter.write(gltf, outputStream);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
