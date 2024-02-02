@@ -399,7 +399,7 @@ public final class KmfModelLoader implements AssetLoader {
 
             // set material
             // TODO: alternative textures (see index 0 below)
-            var material = materials.get(subMeshIndex).get(0);
+            var material = materials.get(animSprite.getMaterialIndex()).get(0);
             String materialName = material.getName();
             //meshPrimitiveModel.setName(materialName);
             meshPrimitiveModel.setExtras(ImmutableMap.of("name", materialName));
