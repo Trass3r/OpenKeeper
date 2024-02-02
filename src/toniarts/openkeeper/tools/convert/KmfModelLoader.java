@@ -548,7 +548,8 @@ public final class KmfModelLoader implements AssetLoader {
         // replace runs of empty LODs with just a single empty level
         // LodControl would just skip them anyway
         for (int i = trianglesList.size() - 1; i > 0; --i)
-            trianglesList.remove(i);
+            //if (trianglesList.get(i).isEmpty() && trianglesList.get(i - 1).isEmpty())
+                trianglesList.remove(i);
 
         var lodLevels = new VertexBuffer[trianglesList.size()];
         int lod = 0;
