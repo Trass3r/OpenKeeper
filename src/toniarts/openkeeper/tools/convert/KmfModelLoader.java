@@ -417,7 +417,7 @@ public final class KmfModelLoader implements AssetLoader {
             float shininess = material.getParamValue("Shininess");
             String textureName = textureParam.getTextureValue().getName();
             var textureModel = textureModels.computeIfAbsent(textureName, key -> {
-                var imageModel = ImageModels.create("assets/Converted/" + key, key);
+                var imageModel = ImageModels.create(new File("assets/Converted/" + key).toURI().toString(), key); // handles spaces via toURI
                 imageModel.setName(key);
                 var texModel = new DefaultTextureModel();
                 texModel.setName(key);
