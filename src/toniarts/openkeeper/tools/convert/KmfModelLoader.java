@@ -391,6 +391,7 @@ public final class KmfModelLoader implements AssetLoader {
             meshPrimitiveBuilder.setByteIndices((ByteBuffer) lodLevels[0].getData());
             meshPrimitiveBuilder.addPositions3D((FloatBuffer) mesh.getBuffer(Type.Position).getData());
             meshPrimitiveBuilder.addTexCoords02D((FloatBuffer) uvBuffer.getData());
+            // problem is they don't get animated anyways
             meshPrimitiveBuilder.addNormals3D((FloatBuffer) normalBuffer.getData());
             var meshPrimitiveModel = meshPrimitiveBuilder.build();
 
