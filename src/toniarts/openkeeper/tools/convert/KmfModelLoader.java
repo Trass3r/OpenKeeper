@@ -352,6 +352,8 @@ public final class KmfModelLoader implements AssetLoader {
 
             // Create lod levels
             VertexBuffer[] lodLevels = createIndices(animSprite.getTriangles());
+            if (lodLevels[0].getData().capacity() <= 0)
+                continue;
             mesh.setBuffer(lodLevels[0]);
             // mesh.setLodLevels(lodLevels);
 
