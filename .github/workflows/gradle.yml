@@ -30,6 +30,7 @@ jobs:
       if: github.ref_name == 'releases' || startsWith(github.ref, 'refs/tags/')
       with:
         tag_name: ${{ github.ref_name == 'releases' && 'latest' || github.ref }}
+        target_commitish: releases
         prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
         generate_release_notes: true
         #name: "Development Build"
