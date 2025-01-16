@@ -16,6 +16,8 @@
  */
 package toniarts.openkeeper.tools.convert;
 
+import com.badlogic.gdx.math.Interpolation;
+import com.google.common.collect.ImmutableMap;
 import com.jme3.anim.AnimClip;
 import com.jme3.anim.AnimComposer;
 import com.jme3.anim.MorphControl;
@@ -25,6 +27,7 @@ import com.jme3.asset.AssetLoader;
 import com.jme3.asset.MaterialKey;
 import com.jme3.asset.ModelKey;
 import com.jme3.asset.TextureKey;
+import com.jme3.material.MatParamTexture;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.material.RenderState.FaceCullMode;
@@ -43,12 +46,24 @@ import com.jme3.scene.mesh.MorphTarget;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
+import de.javagl.jgltf.impl.v2.GlTF;
+import de.javagl.jgltf.model.GltfConstants;
+import de.javagl.jgltf.model.creation.*;
+import de.javagl.jgltf.model.impl.*;
+import de.javagl.jgltf.model.impl.DefaultAnimationModel.*;
+import de.javagl.jgltf.model.io.Buffers;
+import de.javagl.jgltf.model.io.GltfWriter;
+import de.javagl.jgltf.model.io.v2.*;
+import de.javagl.jgltf.model.v2.MaterialModelV2;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -262,6 +277,10 @@ public final class KmfModelLoader implements AssetLoader {
         for (int i = 0; i < numFrames; ++i)
             times[i] = i / 30f;
 
+        var gltfModelBuilder = GltfModelBuilder.create();
+        Map<String, DefaultImageModel> imageModels = HashMap.newHashMap(materials.size());
+        var meshModel = new DefaultMeshModel();
+
         int subMeshIndex = 0;
         for (var subMesh : anim.getSprites()) {
 
@@ -352,6 +371,44 @@ public final class KmfModelLoader implements AssetLoader {
             mesh.setBuffer(Type.Normal, 3, BufferUtils.createFloatBuffer(normals));
             mesh.setStatic();
 
+            var meshPrimitiveBuilder = MeshPrimitiveBuilder.create();
+            meshPrimitiveBuilder.setByteIndices((ByteBuffer) lodLevels[0].getData());
+            meshPrimitiveBuilder.addPositions3D((FloatBuffer) mesh.getBuffer(Type.Position).getData());
+            meshPrimitiveBuilder.addTexCoords02D((FloatBuffer) uvBuffer.getData());
+            meshPrimitiveBuilder.addNormals3D((FloatBuffer) normalBuffer.getData());
+            var meshPrimitiveModel = meshPrimitiveBuilder.build();
+
+            // add morph targets
+            var bufferBuilder = new BufferStructureBuilder();
+            for (var morphTarget : mesh.getMorphTargets()) {
+                // inlined createAccessorModel:
+                var accessorModel = AccessorModels.createFloat3D(morphTarget.getBuffer(Type.Position));
+                bufferBuilder.addAccessorModel("targets", accessorModel);
+                bufferBuilder.createArrayBufferViewModel("targets");
+
+                meshPrimitiveModel.addTarget(ImmutableMap.of("POSITION", accessorModel));
+            }
+            bufferBuilder.createBufferModel("targets", "morphtargets.bin");
+            BufferStructure bufferStructure = bufferBuilder.build();
+            gltfModelBuilder.addAccessorModels(bufferStructure.getAccessorModels());
+            gltfModelBuilder.addBufferViewModels(bufferStructure.getBufferViewModels());
+            gltfModelBuilder.addBufferModels(bufferStructure.getBufferModels());
+
+            // set material
+            // TODO: alternative textures (see index 0 below)
+            var material = materials.get(subMeshIndex).get(0);
+            var materialName = material.getName();
+            MatParamTexture textureParam = material.getTextureParam("DiffuseMap");
+            String texturePath = "assets/Converted/" + textureParam.getTextureValue().getName();
+            DefaultImageModel imageModel = imageModels.computeIfAbsent(texturePath, key -> ImageModels.create(key, key));
+            var textureModel = new DefaultTextureModel();
+            textureModel.setImageModel(imageModel);
+            var materialModel = new MaterialModelV2();
+            materialModel.setBaseColorTexture(textureModel);
+            materialModel.setMetallicFactor(0.0f);
+            meshPrimitiveModel.setMaterialModel(materialModel);
+            meshModel.addMeshPrimitiveModel(meshPrimitiveModel);
+
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, subMesh.getMaterialIndex());
 
@@ -361,6 +418,53 @@ public final class KmfModelLoader implements AssetLoader {
             //Attach the geometry to the node
             node.attachChild(geom);
             ++subMeshIndex;
+        }
+        // base pose weights are 0
+        meshModel.setWeights(new float[numMorphTracks]);
+
+        var nodeModel = new DefaultNodeModel();
+        nodeModel.addMeshModel(meshModel);
+        var scene = new DefaultSceneModel();
+        scene.addNode(nodeModel);
+        gltfModelBuilder.addSceneModel(scene);
+
+        var animationModel = new DefaultAnimationModel();
+        var inputAccessorModel = AccessorModels.create(
+            GltfConstants.GL_FLOAT, "SCALAR", false,
+                Buffers.createByteBufferFrom(FloatBuffer.wrap(times)));
+        var outputAccessorModel = AccessorModels.create(
+            GltfConstants.GL_FLOAT, "SCALAR", false,
+            Buffers.createByteBufferFrom(FloatBuffer.wrap(animTracks.get(0).getWeights())));
+        var samplerModel = new DefaultSampler(inputAccessorModel, Interpolation.LINEAR, outputAccessorModel);
+        var animationChannel = new DefaultChannel(samplerModel, nodeModel, "weights");
+        animationModel.addChannel(animationChannel);
+        gltfModelBuilder.addAnimationModel(animationModel);
+        var gltfModel = gltfModelBuilder.build();
+
+        try {
+            // normally we'd just do this:
+            //var gltfWriter = new GltfModelWriter();
+            //gltfWriter.writeEmbedded(gltfModel, outputFile);
+
+            // but let's save images as refs only
+            var outputFile = new File(anim.getName() + ".gltf");
+            try (var outputStream = new FileOutputStream(outputFile))
+            {
+                // inline this:
+                //var gltfWriter = new GltfModelWriterV2();
+                //gltfWriter.writeEmbedded(gltfModel, outputStream);
+
+                GltfAssetV2 gltfAsset = GltfAssetsV2.createEmbedded(gltfModel);
+                GlTF gltf = gltfAsset.getGltf();
+                int i = 0;
+                for (var image : gltf.getImages()) {
+                    image.setUri(gltfModel.getImageModel(i++).getUri());
+                }
+                GltfWriter gltfWriter = new GltfWriter();
+                gltfWriter.write(gltf, outputStream);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         // Create the animation itself and attach the animation
