@@ -36,13 +36,14 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import toniarts.openkeeper.tools.convert.AssetsConverter;
-import static toniarts.openkeeper.tools.convert.AssetsConverter.getAssetsFolder;
 import toniarts.openkeeper.tools.convert.KmfAssetInfo;
 import toniarts.openkeeper.tools.convert.KmfModelLoader;
 import toniarts.openkeeper.tools.convert.kmf.KmfFile;
 import toniarts.openkeeper.tools.convert.wad.WadFile;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.utils.Utils;
+
+import static toniarts.openkeeper.tools.convert.AssetsConverter.getAssetsFolder;
 
 /**
  * Dungeon Keeper II models conversion. Converts KMF to jME internal optimized
@@ -182,6 +183,8 @@ public final class ConvertModels extends ConversionTask {
 
         // Remove the file extension from the file
         KmfAssetInfo ai = new KmfAssetInfo(assetManager, new AssetKey(name), model, true);
+        if (!name.startsWith("Claimed"))
+            return;
         KmfModelLoader kmfModelLoader = new KmfModelLoader();
         try {
             Node n = (Node) kmfModelLoader.load(ai);

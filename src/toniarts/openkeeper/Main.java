@@ -36,6 +36,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.opengl.GLRenderer;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
+import com.jme3.texture.plugins.ktx.KTXLoader;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.render.batch.BatchRenderConfiguration;
 import java.awt.event.WindowAdapter;
@@ -355,6 +356,8 @@ public final class Main extends SimpleApplication {
                     getAssetManager().registerLoader(MP2Loader.class, MP2Loader.FILE_EXTENSION);
                     // Camera sweep files
                     getAssetManager().registerLoader(CameraSweepDataLoader.class, CameraSweepDataLoader.FILE_EXTENSION);
+                    // KTX texture loader
+                    getAssetManager().registerLoader(KTXLoader.class, "ktx");
 
                     // Set the anisotropy asset listener
                     setAnisotropy();

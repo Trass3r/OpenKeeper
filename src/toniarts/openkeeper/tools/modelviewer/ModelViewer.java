@@ -46,6 +46,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
+import com.jme3.texture.plugins.ktx.KTXLoader;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
 import de.lessvoid.nifty.Nifty;
@@ -68,6 +69,7 @@ import java.util.List;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.audio.plugins.MP2Loader;
 import toniarts.openkeeper.game.data.ISoundable;
+import toniarts.openkeeper.game.data.Settings;
 import toniarts.openkeeper.game.sound.SoundCategory;
 import toniarts.openkeeper.game.sound.SoundFile;
 import toniarts.openkeeper.game.sound.SoundGroup;
@@ -187,6 +189,8 @@ public final class ModelViewer extends SimpleApplication {
         }
 
         ModelViewer app = new ModelViewer();
+        app.showSettings = true;
+        app.settings = Settings.getInstance().getAppSettings();
         app.start();
     }
 
@@ -209,6 +213,7 @@ public final class ModelViewer extends SimpleApplication {
         // Distribution locator
         assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
         assetManager.registerLoader(MP2Loader.class, "mp2");
+        assetManager.registerLoader(KTXLoader.class, "ktx");
 
         //Effects manager
         this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager);
