@@ -64,8 +64,7 @@ dependencies {
     implementation "com.simsilica:zay-es-net:1.6.0"
     implementation "com.simsilica:sio2:1.8.0"
     implementation "com.simsilica:sim-ethereal:1.8.0"
-    implementation "de.javagl:jgltf-model:2.0.3"
-    implementation "de.javagl:jgltf-model-builder:2.0.3"
+    implementation "com.github.javagl:JglTF:master-SNAPSHOT"
 }
 
 sourceSets {
