@@ -308,7 +308,11 @@ public final class KmfModelLoader implements AssetLoader {
                     short frameBase     = animGeometries.get(geomIndex).getFrameBase();
                     var nextCoord       = animGeometries.get(geomIndex + 1).getGeometry();
                     short nextFrameBase = animGeometries.get(geomIndex + 1).getFrameBase();
-                    float geomFactor = (float) ((frame & 0x7f) - frameBase) / (float) (nextFrameBase - frameBase);
+
+                    // the last frame will have an extra duplicate entry
+                    // so prevent division by zero
+                    float geomFactor = nextFrameBase <= frameBase ? 0 :
+                        (float) ((frame & 0x7f) - frameBase) / (float) (nextFrameBase - frameBase);
 
                     // interpolate and convert to Y-up
                     vertices[i] = new Vector3f(
