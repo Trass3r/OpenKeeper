@@ -311,7 +311,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 generateTileNodes(wall, x, y);
                 page.attachChild(wall);
                 BatchNode ceiling = new BatchNode("ceiling");
-                ceiling.setShadowMode(RenderQueue.ShadowMode.Off); // No lights above ceilings
+                ceiling.setShadowMode(RenderQueue.ShadowMode.Cast);
                 generateTileNodes(ceiling, x, y);
                 page.attachChild(ceiling);
 
