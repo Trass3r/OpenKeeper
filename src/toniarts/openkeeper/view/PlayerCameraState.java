@@ -386,6 +386,7 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
             return;
         }
 
+        boolean changed = true;
         if (name.equals(CAMERA_MOUSE_ZOOM_IN) || isCombinationPressed(name, Setting.CAMERA_ZOOM_IN)) {
             if (name.equals(CAMERA_MOUSE_ZOOM_IN)) {
                 value = Main.getUserSettings().getFloat(Setting.MOUSE_SENSITIVITY) * ZOOM_MOUSE;
@@ -428,7 +429,11 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
             camera.roll(-value * ROTATION_SPEED);
         } else if (isCombinationPressed(name, Setting.ROLL_CAMERA_RIGHT)) {
             camera.roll(value * ROTATION_SPEED);
+        } else {
+            changed = false;
         }
+        if (changed)
+            stateManager.getState(KeeperHandState.class).updatePosition();
     }
 
     private boolean isCombinationPressed(String name, Setting s) {
