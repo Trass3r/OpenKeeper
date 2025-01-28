@@ -98,6 +98,8 @@ public abstract class KeeperHandState extends AbstractAppState {
     private final Node rootNode;
     private final InHandLoaderCreatureModelContainer inHandLoader;
     private SpotLight keeperLight;
+    private float lastMouseX;
+    private float lastMouseY;
 
     public KeeperHandState(int maxQueueSize, KwdFile kwdFile, EntityData entityData, short playerId) {
         this.queue = new ArrayList<>(maxQueueSize);
@@ -202,7 +204,13 @@ public abstract class KeeperHandState extends AbstractAppState {
         rootNode.setCullHint(visible ? CullHint.Never : CullHint.Always);
     }
 
-    public void setPosition(float x, float y) {
+    void updatePosition() {
+        setPosition(lastMouseX, lastMouseY);
+    }
+
+    void setPosition(float x, float y) {
+        lastMouseX = x;
+        lastMouseY = y;
         rootNode.setLocalTranslation(x, y, 0);
 
         if (!isInitialized())
