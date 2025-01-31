@@ -20,6 +20,8 @@ import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.TextureKey;
+import com.jme3.light.Light;
+import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -82,6 +84,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
     private final Map<Point, Thing.Room> roomThings = new HashMap<>();
     private final Map<RoomInstance, RoomConstructor> roomActuals = new HashMap<>(); // Rooms by room constructor
     private final Map<Point, EntityInstance<Terrain>> terrainBatchCoordinates = new HashMap<>(); // A quick glimpse whether terrain batch at specific coordinates is already "found"
+    private final Map<Point, Light> lightMap = new HashMap<>();
 
     public MapViewController(AssetManager assetManager, KwdFile kwdFile, IMapInformation mapClientService, short playerId) {
         this.kwdFile = kwdFile;
@@ -144,7 +147,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         return map;
     }
 
-    public IMapDataInformation<IMapTileInformation> getMapData() {
+    private IMapDataInformation<IMapTileInformation> getMapData() {
         return mapClientService.getMapData();
     }
 
@@ -195,23 +198,13 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             // Reconstruct and mark for patching
             // The tile node needs to created anew, somehow the BatchNode just doesn't get it if I remove children from subnode
             Node pageNode = getPageNode(point, terrainNode);
-            Node tileNode = getTileNode(point, (Node) pageNode.getChild(FLOOR_INDEX));
-            if (!tileNode.getChildren().isEmpty()) {
-                tileNode.removeFromParent();
-                ((BatchNode) pageNode.getChild(FLOOR_INDEX)).attachChildAt(new Node(tileNode.getName()), getTileNodeIndex(point));
-                nodesNeedBatching.add((BatchNode) pageNode.getChild(FLOOR_INDEX));
-            }
-            tileNode = getTileNode(point, (Node) pageNode.getChild(WALL_INDEX));
-            if (!tileNode.getChildren().isEmpty()) {
-                tileNode.removeFromParent();
-                ((BatchNode) pageNode.getChild(WALL_INDEX)).attachChildAt(new Node(tileNode.getName()), getTileNodeIndex(point));
-                nodesNeedBatching.add((BatchNode) pageNode.getChild(WALL_INDEX));
-            }
-            tileNode = getTileNode(point, (Node) pageNode.getChild(TOP_INDEX));
-            if (!tileNode.getChildren().isEmpty()) {
-                tileNode.removeFromParent();
-                ((BatchNode) pageNode.getChild(TOP_INDEX)).attachChildAt(new Node(tileNode.getName()), getTileNodeIndex(point));
-                nodesNeedBatching.add((BatchNode) pageNode.getChild(TOP_INDEX));
+            for (int i = FLOOR_INDEX; i <= TOP_INDEX; ++i) {
+                Node tileNode = getTileNode(point, (Node) pageNode.getChild(i));
+                if (!tileNode.getChildren().isEmpty()) {
+                    tileNode.removeFromParent();
+                    ((BatchNode) pageNode.getChild(i)).attachChildAt(new Node(tileNode.getName()), getTileNodeIndex(point));
+                    nodesNeedBatching.add((BatchNode) pageNode.getChild(i));
+                }
             }
 
             // Reconstruct
@@ -470,52 +463,73 @@ public abstract class MapViewController implements ILoader<KwdFile> {
 
     private void handleTorch(IMapTileInformation tile, Node pageNode) {
 
-        // The rooms actually contain the torch model resource, but it is always the same,
-        // and sometimes even null and there is still a torch. So I don't think they are used
         // Take the first direction where we can put a torch
-        String name = null;
+        String torchResourceName = "Torch1";
         float angleY = 0;
-        Vector3f position = Vector3f.ZERO;
+        var tileLocation = tile.getLocation();
+        Vector3f torchPosition = WorldUtils.pointToVector3f(tileLocation);
+        Vector3f flameOffset;
 
-        if (tile.getY() % 2 == 0 && tile.getX() % 2 != 0 && canPlaceTorch(tile.getX(), tile.getY() - 1)) { // North
-            name = "Torch1";
+        if (tileLocation.y % 2 == 0 && tileLocation.x % 2 != 0 && canPlaceTorch(tileLocation.x, tileLocation.y - 1)) { // North
             angleY = -FastMath.HALF_PI;
-            position = new Vector3f(0, WorldUtils.TORCH_HEIGHT, -WorldUtils.TILE_WIDTH / 2);
-
-        } else if (tile.getX() % 2 == 0 && tile.getY() % 2 == 0 && canPlaceTorch(tile.getX() - 1, tile.getY())) { // West
-            name = "Torch1";
-            position = new Vector3f(-WorldUtils.TILE_WIDTH / 2, WorldUtils.TORCH_HEIGHT, 0);
-
-        } else if (tile.getY() % 2 == 0 && tile.getX() % 2 != 0 && canPlaceTorch(tile.getX(), tile.getY() + 1)) { // South
-            name = "Torch1";
+            torchPosition.addLocal(0, WorldUtils.TORCH_HEIGHT, -WorldUtils.TILE_WIDTH / 2);
+            flameOffset = new Vector3f(0, 0.5f, 0.25f);
+        } else if (tileLocation.x % 2 == 0 && tileLocation.y % 2 == 0 && canPlaceTorch(tileLocation.x - 1, tileLocation.y)) { // West
+            torchPosition.addLocal(-WorldUtils.TILE_WIDTH / 2, WorldUtils.TORCH_HEIGHT, 0);
+            flameOffset = new Vector3f(0.25f, 0.5f, 0);
+        } else if (tileLocation.y % 2 == 0 && tileLocation.x % 2 != 0 && canPlaceTorch(tileLocation.x, tileLocation.y + 1)) { // South
             angleY = FastMath.HALF_PI;
-            position = new Vector3f(0, WorldUtils.TORCH_HEIGHT, WorldUtils.TILE_WIDTH / 2);
-
-        } else if (tile.getX() % 2 == 0 && tile.getY() % 2 == 0 && canPlaceTorch(tile.getX() + 1, tile.getY())) { // East
-            name = "Torch1";
+            torchPosition.addLocal(0, WorldUtils.TORCH_HEIGHT, WorldUtils.TILE_WIDTH / 2);
+            flameOffset = new Vector3f(0, 0.5f, -0.25f);
+        } else if (tileLocation.x % 2 == 0 && tileLocation.y % 2 == 0 && canPlaceTorch(tileLocation.x + 1, tileLocation.y)) { // East
             angleY = FastMath.PI;
-            position = new Vector3f(WorldUtils.TILE_WIDTH / 2, WorldUtils.TORCH_HEIGHT, 0);
+            torchPosition.addLocal(WorldUtils.TILE_WIDTH / 2, WorldUtils.TORCH_HEIGHT, 0);
+            flameOffset = new Vector3f(-0.25f, 0.5f, 0);
+        } else {
+            var light = lightMap.remove(tileLocation);
+            if (light != null) {
+                pageNode.removeLight(light);
+            }
+            return;
         }
 
-        // Move to tile and right height
-        if (name != null) {
-            // if room get room torch
-            if (getTerrain(tile).getFlags().contains(Terrain.TerrainFlag.ROOM)) {
-                RoomInstance roomInstance = null;//roomCoordinates.get(tile.getLocation());
-                if (roomInstance != null) {
-                    ArtResource torch = roomInstance.getRoom().getTorch();
-                    if (torch == null) {
-                        return;
-                    }
-                    name = torch.getName();
+        // if room get room torch
+        if (getTerrain(tile).getFlags().contains(Terrain.TerrainFlag.ROOM)) {
+            // The rooms actually contain the torch model resource, but it is always the same,
+            // and sometimes even null and there is still a torch. So I don't think they are used
+            RoomInstance roomInstance = null;//roomCoordinates.get(tileLocation);
+            if (roomInstance != null) {
+                ArtResource torch = roomInstance.getRoom().getTorch();
+                if (torch == null) {
+                    return;
                 }
+                torchResourceName = torch.getName();
             }
-            Spatial spatial = AssetUtils.loadModel(assetManager, name, null);
-            spatial.addControl(new TorchControl(kwdFile, assetManager, angleY));
-            spatial.rotate(0, angleY, 0);
-            spatial.setLocalTranslation(WorldUtils.pointToVector3f(tile.getLocation()).addLocal(position));
+        }
 
-            ((Node) getTileNode(tile.getLocation(), (Node) pageNode.getChild(WALL_INDEX))).attachChild(spatial);
+        Spatial spatial = AssetUtils.loadModel(assetManager, torchResourceName, null);
+        spatial.addControl(new TorchControl(kwdFile, assetManager, angleY));
+        spatial.rotate(0, angleY, 0);
+        spatial.setLocalTranslation(torchPosition);
+        getTileNode(tileLocation, (Node) pageNode.getChild(WALL_INDEX)).attachChild(spatial);
+
+        // Light
+        var lightPos = torchPosition.add(flameOffset);
+        var light = (PointLight)lightMap.get(tileLocation);
+        if (light != null) {
+            light.setPosition(lightPos);
+        } else {
+            light = new PointLight(lightPos, ColorRGBA.Orange, WorldUtils.TILE_WIDTH * 2);
+            String lightName = tileLocation.x + "-" + tileLocation.y;
+            light.setName(lightName);
+            pageNode.addLight(light);
+            lightMap.put(tileLocation, light);
+
+            float intensity = kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_INTENSITY).getValue();
+            light.setColor(new ColorRGBA((kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RED).getValue() + intensity) / 255,
+                    (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_GREEN).getValue() + intensity) / 255,
+                    (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_BLUE).getValue() + intensity) / 255, 0));
+            light.setRadius(kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RADIUS_TILES).getValue());
         }
     }
 
@@ -659,7 +673,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
      * @param root the root node
      * @return page node
      */
-    protected Node getPageNode(Point p, Node root) {
+    private Node getPageNode(Point p, Node root) {
         int pageX = (int) Math.floor(p.x / (float) PAGE_SQUARE_SIZE);
         int pageY = (int) Math.floor(p.y / (float) PAGE_SQUARE_SIZE);
 
@@ -689,7 +703,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         return false;
     }
 
-    public static boolean hasRoomWalls(Room room) {
+    private static boolean hasRoomWalls(Room room) {
         return room.getFlags().contains(Room.RoomFlag.HAS_WALLS)
                 || room.getTileConstruction() == Room.TileConstruction.HERO_GATE_FRONT_END
                 || room.getTileConstruction() == Room.TileConstruction.HERO_GATE_3_BY_1;
@@ -844,7 +858,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
      *
      * @param instances room instances to remove
      */
-    protected void removeRoomInstances(RoomInstance... instances) {
+    private void removeRoomInstances(RoomInstance... instances) {
         for (RoomInstance instance : instances) {
             roomsNode.detachChild(roomNodes.get(instance));
             roomNodes.remove(instance);
@@ -994,7 +1008,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
      *
      * @param rooms the rooms to update
      */
-    protected void updateRoomWalls(RoomInstance... rooms) {
+    private void updateRoomWalls(RoomInstance... rooms) {
         for (RoomInstance room : rooms) {
             findRoomWallSections(room);
         }
