@@ -37,3 +37,13 @@ jobs:
         title: "Development Build"
         files: |
           build/distributions/OpenKeeper.zip
+
+    - uses: pmd/pmd-github-action@v2
+      with:
+        rulesets: 'rulesets/java/quickstart.xml'
+        analyzeModifiedFilesOnly: false
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: pmd-report.sarif
+        category: 'PMD'
