@@ -293,11 +293,11 @@ public final class KmfModelLoader implements AssetLoader {
             }
 
             // set up weights as identity matrix
-            // frames are columns, morph targets are rows
-            // first column is 0
+            // frames are rows, morph targets are columns
+            // first row is 0
             var weights = new float[numFrames * numMorphTracks];
-            for (i = 0; i < numMorphTracks; ++i)
-                weights[i * numFrames + i+1] = 1;
+            for (i = 1; i < numFrames; ++i)
+                weights[i * numMorphTracks + i-1] = 1;
 
             // now get the vertices for each frame, make sure we pick the last frame too
             for (int frame = 0; frame < anim.getFrames(); frame += Math.max(1, Math.min(frameSubdiv, anim.getFrames() - frame - 1)))
