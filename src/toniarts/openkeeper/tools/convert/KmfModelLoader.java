@@ -254,15 +254,13 @@ public final class KmfModelLoader implements AssetLoader {
         // Create times (same for all tracks)
         // we subsample the frames to reduce the size
         // always take the last frame
-        final int frameSubdiv = 2;
         final int lastFrame = anim.getFrames() - 1;
         assert lastFrame > 0;
-        final int numFrames = (lastFrame - 1) / frameSubdiv + 1 + 1; // ceiling division + 1
-        final int numMorphTracks = numFrames - 1; // first frame doesn't need one
+        final int numFrames = lastFrame + 1; // ceiling division + 1
+        final int numMorphTracks = numFrames-1; // first frame doesn't need one
         float[] times = new float[numFrames];
-        for (int i = 0; i < numFrames-1; ++i)
-            times[i] = (frameSubdiv * i) / 30f;
-        times[numFrames-1] = (lastFrame) / 30f;
+        for (int i = 0; i < numFrames; ++i)
+            times[i] = i / 30f;
 
         int subMeshIndex = 0;
         for (var subMesh : anim.getSprites()) {
@@ -300,7 +298,7 @@ public final class KmfModelLoader implements AssetLoader {
                 weights[i * numMorphTracks + i-1] = 1;
 
             // now get the vertices for each frame, make sure we pick the last frame too
-            for (int frame = 0; frame < anim.getFrames(); frame += Math.max(1, Math.min(frameSubdiv, anim.getFrames() - frame - 1)))
+            for (int frame = 0; frame < anim.getFrames(); frame += 1)
             {
                 i = 0;
                 for (var animVertex : subMesh.getVertices())
