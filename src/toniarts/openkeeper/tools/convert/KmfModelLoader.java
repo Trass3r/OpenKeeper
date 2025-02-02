@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 import toniarts.openkeeper.animation.Pose;
 import toniarts.openkeeper.animation.PoseTrack;
 import toniarts.openkeeper.animation.PoseTrack.PoseFrame;
@@ -83,6 +84,8 @@ public final class KmfModelLoader implements AssetLoader {
     // there's 1 kmf per animation so we only use 1 dummy JME animation clip
     public static final String DUMMY_ANIM_CLIP_NAME = "dummyAnimClipName";
     private static final Logger logger = System.getLogger(KmfModelLoader.class.getName());
+
+    private LodControl lodControl = null;//new LodControl();
 
     /* Some textures are broken */
     private final static Map<String, String> textureFixes = Map.of("Goblinbak", "GoblinBack", "Goblin2", "GoblinFront");
@@ -189,7 +192,7 @@ public final class KmfModelLoader implements AssetLoader {
                 continue; // FIXME: LODs are broken so we only take L0
 
             //Each sprite represents a geometry (+ mesh) since they each have their own material
-            Mesh mesh = new Mesh();
+            Mesh mesh = new MeshFix();
 
             //Vertices, UV (texture coordinates), normals
             var vertices = new Vector3f[subMesh.getVertices().size()];
@@ -232,6 +235,7 @@ public final class KmfModelLoader implements AssetLoader {
             index++;
         }
 
+        if (lodControl != null) node.addControl(lodControl);
         return node;
     }
 
@@ -279,7 +283,7 @@ public final class KmfModelLoader implements AssetLoader {
 
             //
             //Each sprite represents a geometry (+ mesh) since they each have their own material
-            Mesh mesh = new Mesh();
+            Mesh mesh = new MeshFix();
 
             // Base Pose vertices, uvs, normals
             var vertices = new Vector3f[subMesh.getVertices().size()];
@@ -455,6 +459,8 @@ public final class KmfModelLoader implements AssetLoader {
             ++subMeshIndex;
         }
 
+        if (lodControl != null) node.addControl(lodControl);
+
         // Create the animation itself and attach the animation
         var animation = new AnimClip(DUMMY_ANIM_CLIP_NAME);
         animation.setTracks(poseTracks.toArray(new PoseTrack[0]));
@@ -466,7 +472,7 @@ public final class KmfModelLoader implements AssetLoader {
         return node;
     }
 
-    private VertexBuffer[] createIndices(final List<List<Triangle>> trianglesList) {
+    private VertexBuffer[] createIndices(List<List<Triangle>> trianglesList) {
 
         // Triangles are not in order, sometimes they are very random, many missing etc.
         // For JME 3.0 this was somehow ok, but JME 3.1 doesn't do some automatic organizing etc.
@@ -477,17 +483,21 @@ public final class KmfModelLoader implements AssetLoader {
         //
         // Triangles, we have LODs here
 
-        // replace runs of empty LODs with just a single empty level
-        // LodControl would just skip them anyway
-        for (int i = trianglesList.size() - 1; i > 0; --i)
-            if (trianglesList.get(i).isEmpty() && trianglesList.get(i - 1).isEmpty())
-                trianglesList.remove(i);
+        // LODs are too fine-grained anyway
+        // there would be too many updates
+        trianglesList = IntStream.range(0, trianglesList.size()).filter(i -> i % 2 == 0).mapToObj(trianglesList::get).toList();
 
+        // the lower levels are often empty or almost empty anyways
+        //trianglesList = trianglesList.subList(0, 8);
         var lodLevels = new VertexBuffer[trianglesList.size()];
-        int lod = 0;
-        for (var triangles : trianglesList) {
-            // in case of an empty buffer, put one 0 there to prevent exception in LwjglRender.checkLimit
-            var indexes = new byte[Math.max(1, 3 * triangles.size())];
+        for (int lod = 0; lod < trianglesList.size(); ++lod) {
+            var triangles = trianglesList.get(lod);
+            if (triangles.isEmpty()) {
+                lodLevels[lod] = null; // according to the GLRenderer this is a legit way to say that there are no triangles
+                continue;
+            }
+
+            var indexes = new byte[3 * triangles.size()];
             int x = 0;
             for (Triangle triangle : triangles) {
                 indexes[x * 3] = triangle.getTriangle()[2];
@@ -499,7 +509,6 @@ public final class KmfModelLoader implements AssetLoader {
             buf.setName("IndexBuffer L" + lod);
             buf.setupData(VertexBuffer.Usage.Static, 3, VertexBuffer.Format.UnsignedByte, BufferUtils.createByteBuffer(indexes));
             lodLevels[lod] = buf;
-            ++lod;
         }
         return lodLevels;
     }
