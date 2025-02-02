@@ -169,14 +169,14 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             pointsToUpdate.add(point);
             RoomInstance roomInstance = roomCoordinates.get(point);
             if (roomInstance != null) {
-                pointsToUpdate.addAll(Arrays.asList(WorldUtils.getSurroundingTiles(getMapData(), point, true)));
+                pointsToUpdate.addAll(Arrays.asList(WorldUtils.getSurroundingTiles(getMapData(), point, false)));
                 for (Point roomCoordinate : roomInstance.getCoordinates()) {
-                    pointsToUpdate.addAll(Arrays.asList(WorldUtils.getSurroundingTiles(getMapData(), roomCoordinate, true)));
+                    pointsToUpdate.addAll(Arrays.asList(WorldUtils.getSurroundingTiles(getMapData(), roomCoordinate, false)));
                     pointsToUpdate.add(roomCoordinate);
                 }
                 removeRoomInstances(roomInstance);
             } else {
-                Point[] surroundingTiles = WorldUtils.getSurroundingTiles(getMapData(), point, true);
+                Point[] surroundingTiles = WorldUtils.getSurroundingTiles(getMapData(), point, false);
                 pointsToUpdate.addAll(Arrays.asList(surroundingTiles));
 
                 // Also remove the surrounding rooms, if this room needs to be merged to other rooms
