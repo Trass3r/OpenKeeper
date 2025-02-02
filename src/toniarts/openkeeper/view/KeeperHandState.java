@@ -104,7 +104,7 @@ public abstract class KeeperHandState extends AbstractAppState {
     private IEntityViewControl currentItem;
     private final Node queueNode;
     private final Node cursor;
-    private final Node rootNode;
+    private final Node rootNode; // for the keeper hand
     private final InHandLoaderCreatureModelContainer inHandLoader;
     private SpotLight keeperLight;
     private float lastMouseX;
@@ -253,7 +253,7 @@ public abstract class KeeperHandState extends AbstractAppState {
     void setPosition(float x, float y) {
         lastMouseX = x;
         lastMouseY = y;
-        rootNode.setLocalTranslation(x, y, 0);
+        rootNode.setLocalTranslation(x, y, 0); // makes any difference?
 
         if (!isInitialized())
             return;
