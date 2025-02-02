@@ -434,11 +434,19 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         Terrain terrain = getTerrain(tile);
         Point p = tile.getLocation();
         Node pageNode = getPageNode(p, root);
+        logger.log(Level.TRACE, "Handling tile {0} {1}", tile.getLocation(), terrain.getName());
 
         // Torch (see https://github.com/tonihele/OpenKeeper/issues/128)
-        if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)
+        if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID) // e.g. SOLID blocks have TORCH flag
             && (p.x % 2 != 0 ^ p.y % 2 != 0)) {
             handleTorch(tile, pageNode);
+        } else {
+            Light light = lightMap.remove(p);
+            if (light != null) {
+                pageNode.removeLight(light);
+                logger.log(Level.INFO, "Torch removed at {0}", p);
+                throw new RuntimeException("Light found in map with " + p + "!");
+            }
         }
 
         // Room
@@ -463,6 +471,16 @@ public abstract class MapViewController implements ILoader<KwdFile> {
 
     private void handleTorch(IMapTileInformation tile, Node pageNode) {
 
+        /*
+         Use cases:
+           - other kind of update: no changes needed
+           - SOLID block gets destroyed
+             - Torches attached to it are removed
+             - it turns into Dirt
+             - surrounding SOLID blocks may get a torch / the new Dirt tile gets 1 potentially
+             - surrounding non-SOLID blocks may lose a torch and need to get a new one
+             - actually Gold is also SOLID, but no TORCH
+         */
         // Take the first direction where we can put a torch
         String torchResourceName = "Torch1";
         float angleY = 0;
@@ -489,6 +507,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             var light = lightMap.remove(tileLocation);
             if (light != null) {
                 pageNode.removeLight(light);
+                logger.log(Level.INFO, "Old torch removed at {0}", tileLocation);
             }
             return;
         }
@@ -513,17 +532,24 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         spatial.setLocalTranslation(torchPosition);
         getTileNode(tileLocation, (Node) pageNode.getChild(WALL_INDEX)).attachChild(spatial);
 
+        logger.log(Level.INFO, "Torch at {0} {1} for {2}", tileLocation, flameOffset, pageNode.getName());
         // Light
         var lightPos = torchPosition.add(flameOffset);
         var light = (PointLight)lightMap.get(tileLocation);
         if (light != null) {
-            light.setPosition(lightPos);
+            logger.log(Level.INFO, "Found light in map with {0}!", light.getPosition());
+            if (light.getPosition().isSimilar(lightPos, 0.001f))
+                logger.log(Level.INFO, "Found a light with the same coords {0}", tileLocation);
+            else
+                light.setPosition(lightPos);
         } else {
+            logger.log(Level.INFO, "No light found at {0}", tileLocation);
             light = new PointLight(lightPos, ColorRGBA.Orange, WorldUtils.TILE_WIDTH * 2);
             String lightName = tileLocation.x + "-" + tileLocation.y;
             light.setName(lightName);
             pageNode.addLight(light);
             lightMap.put(tileLocation, light);
+            logger.log(Level.INFO, "Torch put at {0}", lightName);
 
             float intensity = kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_INTENSITY).getValue();
             light.setColor(new ColorRGBA((kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RED).getValue() + intensity) / 255,
@@ -534,9 +560,12 @@ public abstract class MapViewController implements ILoader<KwdFile> {
     }
 
     private boolean canPlaceTorch(int x, int y) {
+        //if (lightMap.get(new Point(x, y)) != null)
+        //    return false;
+
         IMapTileInformation tile = getMapData().getTile(x, y);
         return (tile != null && getTerrain(tile).getFlags().contains(Terrain.TerrainFlag.TORCH));
-
+        //return (tile != null && !getTerrain(tile).getFlags().contains(Terrain.TerrainFlag.SOLID));
     }
 
     private RoomInstance handleRoom(Point p, Room room, Thing.Room thing) {
