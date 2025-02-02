@@ -23,9 +23,17 @@ import com.jme3.asset.AssetManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.light.DirectionalLight;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
+import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.shadow.DirectionalLightShadowFilter;
+import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.util.BufferUtils;
 import com.simsilica.es.EntityData;
 import jme3tools.savegame.SaveGame;
@@ -46,6 +54,7 @@ import toniarts.openkeeper.view.map.MapTileContainer;
 import toniarts.openkeeper.view.map.MapViewController;
 
 import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Collection;
 import java.util.List;
 
@@ -163,6 +172,36 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
                 PlayerMapViewState.this.updateProgress(progress);
             }
 
+            //@Override
+            public Spatial load_(AssetManager assetManager, KwdFile object) {
+                Spatial res = super.load(assetManager, object);
+                var sun = new DirectionalLight();
+                sun.setColor(ColorRGBA.White);
+                sun.setDirection(new Vector3f(-1, -1, -1));
+                app.getRootNode().addLight(sun);
+                var viewPort = app.getViewPort();
+                final int SHADOWMAP_SIZE = 512;
+                if (true) {
+                } else if (true) {
+                    var dlsr = new DirectionalLightShadowRenderer(assetManager, SHADOWMAP_SIZE, 2);
+                    dlsr.setLight(sun);
+                    viewPort.addProcessor(dlsr);
+                } else {
+                    var fpp = new FilterPostProcessor(assetManager);
+                    var dlsf = new DirectionalLightShadowFilter(assetManager, SHADOWMAP_SIZE, 2);
+                    dlsf.setLight(sun);
+                    dlsf.setShadowIntensity(1);
+                    dlsf.setEnabled(true);
+                    fpp.addFilter(dlsf);
+                    viewPort.addProcessor(fpp);
+                }
+                app.getRootNode().setShadowMode(ShadowMode.CastAndReceive);
+                app.getRootNode().depthFirstTraversal((Spatial spatial) -> {
+                    logger.log(Level.INFO, "spatial {0} {1}", new Object[] { spatial.getName(), spatial.getShadowMode() });
+                    spatial.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
+                });
+                return res;
+            }
         };
 
         flashTileControl = new FlashTileViewState(mapLoader);
