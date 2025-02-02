@@ -688,6 +688,7 @@ public final class KmfModelLoader implements AssetLoader {
             material.setColor("Specular", ColorRGBA.Orange); // Dungeons are lit only with fire...? Experimental
             material.setColor("Diffuse", ColorRGBA.White); // Experimental
             material.setFloat("Shininess", mat.getShininess());
+            //material.setBoolean("UseVertexColor", true);
 
             // Set some flags
             setMaterialFlags(material, mat);

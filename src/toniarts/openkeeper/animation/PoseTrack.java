@@ -37,6 +37,7 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -46,6 +47,8 @@ import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.util.BufferUtils;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -124,19 +127,88 @@ public final class PoseTrack extends MorphTrack {
      */
     public PoseTrack() {
     }
+private final Map<Pose, ColorRGBA> poseColors = new HashMap<>();
+private float nextHue = 0;
+
+private ColorRGBA getPoseColor(Pose pose) {
+    return poseColors.computeIfAbsent(pose, p -> {
+        ColorRGBA color = hsvToRgb(nextHue, 1f, 1f);
+        nextHue = (nextHue + 0.618034f) % 1f; // Golden ratio for good distribution
+        return color;
+    });
+}
 
     private void applyFrame(Mesh target, int frameIndex) {
         PoseFrame frame = frames[frameIndex];
         VertexBuffer pb = target.getBuffer(Type.Position);
+/*
+        // Add color buffer if it doesn't exist
+        VertexBuffer cb = target.getBuffer(Type.Color);
+        if (cb == null) {
+            cb = new VertexBuffer(Type.Color);
+            cb.setNormalized(true);
+            target.setBuffer(cb);
+        }
+
+        // Create or get color data buffer
+        FloatBuffer colorData;
+        if (cb.getData() == null) {
+            colorData = BufferUtils.createFloatBuffer(pb.getNumElements() * 4); // 4 components (RGBA)
+            cb.setupData(Usage.Stream, 4, Format.Float, colorData);
+        } else {
+            colorData = (FloatBuffer) cb.getData();
+            colorData.rewind();
+        }
+
+        // Reset colors to default
+        while (colorData.remaining() > 0) {
+            colorData.put(1f).put(1f).put(1f).put(1f); // White
+        }
+        colorData.rewind();
+*/
         for (int i = 0; i < frame.poses.length / 2; i++) {
 
-            // Poses come in pairs of two [startPose] + [endPose], weight tells us how close we are to the end
-            // The pose pair must have the same vertices in the same order
-            applyPose(frame.poses[i * 2], frame.poses[i * 2 + 1], frame.weights[i], (FloatBuffer) pb.getData());
+            Pose startPose = frame.poses[i * 2];
+            Pose endPose   = frame.poses[i * 2 + 1];
+
+            // Use consistent color based on start pose
+            //ColorRGBA poseColor = getPoseColor(startPose);
+            //applyPoseColors(startPose, endPose, frame.weights[i], colorData, poseColor);
+
+            // Apply regular pose transformation
+            applyPose(startPose, endPose, frame.weights[i], (FloatBuffer) pb.getData());
         }
 
         // force to re-upload data to gpu
         pb.updateData(pb.getData());
+        //cb.updateData(colorData);
+    }
+
+    private void applyPoseColors(Pose startPose, Pose endPose, float weight,
+            FloatBuffer colorBuffer, ColorRGBA poseColor) {
+                    if (startPose == null) {
+                        return;
+                    }
+            
+                    int[] indices = startPose.getIndices();
+                    for (int vertIndex : indices) {
+                        // Calculate buffer position for this vertex
+                        int colorIndex = vertIndex * 4;
+            
+                        // Blend with existing color
+                        colorBuffer.position(colorIndex);
+                        float r = colorBuffer.get();
+                        float g = colorBuffer.get();
+                        float b = colorBuffer.get();
+                        float a = colorBuffer.get();
+            
+                        // Apply new color with weight
+                        colorBuffer.position(colorIndex);
+                        colorBuffer.put(FastMath.interpolateLinear(weight, r, poseColor.r));
+                        colorBuffer.put(FastMath.interpolateLinear(weight, g, poseColor.g));
+                        colorBuffer.put(FastMath.interpolateLinear(weight, b, poseColor.b));
+                        colorBuffer.put(FastMath.interpolateLinear(weight, a, poseColor.a));
+        }
     }
 
     /**
@@ -245,5 +317,28 @@ public final class PoseTrack extends MorphTrack {
             frames = new PoseTrack.PoseFrame[readSavableArray.length];
             System.arraycopy(readSavableArray, 0, frames, 0, readSavableArray.length);
         }
+    }
+
+    private ColorRGBA hsvToRgb(float h, float s, float v) {
+        float c = v * s;
+        float x = c * (1 - Math.abs((h * 6) % 2 - 1));
+        float m = v - c;
+
+        float r = 0, g = 0, b = 0;
+        if (h < 1.0f/6.0f) {
+            r = c; g = x; b = 0;
+        } else if (h < 2.0f/6.0f) {
+            r = x; g = c; b = 0;
+        } else if (h < 3.0f/6.0f) {
+            r = 0; g = c; b = x;
+        } else if (h < 4.0f/6.0f) {
+            r = 0; g = x; b = c;
+        } else if (h < 5.0f/6.0f) {
+            r = x; g = 0; b = c;
+        } else {
+            r = c; g = 0; b = x;
+        }
+
+        return new ColorRGBA(r + m, g + m, b + m, 1f);
     }
 }

@@ -117,4 +117,8 @@ public final class Pose implements Savable, Cloneable {
             System.arraycopy(readSavableArray, 0, offsets, 0, readSavableArray.length);
         }
     }
+
+    public String getName() {
+        return name;
+    }
 }
