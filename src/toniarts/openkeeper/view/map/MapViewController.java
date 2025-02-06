@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import toniarts.openkeeper.common.EntityInstance;
 import toniarts.openkeeper.common.RoomInstance;
+import toniarts.openkeeper.game.controller.room.RoomAudioControl;
 import toniarts.openkeeper.game.map.IMapDataInformation;
 import toniarts.openkeeper.game.map.IMapInformation;
 import toniarts.openkeeper.game.map.IMapTileInformation;
@@ -552,6 +553,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         Spatial roomNode = handleRoom(roomInstance);
         if (roomNode != null) {
             roomsNode.attachChild(roomNode);
+            roomNode.addControl(new RoomAudioControl(roomInstance.getRoom(), assetManager));
         }
 
         // Add to registry
