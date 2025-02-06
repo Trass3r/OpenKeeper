@@ -525,11 +525,12 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             pageNode.addLight(light);
             lightMap.put(tileLocation, light);
 
-            float intensity = kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_INTENSITY).getValue();
-            light.setColor(new ColorRGBA((kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RED).getValue() + intensity) / 255,
-                    (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_GREEN).getValue() + intensity) / 255,
-                    (kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_BLUE).getValue() + intensity) / 255, 0));
-            light.setRadius(kwdFile.getVariables().get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RADIUS_TILES).getValue());
+            var kwdVars = kwdFile.getVariables();
+            //float intensity = kwdVars.get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_INTENSITY).getValue();
+            //light.setColor(new ColorRGBA((kwdVars.get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RED).getValue() + intensity) / 255,
+            //        (kwdVars.get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_GREEN).getValue() + intensity) / 255,
+            //        (kwdVars.get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_BLUE).getValue() + intensity) / 255, 0));
+            light.setRadius(kwdVars.get(Variable.MiscVariable.MiscType.DEFAULT_TORCH_LIGHT_RADIUS_TILES).getValue() * WorldUtils.TILE_WIDTH);
         }
     }
 
