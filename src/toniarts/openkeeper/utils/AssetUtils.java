@@ -29,7 +29,6 @@ import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -76,7 +75,7 @@ import toniarts.openkeeper.tools.convert.map.Terrain;
  */
 public final class AssetUtils {
 
-    private static final Logger logger = System.getLogger(AssetUtils.class.getName());
+    private static final Logger logger = System.getLogger(AssetUtils.class.getSimpleName());
     
     private final static Object ASSET_LOCK = new Object();
     private final static AssetCache ASSET_CACHE = new SimpleAssetCache();
@@ -647,7 +646,6 @@ public final class AssetUtils {
     }
 
     public static class VertexNoiseMaker {
-        private static final float NOISE_AMPLITUDE = 0.02f;
 
         private static void applyNoiseRecursively(Spatial spatial, Transform parentTransform) {
             // Combine parent transform with this node's local transform
@@ -655,7 +653,7 @@ public final class AssetUtils {
             worldTransform.combineWithParent(spatial.getLocalTransform());
 
             if (spatial instanceof Geometry) {
-                applyNoiseToGeometry((Geometry) spatial, worldTransform);
+                applyNoiseToGeometry((Geometry) spatial);
             }
 
             // Recurse through children with accumulated transform
@@ -666,14 +664,24 @@ public final class AssetUtils {
             }
         }
 
-        private static void applyNoiseToGeometry(Geometry geom, Transform worldTransform) {
-            var mesh = geom.getMesh();
-            FloatBuffer positions = mesh.getFloatBuffer(VertexBuffer.Type.Position);
+        private static void applyNoiseToGeometry(Geometry geom) {
+            if (Boolean.TRUE.equals(geom.getUserData("noiseApplied")))
+                return;
+            geom.setUserData("noiseApplied", true);
+            logger.log(Level.INFO, "Applying noise to {0} {1}", geom.getName(), geom.hashCode());
+            var worldTransform = geom.getWorldTransform();
+            var mesh = geom.getMesh().clone(); // must clone cause the Meshes can't be shared anymore
+            var positionsVB = mesh.getBuffer(VertexBuffer.Type.Position).clone();
+            var positions = (FloatBuffer) positionsVB.getData();
+            //new floatbuff
             positions.rewind();
 
             var vertex = new Vector3f();
+            var worldVertex = new Vector3f();
             var noise = new Vector3f();
-            Transform invWorld = worldTransform.invert();
+            var invnoise = new Vector3f();
+            //var invWorld = worldTransform.getRotation().inverse();
+            var invWorld = worldTransform.clone().setTranslation(0, 0, 0).invert();
 
             while (positions.hasRemaining()) {
                 vertex.x = positions.get();
@@ -681,79 +689,67 @@ public final class AssetUtils {
                 vertex.z = positions.get();
 
                 // Transform vertex to world space and get noise
-                worldTransform.transformVector(vertex, vertex);
-                noise.set(getNoiseForWorldPos(vertex));
+                worldTransform.transformVector(vertex, worldVertex);
+                noise.set(getNoiseForWorldPos(worldVertex));
 
+                //logger.log(Level.INFO, "Noise: {0}", noise);
                 // Transform noise back to local space
-                invWorld.transformVector(noise, noise);
+                invWorld.transformVector(noise, invnoise);
+                //var invnoise = invWorld.mult(noise);
+                //invnoise = noise;
 
                 // Write back
                 positions.position(positions.position() - 3);
-                positions.put(vertex.x + noise.x);
-                positions.put(vertex.y + noise.y);
-                positions.put(vertex.z + noise.z);
+                positions.put(vertex.x + invnoise.x);
+                positions.put(vertex.y + invnoise.y);
+                positions.put(vertex.z + invnoise.z);
             }
 
-            mesh.setBuffer(Type.Position, 3, positions);
+            //mesh.setBuffer(Type.Position, 3, positions);
+            //var vb = new VertexBuffer(Type.Position);
+            //vb.setupData(Usage.Static, 3, Format.Float, positions);
+            mesh.clearBuffer(Type.Position);
+            //mesh.setBuffer(vb);
+            mesh.setBuffer(positionsVB);
             mesh.updateBound();
+            if (geom.isGrouped())
+                geom.unassociateFromGroupNode(); // HACK
+            geom.setMesh(mesh); // FIXME: Cannot set the mesh of a batched geometry
+            //geom.forceRefresh(false, true, false);
         }
 
-        private static Vector3f getNoiseForWorldPos(Vector3f worldPos) {
-            int x = Math.round(worldPos.x * 100);
-            int y = Math.round(worldPos.y * 100);
-            int z = Math.round(worldPos.z * 100);
+        private static final float NOISE_AMPLITUDE = 0.075f;
+        private static final int POSITION_SCALE = 10; // Increase precision of grid coords
 
+        private static Vector3f getNoiseForWorldPos(Vector3f worldPos) {
+            int x = Math.round(worldPos.x * POSITION_SCALE);
+            int y = Math.round(worldPos.y * POSITION_SCALE);
+            int z = Math.round(worldPos.z * POSITION_SCALE);
+
+            // Use different large primes for each coordinate offset to avoid repeating patterns
             return new Vector3f(
-                    hash3D(x, y, z) * NOISE_AMPLITUDE,
-                    hash3D(x + 31, y + 31, z + 31) * NOISE_AMPLITUDE * 0.25f,
-                    hash3D(x + 67, y + 67, z + 67) * NOISE_AMPLITUDE);
+                hash3D(x, y, z) * NOISE_AMPLITUDE,
+                hash3D(x + 104729, y + 104729, z + 104729) * NOISE_AMPLITUDE,// * 0.25f, // Large prime number
+                hash3D(x + 15485863, y + 15485863, z + 15485863) * NOISE_AMPLITUDE // Different large prime
+            );
         }
 
         private static float hash3D(int x, int y, int z) {
-            int h = x * 31 + y;
-            h = h * 31 + z;
-            h = h * h * h * 60493;
-            h = (h >> 13) ^ h;
-            return (h & 0xFF) / 255.0f * 2.0f - 1.0f;
+            // Wang hash - simple but good distribution
+            int h = x * 73856093 ^ y * 19349663 ^ z * 83492791;
+            return (float) ((h & 0xFFFFFFFFL) / 4294967296.0 * 2.0f - 1.0f);
         }
     }
 
     public static void translateToTile(final Spatial spatial, final Point tile) {
-        // Set up base world transform for this tile
-        var tileTransform = new Transform();
-        tileTransform.setTranslation(WorldUtils.pointToVector3f(tile));
 
-        // Apply noise based on world positions
-        VertexNoiseMaker.applyNoiseRecursively(spatial, tileTransform);
-
-        // Apply the actual translation last
         spatial.setLocalTranslation(WorldUtils.pointToVector3f(tile));
 
-        /*spatial.depthFirstTraversal(n -> {
-            if (!(n instanceof Geometry geom))
+        spatial.depthFirstTraversal(s -> {
+            if (!(s instanceof Geometry geom))
                 return;
-            var mesh = geom.getMesh();
-            FloatBuffer vertexBuffer = mesh.getFloatBuffer(VertexBuffer.Type.Position);
-
-            var tileLocation = tile.getLocation();
-            for(int i = 0; i < vertexBuffer.limit(); i += 3) {
-                float x = vertexBuffer.get(i);
-                float y = vertexBuffer.get(i+1); 
-                float z = vertexBuffer.get(i+2);
-
-                // Add some deterministic noise based on tile position
-                float noise = (FastMath.sin(tileLocation.x * 234.12f + tileLocation.y * 123.56f)) * 0.05f;
-                y += noise;
-
-                vertexBuffer.put(i, x);
-                vertexBuffer.put(i+1, y);
-                vertexBuffer.put(i+2, z);
-            }
-
-            mesh.setBuffer(VertexBuffer.Type.Position, 3, vertexBuffer);
-            mesh.updateBound();
+            VertexNoiseMaker.applyNoiseToGeometry(geom);
         });
-        */
     }
 
     public static void scale(final Spatial spatial) {
