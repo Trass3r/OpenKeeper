@@ -29,10 +29,15 @@ import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Transform;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.plugins.AWTLoader;
@@ -47,6 +52,7 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -203,15 +209,14 @@ public final class AssetUtils {
     }
 
     private static void assignMapsToMaterial(Spatial model, AssetManager assetManager) {
-        model.depthFirstTraversal(new SceneGraphVisitor() {
-            @Override
-            public void visit(Spatial spatial) {
-                if (spatial instanceof Geometry) {
-                    Material material = ((Geometry) spatial).getMaterial();
-                    assignMapsToMaterial(assetManager, material);
-                }
-            }
+        model.depthFirstTraversal(spatial -> {
+            if (spatial instanceof Geometry geom) {
+                Material material = geom.getMaterial();
+                assignMapsToMaterial(assetManager, material);
 
+                for (var buffer : geom.getMesh().getBufferList())
+                    buffer.setName(geom.getName() + ' ' + buffer.getBufferType().name() + 's');
+            }
         });
     }
 
@@ -223,6 +228,9 @@ public final class AssetUtils {
      * @param material the material to apply to
      */
     public static void assignMapsToMaterial(AssetManager assetManager, Material material) {
+
+        //material.setBoolean("VertexLighting", true);
+        //material.getAdditionalRenderState().setWireframe(true);
 
         // Unharmed texture
         String diffuseTexture = ((Texture) material.getParam("DiffuseMap").getValue()).getKey().getName();
@@ -638,8 +646,114 @@ public final class AssetUtils {
         });
     }
 
+    public static class VertexNoiseMaker {
+        private static final float NOISE_AMPLITUDE = 0.02f;
+
+        private static void applyNoiseRecursively(Spatial spatial, Transform parentTransform) {
+            // Combine parent transform with this node's local transform
+            Transform worldTransform = parentTransform.clone();
+            worldTransform.combineWithParent(spatial.getLocalTransform());
+
+            if (spatial instanceof Geometry) {
+                applyNoiseToGeometry((Geometry) spatial, worldTransform);
+            }
+
+            // Recurse through children with accumulated transform
+            if (spatial instanceof Node) {
+                for (Spatial child : ((Node) spatial).getChildren()) {
+                    applyNoiseRecursively(child, worldTransform);
+                }
+            }
+        }
+
+        private static void applyNoiseToGeometry(Geometry geom, Transform worldTransform) {
+            var mesh = geom.getMesh();
+            FloatBuffer positions = mesh.getFloatBuffer(VertexBuffer.Type.Position);
+            positions.rewind();
+
+            var vertex = new Vector3f();
+            var noise = new Vector3f();
+            Transform invWorld = worldTransform.invert();
+
+            while (positions.hasRemaining()) {
+                vertex.x = positions.get();
+                vertex.y = positions.get();
+                vertex.z = positions.get();
+
+                // Transform vertex to world space and get noise
+                worldTransform.transformVector(vertex, vertex);
+                noise.set(getNoiseForWorldPos(vertex));
+
+                // Transform noise back to local space
+                invWorld.transformVector(noise, noise);
+
+                // Write back
+                positions.position(positions.position() - 3);
+                positions.put(vertex.x + noise.x);
+                positions.put(vertex.y + noise.y);
+                positions.put(vertex.z + noise.z);
+            }
+
+            mesh.setBuffer(Type.Position, 3, positions);
+            mesh.updateBound();
+        }
+
+        private static Vector3f getNoiseForWorldPos(Vector3f worldPos) {
+            int x = Math.round(worldPos.x * 100);
+            int y = Math.round(worldPos.y * 100);
+            int z = Math.round(worldPos.z * 100);
+
+            return new Vector3f(
+                    hash3D(x, y, z) * NOISE_AMPLITUDE,
+                    hash3D(x + 31, y + 31, z + 31) * NOISE_AMPLITUDE * 0.25f,
+                    hash3D(x + 67, y + 67, z + 67) * NOISE_AMPLITUDE);
+        }
+
+        private static float hash3D(int x, int y, int z) {
+            int h = x * 31 + y;
+            h = h * 31 + z;
+            h = h * h * h * 60493;
+            h = (h >> 13) ^ h;
+            return (h & 0xFF) / 255.0f * 2.0f - 1.0f;
+        }
+    }
+
     public static void translateToTile(final Spatial spatial, final Point tile) {
+        // Set up base world transform for this tile
+        var tileTransform = new Transform();
+        tileTransform.setTranslation(WorldUtils.pointToVector3f(tile));
+
+        // Apply noise based on world positions
+        VertexNoiseMaker.applyNoiseRecursively(spatial, tileTransform);
+
+        // Apply the actual translation last
         spatial.setLocalTranslation(WorldUtils.pointToVector3f(tile));
+
+        /*spatial.depthFirstTraversal(n -> {
+            if (!(n instanceof Geometry geom))
+                return;
+            var mesh = geom.getMesh();
+            FloatBuffer vertexBuffer = mesh.getFloatBuffer(VertexBuffer.Type.Position);
+
+            var tileLocation = tile.getLocation();
+            for(int i = 0; i < vertexBuffer.limit(); i += 3) {
+                float x = vertexBuffer.get(i);
+                float y = vertexBuffer.get(i+1); 
+                float z = vertexBuffer.get(i+2);
+
+                // Add some deterministic noise based on tile position
+                float noise = (FastMath.sin(tileLocation.x * 234.12f + tileLocation.y * 123.56f)) * 0.05f;
+                y += noise;
+
+                vertexBuffer.put(i, x);
+                vertexBuffer.put(i+1, y);
+                vertexBuffer.put(i+2, z);
+            }
+
+            mesh.setBuffer(VertexBuffer.Type.Position, 3, vertexBuffer);
+            mesh.updateBound();
+        });
+        */
     }
 
     public static void scale(final Spatial spatial) {
