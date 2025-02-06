@@ -446,6 +446,9 @@ public final class KmfModelLoader implements AssetLoader {
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, subMesh.getMaterialIndex());
 
+            for (var buffer : mesh.getBufferList())
+                buffer.setName(geom.getName() + ' ' + buffer.getBufferType().name() + 's');
+
             // Create a pose track for this mesh
             var poseTrack = new PoseTrack(geom, times, poseFrames.toArray(new PoseFrame[0]));
             poseTracks.add(poseTrack);
