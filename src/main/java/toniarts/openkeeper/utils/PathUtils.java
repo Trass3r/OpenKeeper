@@ -57,7 +57,11 @@ public final class PathUtils {
     public static final String DKII_SFX_GLOBAL_FOLDER   = "Data/Sound/Sfx/Global/";
     public static final String DKII_TEXT_DEFAULT_FOLDER = "Data/Text/Default/"; // TODO: in the demo it's: Data/Text/English
 
-    public static final String MESHES_WAD = DKII_DATA_FOLDER + "Meshes.WAD";
+    public static final String ENGINE_TEXTURES_WAD = DKII_DATA_FOLDER + "EngineTextures.WAD";
+    public static final String FRONTEND_WAD = DKII_DATA_FOLDER + "FrontEnd.WAD";
+    public static final String MESHES_WAD   = DKII_DATA_FOLDER + "Meshes.WAD";
+    public static final String PATHS_WAD    = DKII_DATA_FOLDER + "Paths.WAD";
+    public static final String SPRITE_WAD   = DKII_DATA_FOLDER + "Sprite.WAD";
 
     private static final String DKII_FOLDER_KEY = "DungeonKeeperIIFolder";
 

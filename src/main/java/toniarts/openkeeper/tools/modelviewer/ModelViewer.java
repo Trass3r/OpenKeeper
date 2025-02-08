@@ -21,6 +21,7 @@ import com.jme3.anim.tween.Tweens;
 import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetKey;
+import com.jme3.asset.ModelKey;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.audio.AudioNode;
 import com.jme3.input.KeyInput;
@@ -71,6 +72,7 @@ import toniarts.openkeeper.game.data.Settings;
 import toniarts.openkeeper.game.sound.*;
 import toniarts.openkeeper.gui.CursorFactory;
 import toniarts.openkeeper.tools.convert.AssetsConverter;
+import toniarts.openkeeper.tools.convert.DK2AssetLocator;
 import toniarts.openkeeper.tools.convert.KmfAssetInfo;
 import toniarts.openkeeper.tools.convert.KmfModelLoader;
 import toniarts.openkeeper.tools.convert.kmf.KmfFile;
@@ -209,6 +211,8 @@ public final class ModelViewer extends SimpleApplication {
         // Distribution locator
         assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
         assetManager.registerLoader(MP2Loader.class, "mp2");
+        assetManager.registerLocator(dkIIFolder, DK2AssetLocator.class);
+        assetManager.registerLoader(KmfModelLoader.class, "kmf");
 
         // Effects manager
         this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager);
@@ -260,6 +264,14 @@ public final class ModelViewer extends SimpleApplication {
         setupDebug();
 
         // Open a KMF model if set
+        if (kmfModel == null) {
+            kmfModel = java.nio.file.Path.of("IMP-Idle4.kmf"); // case-sensitive!
+            Node node = (Node) assetManager.loadModel(new ModelKey(kmfModel.toString()));
+            setupModel(node, false);
+            //Node spat = (Node) AssetUtils.loadAsset(assetManager, kmfModel.toString(), null);
+            //String filename = AssetsConverter.MODELS_FOLDER + File.separator + kmfModel + ".j3o";
+            //ModelKey assetKey = new ModelKey(AssetUtils.getCanonicalAssetKey(filename));
+        } else
         if (kmfModel != null) {
             try {
                 KmfFile kmf = new KmfFile(kmfModel);

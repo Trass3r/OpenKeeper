@@ -78,6 +78,8 @@ import toniarts.openkeeper.setup.DKConverter;
 import toniarts.openkeeper.setup.DKFolderSelector;
 import toniarts.openkeeper.setup.IFrameClosingBehavior;
 import toniarts.openkeeper.tools.convert.AssetsConverter;
+import toniarts.openkeeper.tools.convert.DK2AssetLocator;
+import toniarts.openkeeper.tools.convert.KmfModelLoader;
 import toniarts.openkeeper.tools.modelviewer.SoundsLoader;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.utils.SettingUtils;
@@ -361,8 +363,10 @@ public final class Main extends SimpleApplication {
             }
         }
 
-        // Distribution locator
-        getAssetManager().registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
+        // Asset locators - extracted files take priority over original game files
+        assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
+        assetManager.registerLocator(getDkIIFolder(), DK2AssetLocator.class);
+        assetManager.registerLoader(KmfModelLoader.class, "kmf");
 
         // Init nifty while in render thread so it will get initialized before it is updated, otherwise we might hit a rare race-condition
         Nifty nifty = getNifty();
