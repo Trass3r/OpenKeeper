@@ -21,6 +21,7 @@ import com.jme3.anim.tween.Tweens;
 import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetKey;
+import com.jme3.asset.ModelKey;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.audio.AudioNode;
 import com.jme3.input.KeyInput;
@@ -75,6 +76,7 @@ import toniarts.openkeeper.gui.CursorFactory;
 import toniarts.openkeeper.tools.convert.AssetsConverter;
 import toniarts.openkeeper.tools.convert.KmfAssetInfo;
 import toniarts.openkeeper.tools.convert.KmfModelLoader;
+import toniarts.openkeeper.tools.convert.WadLocator;
 import toniarts.openkeeper.tools.convert.kmf.KmfFile;
 import toniarts.openkeeper.tools.convert.map.Creature;
 import toniarts.openkeeper.tools.convert.map.Door;
@@ -209,6 +211,8 @@ public final class ModelViewer extends SimpleApplication {
         // Distribution locator
         assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
         assetManager.registerLoader(MP2Loader.class, "mp2");
+        assetManager.registerLocator(dkIIFolder + "data/Meshes.WAD", WadLocator.class);
+        assetManager.registerLoader(KmfModelLoader.class, "kmf");
 
         //Effects manager
         this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager);

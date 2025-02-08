@@ -42,7 +42,9 @@ public final class KmfAssetInfo extends AssetInfo {
 
     @Override
     public InputStream openStream() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
+        // KMF data is already loaded, we don't need to provide an input stream
+        //return null;
     }
 
     public KmfFile getKmfFile() {
