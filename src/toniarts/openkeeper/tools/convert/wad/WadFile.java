@@ -129,7 +129,7 @@ public final class WadFile {
                     name = path + name;
                 }
 
-                wadFileEntries.put(name, entry);
+                wadFileEntries.put(name.toLowerCase(), entry);
             }
         } catch (IOException e) {
 
@@ -235,7 +235,7 @@ public final class WadFile {
         ByteArrayOutputStream result = null;
 
         // Get the file
-        WadFileEntry fileEntry = wadFileEntries.get(fileName);
+        WadFileEntry fileEntry = wadFileEntries.get(fileName.toLowerCase());
         if (fileEntry == null) {
             throw new RuntimeException("File " + fileName + " not found from the WAD archive!");
         }
