@@ -124,12 +124,15 @@ public final class KmfModelLoader implements AssetLoader {
     public Object load(AssetInfo assetInfo) throws IOException {
 
         KmfFile kmfFile;
-        boolean generateMaterialFile = false;
+        boolean generateMaterialFile = true;
         if (assetInfo instanceof KmfAssetInfo) {
             kmfFile = ((KmfAssetInfo) assetInfo).getKmfFile();
             generateMaterialFile = ((KmfAssetInfo) assetInfo).isGenerateMaterialFile();
         } else {
+            // Load from normal asset
             kmfFile = new KmfFile(assetInfo.openStream());
+            if (assetInfo.getKey() instanceof KmfAssetKey)
+                generateMaterialFile = ((KmfAssetKey) assetInfo.getKey()).isGenerateMaterialFile();
         }
 
         // root node is needed cause AnimationLoader adds start and end anims
@@ -704,11 +707,11 @@ public final class KmfModelLoader implements AssetLoader {
                     m.setKey(new MaterialKey(materialKey));
 
                     // Save
-                    J3MExporter exporter = new J3MExporter();
+                    /*J3MExporter exporter = new J3MExporter();
                     try (OutputStream out = Files.newOutputStream(Paths.get(materialLocation));
                             BufferedOutputStream bout = new BufferedOutputStream(out)) {
                         exporter.save(m, bout);
-                    }
+                    }*/
 
                     // Put the first one to the cache
                     if (k == 0) {
