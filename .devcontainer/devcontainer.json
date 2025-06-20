@@ -1,0 +1,29 @@
+{
+    "name": "OpenKeeper Development Environment",
+    "image": "mcr.microsoft.com/devcontainers/java:21",
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "vscjava.vscode-java-pack",
+                "redhat.java",
+                "vscjava.vscode-gradle",
+                "ms-vscode.vscode-json",
+                "ms-vscode.hexeditor"
+            ]
+        }
+    },
+    "remoteUser": "vscode",
+    "containerEnv": {
+        "DISPLAY": ":1"
+    },
+    "runArgs": [
+        "--init"
+    ],
+    "mounts": [
+        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
+    ]
+}
