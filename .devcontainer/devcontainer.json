@@ -1,9 +1,14 @@
 {
     "name": "OpenKeeper Development Environment",
-    "image": "mcr.microsoft.com/devcontainers/java:21-jdk",
+    "image": "mcr.microsoft.com/devcontainers/java:21",
     "features": {
         "ghcr.io/devcontainers/features/git:1": {},
-        "ghcr.io/devcontainers/features/github-cli:1": {}
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "none",
+            "installGradle": "true",
+            "installMaven": "true"
+        }
     },
     "customizations": {
         "vscode": {
