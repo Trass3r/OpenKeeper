@@ -78,6 +78,8 @@ import toniarts.openkeeper.setup.DKConverter;
 import toniarts.openkeeper.setup.DKFolderSelector;
 import toniarts.openkeeper.setup.IFrameClosingBehavior;
 import toniarts.openkeeper.tools.convert.AssetsConverter;
+import toniarts.openkeeper.tools.convert.KmfModelLoader;
+import toniarts.openkeeper.tools.convert.WadAssetLocator;
 import toniarts.openkeeper.tools.modelviewer.SoundsLoader;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.utils.SettingUtils;
@@ -195,26 +197,11 @@ public final class Main extends SimpleApplication {
             folderOk = true;
         }
 
-        // If the folder is ok, check the conversion
-        if (folderOk && (AssetsConverter.isConversionNeeded(Main.getSettings()))) {
-            logger.log(Level.INFO, "Need to convert the assets!");
-            saveSetup = true;
-
-            // Convert
-            setLookNFeel();
-            AssetManager assetManager = JmeSystem.newAssetManager(
-                    Thread.currentThread().getContextClassLoader()
-                            .getResource("com/jme3/asset/Desktop.cfg")); // Get temporary asset manager instance since we not yet have one ourselves
-            assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
-            DKConverter frame = new DKConverter(getDkIIFolder(), assetManager) {
-                @Override
-                protected void continueOk() {
-                    conversionOk = true;
-                }
-            };
-            openFrameAndWait(frame);
-        } else if (folderOk) {
+        // If the folder is ok, assets will be loaded directly from WAD files
+        // No conversion is required at startup
+        if (folderOk) {
             conversionOk = true;
+            logger.log(Level.INFO, "Assets will be loaded directly from WAD files. Use AssetConverterCLI for conversion if needed.");
         }
 
         // If everything is ok, we might need to save the setup
@@ -346,8 +333,9 @@ public final class Main extends SimpleApplication {
             }
         }
 
-        // Distribution locator
+        // Asset locators - priority order: extracted files first, then WAD files
         getAssetManager().registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
+        getAssetManager().registerLocator(getDkIIFolder(), WadAssetLocator.class);
 
         // Init nifty while in render thread so it will get initialized before it is updated, otherwise we might hit a rare race-condition
         Nifty nifty = getNifty();
@@ -359,6 +347,8 @@ public final class Main extends SimpleApplication {
             public void onLoad() {
                 try {
                     // Asset loaders
+                    // KMF models
+                    getAssetManager().registerLoader(KmfModelLoader.class, "kmf");
                     // Sound
                     getAssetManager().registerLoader(MP2Loader.class, MP2Loader.FILE_EXTENSION);
                     // Camera sweep files
