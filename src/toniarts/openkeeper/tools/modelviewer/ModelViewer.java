@@ -720,7 +720,7 @@ public final class ModelViewer extends SimpleApplication {
 
             // Read Alcatraz.kwd by default
             kwdFile = new KwdFile(dkIIFolder,
-                    Paths.get(dkIIFolder, PathUtils.DKII_MAPS_FOLDER, "Alcatraz.kwd"));
+                    Paths.get(dkIIFolder, PathUtils.DKII_MAPS_FOLDER, "Conquest.kwd"));
         }
 
         return kwdFile;
