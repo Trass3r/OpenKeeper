@@ -45,18 +45,19 @@ public final class PathUtils {
     private static final Object FILENAME_LOCK = new Object();
     protected static final String QUOTED_FILE_SEPARATOR = Matcher.quoteReplacement(File.separator);
 
-    public static final String DKII_DATA_FOLDER = getRealDKIIRelativeFolder("Data" + File.separator);
-    public static final String DKII_SFX_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Sound" + File.separator
-            + "sfx" + File.separator);
-    public static final String DKII_MOVIES_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Movies" + File.separator);
-    public static final String DKII_TEXT_DEFAULT_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Text" + File.separator
-            + "English" + File.separator);
-    public static final String DKII_EDITOR_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "editor" + File.separator);
-    public static final String DKII_MAPS_FOLDER = getRealDKIIRelativeFolder(DKII_EDITOR_FOLDER + "maps" + File.separator);
-    public static final String DKII_SFX_GLOBAL_FOLDER = getRealDKIIRelativeFolder(DKII_SFX_FOLDER + "Global" + File.separator);
+    public static final String DKII_DATA_FOLDER = getRealDKIIRelativeFolder("Data/");
+    public static final String DKII_SFX_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Sound/"
+            + "Sfx/");
+    public static final String DKII_MOVIES_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Movies/");
+    public static final String DKII_TEXT_DEFAULT_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Text/"
+            + "English/");
+    public static final String DKII_EDITOR_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Editor/");
+    public static final String DKII_MAPS_FOLDER = getRealDKIIRelativeFolder(DKII_EDITOR_FOLDER + "Maps/");
+    public static final String DKII_SFX_GLOBAL_FOLDER = getRealDKIIRelativeFolder(DKII_SFX_FOLDER + "Global/");
+
+    public static final String MESHES_WAD = DKII_DATA_FOLDER + "Meshes.WAD";
 
     private static final String DKII_FOLDER_KEY = "DungeonKeeperIIFolder";
-    private static final String TEST_FILE = DKII_MAPS_FOLDER + "FrontEnd3DLevel.kwd";
 
     /**
      * Get the folder of the original Dungeon Keeper 2 installation
@@ -86,7 +87,7 @@ public final class PathUtils {
 
         // Throw a simple test to the folder, try to find a test file
         if (folder != null && !folder.isEmpty()) {
-            return Files.exists(Paths.get(PathUtils.fixFilePath(folder).concat(TEST_FILE)));
+            return Files.exists(Paths.get(PathUtils.fixFilePath(folder).concat(MESHES_WAD)));
         }
 
         // Better luck next time
@@ -115,7 +116,7 @@ public final class PathUtils {
     public static String getRealDKIIRelativeFolder(final String folder) {
         String rootFolder = getDKIIFolder();
         if (rootFolder != null && !rootFolder.isEmpty()) {
-            return fixFilePath(getCanonicalRelativePath(rootFolder, folder));
+            return /*fixFilePath*/(getCanonicalRelativePath(rootFolder, folder));
         }
         return fixFilePath(folder);
     }
@@ -171,12 +172,26 @@ public final class PathUtils {
      * @param path the unknown path to fix
      * @return fully qualified and working relative path
      */
-    public static String getCanonicalRelativePath(String rootPath, String path) {
+    public static String getCanonicalRelativePath(String rootPath, String relPath) {
+        boolean trailingSlash = relPath.charAt(relPath.length()-1) == '/';
+        boolean trailingBackslash = relPath.charAt(relPath.length() - 1) == '\\';
         try {
-            return getRealFileName(rootPath, path).substring(rootPath.length());
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Can not locate path " + path + " from " + rootPath + "!", e);
-            return path;
+            Path root = Paths.get(rootPath).toAbsolutePath().normalize();
+            Path resolved = root.resolve(relPath).normalize();
+            Path realRoot = root.toRealPath();
+            Path realTarget = resolved.toRealPath();
+            Path relative = realRoot.relativize(realTarget);
+            String result = relative.toString().replace(File.separatorChar, '/');
+            if (trailingSlash && !result.endsWith("/"))
+                result += '/';
+            return result;
+        } catch (Exception e) {
+            // fallback: just normalize and convert separators
+            String result = Paths.get(relPath).normalize().toString().replace(File.separatorChar, '/');
+            if ((relPath.endsWith("/") || relPath.endsWith("\\")) && !result.endsWith("/")) {
+                result += "/";
+            }
+            return result;
         }
     }
 
