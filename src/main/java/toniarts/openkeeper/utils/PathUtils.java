@@ -55,10 +55,11 @@ public final class PathUtils {
     public static final String DKII_MOVIES_FOLDER       = "Data/Movies/";
     public static final String DKII_SFX_FOLDER          = "Data/Sound/Sfx/";
     public static final String DKII_SFX_GLOBAL_FOLDER   = "Data/Sound/Sfx/Global/";
-    public static final String DKII_TEXT_DEFAULT_FOLDER = "Data/Text/Default/";
+    public static final String DKII_TEXT_DEFAULT_FOLDER = "Data/Text/English/";
+
+    public static final String MESHES_WAD = DKII_DATA_FOLDER + "Meshes.WAD";
 
     private static final String DKII_FOLDER_KEY = "DungeonKeeperIIFolder";
-    private static final String TEST_FILE = DKII_MAPS_FOLDER + "FrontEnd3DLevel.kwd";
 
     /**
      * Get the folder of the original Dungeon Keeper 2 installation
@@ -88,7 +89,7 @@ public final class PathUtils {
 
         // Throw a simple test to the folder, try to find a test file
         if (folder != null && !folder.isEmpty()) {
-            return Files.exists(Paths.get(PathUtils.fixFilePath(folder).concat(TEST_FILE)));
+            return Files.exists(Paths.get(PathUtils.fixFilePath(folder).concat(MESHES_WAD)));
         }
 
         // Better luck next time
