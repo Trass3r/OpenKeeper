@@ -50,7 +50,7 @@ public final class PathUtils {
             + "sfx" + File.separator);
     public static final String DKII_MOVIES_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Movies" + File.separator);
     public static final String DKII_TEXT_DEFAULT_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Text" + File.separator
-            + "Default" + File.separator);
+            + "English" + File.separator);
     public static final String DKII_EDITOR_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "editor" + File.separator);
     public static final String DKII_MAPS_FOLDER = getRealDKIIRelativeFolder(DKII_EDITOR_FOLDER + "maps" + File.separator);
     public static final String DKII_SFX_GLOBAL_FOLDER = getRealDKIIRelativeFolder(DKII_SFX_FOLDER + "Global" + File.separator);
