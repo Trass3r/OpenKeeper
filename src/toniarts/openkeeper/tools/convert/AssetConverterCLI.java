@@ -188,47 +188,47 @@ public final class AssetConverterCLI {
             switch (process) {
                 case TEXTURES:
                     taskManager.addTask(process, 
-                        new ConvertTextures(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.TEXTURES_FOLDER, cliArgs.overwrite),
+                        () -> new ConvertTextures(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.TEXTURES_FOLDER, cliArgs.overwrite),
                         true);
                     break;
                 case MODELS:
                     taskManager.addTask(process,
-                        new ConvertModels(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.MODELS_FOLDER, cliArgs.overwrite, assetManager),
+                        () -> new ConvertModels(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.MODELS_FOLDER, cliArgs.overwrite, assetManager),
                         true);
                     break;
                 case MOUSE_CURSORS:
                     taskManager.addTask(process,
-                        new ConvertMouseCursors(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.MOUSE_CURSORS_FOLDER, cliArgs.overwrite),
+                        () -> new ConvertMouseCursors(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.MOUSE_CURSORS_FOLDER, cliArgs.overwrite),
                         true);
                     break;
                 case MUSIC_AND_SOUNDS:
                     taskManager.addTask(process,
-                        new ConvertSounds(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.SOUNDS_FOLDER, cliArgs.overwrite),
+                        () -> new ConvertSounds(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.SOUNDS_FOLDER, cliArgs.overwrite),
                         true);
                     break;
                 case INTERFACE_TEXTS:
                     taskManager.addTask(process,
-                        new ConvertTexts(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.INTERFACE_TEXTS_FOLDER, cliArgs.overwrite),
+                        () -> new ConvertTexts(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.TEXTS_FOLDER, cliArgs.overwrite),
                         true);
                     break;
                 case PATHS:
                     taskManager.addTask(process,
-                        new ConvertPaths(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.PATHS_FOLDER, cliArgs.overwrite),
+                        () -> new ConvertPaths(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.PATHS_FOLDER, cliArgs.overwrite),
                         true);
                     break;
                 case HI_SCORES:
                     taskManager.addTask(process,
-                        new ConvertHiScores(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.HI_SCORES_FOLDER, cliArgs.overwrite),
+                        () -> new ConvertHiScores(dungeonKeeperFolder, cliArgs.overwrite),
                         true);
                     break;
                 case FONTS:
                     taskManager.addTask(process,
-                        new ConvertFonts(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.FONTS_FOLDER, cliArgs.overwrite),
+                        () -> new ConvertFonts(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.FONTS_FOLDER, cliArgs.overwrite),
                         true);
                     break;
                 case MAP_THUMBNAILS:
                     taskManager.addTask(process,
-                        new ConvertMapThumbnails(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.MAP_THUMBNAILS_FOLDER, cliArgs.overwrite),
+                        () -> new ConvertMapThumbnails(dungeonKeeperFolder, AssetsConverter.getAssetsFolder() + AssetsConverter.MAP_THUMBNAILS_FOLDER, cliArgs.overwrite),
                         true);
                     break;
             }
