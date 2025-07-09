@@ -116,7 +116,9 @@ public abstract class AssetsConverter implements IConversionTaskUpdate {
     public static final String MOUSE_CURSORS_FOLDER = INTERFACE_FOLDER + "Cursors";
     public static final String FONTS_FOLDER = INTERFACE_FOLDER + "Fonts";
     public static final String TEXTS_FOLDER = INTERFACE_FOLDER + "Texts";
+    public static final String INTERFACE_TEXTS_FOLDER = TEXTS_FOLDER; // Alias for backward compatibility
     public static final String PATHS_FOLDER = INTERFACE_FOLDER + "Paths";
+    public static final String HI_SCORES_FOLDER = ""; // HiScores are saved to the current folder
     
     private final String dungeonKeeperFolder;
     private final AssetManager assetManager;

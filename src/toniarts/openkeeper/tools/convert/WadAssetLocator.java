@@ -152,7 +152,7 @@ public final class WadAssetLocator implements AssetLocator {
             EngineTextureEntry entry = engineTextures.getEntry(textureName);
             if (entry != null) {
                 // Extract texture data to byte array
-                byte[] textureData = extractTextureData(entry);
+                byte[] textureData = extractTextureData(entry, textureName);
                 if (textureData != null) {
                     return new WadAssetInfo(key, new ByteArrayInputStream(textureData));
                 }
@@ -167,12 +167,12 @@ public final class WadAssetLocator implements AssetLocator {
     /**
      * Extract texture data from EngineTextures as a PNG byte array
      */
-    private byte[] extractTextureData(EngineTextureEntry entry) {
+    private byte[] extractTextureData(EngineTextureEntry entry, String textureName) {
         try {
             // Create a temporary file to extract the texture
             Path tempFile = Files.createTempFile("texture", ".png");
             try {
-                Path extractedFile = engineTextures.extractFileData(entry.getName(), tempFile.getParent().toString(), true);
+                Path extractedFile = engineTextures.extractFileData(textureName, tempFile.getParent().toString(), true);
                 if (extractedFile != null && Files.exists(extractedFile)) {
                     return Files.readAllBytes(extractedFile);
                 }
@@ -181,7 +181,7 @@ public final class WadAssetLocator implements AssetLocator {
                 Files.deleteIfExists(tempFile);
             }
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Failed to extract texture data for: " + entry.getName(), e);
+            logger.log(Level.WARNING, "Failed to extract texture data for: " + textureName, e);
         }
         return null;
     }
