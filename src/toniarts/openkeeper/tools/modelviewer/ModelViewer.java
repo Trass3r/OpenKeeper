@@ -211,7 +211,7 @@ public final class ModelViewer extends SimpleApplication {
         // Distribution locator
         assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
         assetManager.registerLoader(MP2Loader.class, "mp2");
-        assetManager.registerLocator(dkIIFolder + "data/Meshes.WAD", WadLocator.class);
+        assetManager.registerLocator(dkIIFolder + PathUtils.MESHES_WAD, WadLocator.class);
         assetManager.registerLoader(KmfModelLoader.class, "kmf");
 
         //Effects manager

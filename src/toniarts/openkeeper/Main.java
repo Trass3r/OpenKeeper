@@ -343,7 +343,7 @@ public final class Main extends SimpleApplication {
 
         // Distribution locator
         assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
-        assetManager.registerLocator(getDkIIFolder() + "data/Meshes.WAD", WadLocator.class);
+        assetManager.registerLocator(getDkIIFolder() + PathUtils.MESHES_WAD, WadLocator.class);
         assetManager.registerLoader(KmfModelLoader.class, "kmf");
 
         // Init nifty while in render thread so it will get initialized before it is updated, otherwise we might hit a rare race-condition
