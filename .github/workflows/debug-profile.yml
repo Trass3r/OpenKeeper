@@ -38,7 +38,7 @@ jobs:
           7z x DungeonKeeper2Demo.exe
           unshield x disk1/data1.cab
           mv Program_Files DK2
-          echo "DungeonKeeperIIFolder(string)=$PWD/DK2"  > openkeeper.properties
+          echo "DungeonKeeperIIFolder(string)=$PWD/DK2/"  > openkeeper.properties
       #- uses: mxschmitt/action-tmate@v3
       #  timeout-minutes: 15
 
