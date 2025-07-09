@@ -78,8 +78,8 @@ import toniarts.openkeeper.setup.DKConverter;
 import toniarts.openkeeper.setup.DKFolderSelector;
 import toniarts.openkeeper.setup.IFrameClosingBehavior;
 import toniarts.openkeeper.tools.convert.AssetsConverter;
+import toniarts.openkeeper.tools.convert.DK2AssetLocator;
 import toniarts.openkeeper.tools.convert.KmfModelLoader;
-import toniarts.openkeeper.tools.convert.WadLocator;
 import toniarts.openkeeper.tools.modelviewer.SoundsLoader;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.utils.SettingUtils;
@@ -198,6 +198,7 @@ public final class Main extends SimpleApplication {
         }
 
         // If the folder is ok, check the conversion
+        /*
         if (folderOk && (AssetsConverter.isConversionNeeded(Main.getSettings()))) {
             logger.log(Level.INFO, "Need to convert the assets!");
             saveSetup = true;
@@ -218,14 +219,14 @@ public final class Main extends SimpleApplication {
         } else if (folderOk) {
             conversionOk = true;
         }
+        */
 
         // If everything is ok, we might need to save the setup
-        boolean result = folderOk && conversionOk;
-        if (result && saveSetup) {
+        if (folderOk && saveSetup) {
             SettingUtils.getInstance().saveSettings();
         }
 
-        return result;
+        return folderOk;
     }
 
     private static void initSettings(Main app) {
@@ -348,9 +349,9 @@ public final class Main extends SimpleApplication {
             }
         }
 
-        // Distribution locator
+        // Asset locators - extracted files take priority over original game files
         assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
-        assetManager.registerLocator(getDkIIFolder() + "data/Meshes.WAD", WadLocator.class);
+        assetManager.registerLocator(getDkIIFolder(), DK2AssetLocator.class);
         assetManager.registerLoader(KmfModelLoader.class, "kmf");
 
         // Init nifty while in render thread so it will get initialized before it is updated, otherwise we might hit a rare race-condition

@@ -46,17 +46,21 @@ public final class PathUtils {
     protected static final String QUOTED_FILE_SEPARATOR = Matcher.quoteReplacement(File.separator);
 
     public static final String DKII_DATA_FOLDER = getRealDKIIRelativeFolder("Data" + File.separator);
-    public static final String DKII_SFX_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Sound" + File.separator
-            + "sfx" + File.separator);
+    public static final String DKII_SFX_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Sound" + File.separator + "Sfx" + File.separator);
+    public static final String DKII_SFX_GLOBAL_FOLDER = getRealDKIIRelativeFolder(DKII_SFX_FOLDER + "Global" + File.separator);
     public static final String DKII_MOVIES_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Movies" + File.separator);
     public static final String DKII_TEXT_DEFAULT_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Text" + File.separator
             + "Default" + File.separator);
     public static final String DKII_EDITOR_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "editor" + File.separator);
     public static final String DKII_MAPS_FOLDER = getRealDKIIRelativeFolder(DKII_EDITOR_FOLDER + "maps" + File.separator);
-    public static final String DKII_SFX_GLOBAL_FOLDER = getRealDKIIRelativeFolder(DKII_SFX_FOLDER + "Global" + File.separator);
+
+    public static final String ENGINE_TEXTURES_WAD = DKII_DATA_FOLDER + "EngineTextures.WAD";
+    public static final String FRONTEND_WAD = DKII_DATA_FOLDER + "FrontEnd.WAD";
+    public static final String MESHES_WAD = DKII_DATA_FOLDER + "Meshes.WAD";
+    public static final String PATHS_WAD = DKII_DATA_FOLDER + "Paths.WAD";
+    public static final String SPRITE_WAD = DKII_DATA_FOLDER + "Sprite.WAD";
 
     private static final String DKII_FOLDER_KEY = "DungeonKeeperIIFolder";
-    private static final String TEST_FILE = DKII_MAPS_FOLDER + "FrontEnd3DLevel.kwd";
 
     /**
      * Get the folder of the original Dungeon Keeper 2 installation
@@ -86,7 +90,7 @@ public final class PathUtils {
 
         // Throw a simple test to the folder, try to find a test file
         if (folder != null && !folder.isEmpty()) {
-            return Files.exists(Paths.get(PathUtils.fixFilePath(folder).concat(TEST_FILE)));
+            return Files.exists(Paths.get(PathUtils.fixFilePath(folder).concat(MESHES_WAD)));
         }
 
         // Better luck next time
