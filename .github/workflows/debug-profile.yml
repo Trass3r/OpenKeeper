@@ -24,11 +24,12 @@ jobs:
         id: cache-dk2
         uses: actions/cache@v4
         with:
+          key: dk2-demo
+          lookup-only: true
           path: |
             DK2
             openkeeper.properties
-          key: dk2-demo
-          lookup-only: true
+            /home/runner/.OpenKeeper/openkeeper.properties
       - name: Download
         if: steps.cache-dk2.outputs.cache-hit != 'true'
         run: |
@@ -39,6 +40,8 @@ jobs:
           unshield x disk1/data1.cab
           mv Program_Files DK2
           echo "DungeonKeeperIIFolder(string)=$PWD/DK2/"  > openkeeper.properties
+          mkdir -p ~/.OpenKeeper
+          echo "MusicEnabled(bool)=false"  > ~/.OpenKeeper/openkeeper.properties
       #- uses: mxschmitt/action-tmate@v3
       #  timeout-minutes: 15
 
@@ -53,12 +56,14 @@ jobs:
         with:
           java-version: '21'
           distribution: 'graalvm'
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
+          key: dk2-demo
+          fail-on-cache-miss: true
           path: |
             DK2
             openkeeper.properties
-          key: dk2-demo
+            /home/runner/.OpenKeeper/openkeeper.properties
       - name: Install dependencies
         run: |
           sudo apt update
@@ -114,12 +119,14 @@ jobs:
         with:
           java-version: '21'
           distribution: 'graalvm'
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
+          key: dk2-demo
+          fail-on-cache-miss: true
           path: |
             DK2
             openkeeper.properties
-          key: dk2-demo
+            /home/runner/.OpenKeeper/openkeeper.properties
       - name: Build OpenKeeper
         run: ./gradlew build --no-daemon
       - name: Start Xvfb
@@ -163,12 +170,14 @@ jobs:
         with:
           java-version: '21'
           distribution: 'graalvm'
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
+          key: dk2-demo
+          fail-on-cache-miss: true
           path: |
             DK2
             openkeeper.properties
-          key: dk2-demo
+            /home/runner/.OpenKeeper/openkeeper.properties
       - name: Build
         run: ./gradlew build --no-daemon
 
