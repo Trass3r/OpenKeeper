@@ -116,7 +116,7 @@ public final class PathUtils {
     public static String getRealDKIIRelativeFolder(final String folder) {
         String rootFolder = getDKIIFolder();
         if (rootFolder != null && !rootFolder.isEmpty()) {
-            return /*fixFilePath*/(getCanonicalRelativePath(rootFolder, folder));
+            return fixFilePath(getCanonicalRelativePath(rootFolder, folder));
         }
         return fixFilePath(folder);
     }
@@ -172,26 +172,12 @@ public final class PathUtils {
      * @param path the unknown path to fix
      * @return fully qualified and working relative path
      */
-    public static String getCanonicalRelativePath(String rootPath, String relPath) {
-        boolean trailingSlash = relPath.charAt(relPath.length()-1) == '/';
-        boolean trailingBackslash = relPath.charAt(relPath.length() - 1) == '\\';
+    public static String getCanonicalRelativePath(String rootPath, String path) {
         try {
-            Path root = Paths.get(rootPath).toAbsolutePath().normalize();
-            Path resolved = root.resolve(relPath).normalize();
-            Path realRoot = root.toRealPath();
-            Path realTarget = resolved.toRealPath();
-            Path relative = realRoot.relativize(realTarget);
-            String result = relative.toString().replace(File.separatorChar, '/');
-            if (trailingSlash && !result.endsWith("/"))
-                result += '/';
-            return result;
-        } catch (Exception e) {
-            // fallback: just normalize and convert separators
-            String result = Paths.get(relPath).normalize().toString().replace(File.separatorChar, '/');
-            if ((relPath.endsWith("/") || relPath.endsWith("\\")) && !result.endsWith("/")) {
-                result += "/";
-            }
-            return result;
+            return getRealFileName(rootPath, path).substring(rootPath.length());
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Can not locate path " + path + " from " + rootPath + "!", e);
+            return path;
         }
     }
 
