@@ -68,6 +68,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y xvfb wget unzip libvulkan1
+          sudo modprobe snd-dummy
       - name: Install RenderDoc
         run: |
           wget -nv https://renderdoc.org/stable/1.39/renderdoc_1.39.tar.gz -O renderdoc.tar.gz
@@ -138,6 +139,7 @@ jobs:
           set -eux
           sudo sysctl kernel.perf_event_paranoid=0
           sudo sysctl kernel.kptr_restrict=0
+          sudo modprobe snd-dummy
           ./gradlew run --no-daemon --args="-XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=5s,maxsize=10M,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,path-to-gc-roots=true -debug -level Conquest" &
           pid=$(pgrep -f 'java.*OpenKeeper')
           sleep 30
@@ -195,6 +197,7 @@ jobs:
       - name: Run and profile OpenKeeper
         run: |
           set -eux
+          sudo modprobe snd-dummy
           ./gradlew run --no-daemon --args="-debug -level Conquest" &
           pid=$(pgrep -f 'java.*OpenKeeper')
           sleep 30
