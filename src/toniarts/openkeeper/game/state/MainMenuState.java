@@ -71,7 +71,6 @@ import toniarts.openkeeper.view.PlayerEntityViewState;
 import toniarts.openkeeper.view.map.MapViewController;
 import toniarts.openkeeper.view.text.TextParser;
 import toniarts.openkeeper.view.text.TextParserService;
-import toniarts.openkeeper.world.room.control.FrontEndLevelControl;
 
 /**
  * The main menu state
@@ -512,10 +511,11 @@ public final class MainMenuState extends AbstractAppState {
      *
      * @param selectedLevel the selected level
      */
-    protected void selectCampaignLevel(FrontEndLevelControl selectedLevel) {
-        this.selectedLevel = selectedLevel.getLevel();
-        screen.doTransition("253", "briefing", null);
-    }
+    // TODO: Replace FrontEndLevelControl with appropriate alternative from new system
+    // protected void selectCampaignLevel(FrontEndLevelControl selectedLevel) {
+    //     this.selectedLevel = selectedLevel.getLevel();
+    //     screen.doTransition("253", "briefing", null);
+    // }
 
     /**
      * Stops the level briefing sound

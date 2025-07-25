@@ -20,14 +20,13 @@ import java.awt.Color;
 import java.util.EnumSet;
 import javax.annotation.Nullable;
 import toniarts.openkeeper.tools.convert.IFlagEnum;
-import toniarts.openkeeper.world.effect.IEffect;
 
 /**
  * Container class for EffectElements.kwd
  *
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
-public final class EffectElement implements Comparable<EffectElement>, IEffect {
+public final class EffectElement implements Comparable<EffectElement> { // , IEffect {
 
     /**
      * Effect element flags

@@ -90,7 +90,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.view.animation.AnimationLoader;
 import toniarts.openkeeper.view.animation.LoopMode;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+
 
 /**
  * Simple model viewer
@@ -151,7 +151,7 @@ public final class ModelViewer extends SimpleApplication {
     private static final String KEY_MAPPING_TOGGLE_WIREFRAME = "toggle wireframe";
     private static final String KEY_MAPPING_TOGGLE_ROTATION = "toggle rotation";
 
-    private EffectManagerState effectManagerState;
+    // private EffectManagerState effectManagerState;
     private MapLoaderAppState mapLoaderAppState;
 
     private final ActionListener actionListener = new ActionListener() {
@@ -211,8 +211,9 @@ public final class ModelViewer extends SimpleApplication {
         assetManager.registerLoader(MP2Loader.class, "mp2");
 
         //Effects manager
-        this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager);
-        stateManager.attach(effectManagerState);
+        // TODO: Replace EffectManagerState with appropriate alternative from new system
+        // this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager);
+        // stateManager.attach(effectManagerState);
         // init sound loader
         //soundLoader = new SoundsLoader(assetManager);
 
@@ -425,7 +426,7 @@ public final class ModelViewer extends SimpleApplication {
     }
 
     public void onSelectionChanged(Object selection) {
-        effectManagerState.setEnabled(false);
+        // effectManagerState.setEnabled(false);
 
         switch (screen.getTypeControl().getSelection()) {
             case MODELS: {
@@ -439,7 +440,7 @@ public final class ModelViewer extends SimpleApplication {
             case TERRAIN: {
                 // Load the selected terrain
                 Terrain terrain = (Terrain) selection;
-                effectManagerState.setEnabled(true);
+        // effectManagerState.setEnabled(true);
                 Node spat = (Node) new TerrainsLoader().load(this.getAssetManager(),
                         effectManagerState, terrain);
                 setupModel(spat, false);
@@ -461,7 +462,7 @@ public final class ModelViewer extends SimpleApplication {
             case OBJECTS: {
                 // Load the selected object
                 GameObject object = (GameObject) selection;
-                effectManagerState.setEnabled(true);
+        // effectManagerState.setEnabled(true);
                 Node spat = (Node) new ObjectsLoader().load(this.getAssetManager(),
                         effectManagerState, object);
                 setupModel(spat, false);
@@ -472,7 +473,7 @@ public final class ModelViewer extends SimpleApplication {
             case CREATURES: {
                 // Load the selected creature
                 Creature creature = (Creature) selection;
-                effectManagerState.setEnabled(true);
+        // effectManagerState.setEnabled(true);
                 Node spat = (Node) new CreaturesLoader().load(this.getAssetManager(),
                         effectManagerState, creature);
                 setupModel(spat, false);
@@ -483,7 +484,7 @@ public final class ModelViewer extends SimpleApplication {
             case TRAPS: {
                 // Load the selected trap
                 Trap trap = (Trap) selection;
-                effectManagerState.setEnabled(true);
+        // effectManagerState.setEnabled(true);
                 Node spat = (Node) new TrapsLoader().load(this.getAssetManager(),
                         effectManagerState, trap);
                 setupModel(spat, false);
@@ -494,7 +495,7 @@ public final class ModelViewer extends SimpleApplication {
             case DOORS: {
                 // Load the selected door
                 Door door = (Door) selection;
-                effectManagerState.setEnabled(true);
+        // effectManagerState.setEnabled(true);
                 Node spat = (Node) new DoorsLoader().load(this.getAssetManager(),
                         effectManagerState, door);
                 setupModel(spat, false);
@@ -505,7 +506,7 @@ public final class ModelViewer extends SimpleApplication {
             case ROOMS: {
                 // Load the selected room
                 Room room = (Room) selection;
-                effectManagerState.setEnabled(true);
+        // effectManagerState.setEnabled(true);
                 Node spat = (Node) new RoomsLoader().load(this.getAssetManager(),
                         effectManagerState, room);
                 setupModel(spat, false);
@@ -516,7 +517,7 @@ public final class ModelViewer extends SimpleApplication {
             case SHOTS: {
                 // Load the selected shot
                 Shot shot = (Shot) selection;
-                effectManagerState.setEnabled(true);
+        // effectManagerState.setEnabled(true);
                 Node spat = (Node) new ShotsLoader().load(this.getAssetManager(),
                         effectManagerState, shot);
                 setupModel(spat, false);
@@ -528,9 +529,9 @@ public final class ModelViewer extends SimpleApplication {
                 // Load the selected effect
                 Node spat = new Node();
                 Effect effect = (Effect) selection;
-                effectManagerState.setEnabled(true);
+        // effectManagerState.setEnabled(true);
                 // Load the selected effect
-                effectManagerState.loadSingleEffect(spat, new Vector3f(0, 0, 0),
+        // effectManagerState.loadSingleEffect(spat, new Vector3f(0, 0, 0),
                         effect.getEffectId(), true);
                 setupModel(spat, false);
 

@@ -13,7 +13,6 @@ import com.jme3.input.event.TouchEvent;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import toniarts.openkeeper.world.room.control.FrontEndLevelControl;
 
 /**
  *
@@ -21,7 +20,7 @@ import toniarts.openkeeper.world.room.control.FrontEndLevelControl;
  */
 public final class MainMenuInteraction implements RawInputListener {
     private final MainMenuState mainMenuState;
-    private FrontEndLevelControl currentControl;
+    // private FrontEndLevelControl currentControl;
 
     public MainMenuInteraction(MainMenuState mainMenuState) {
         this.mainMenuState = mainMenuState;
@@ -106,6 +105,8 @@ public final class MainMenuInteraction implements RawInputListener {
             mainMenuState.menuNode.collideWith(ray, results);
 
             // See the results so we see what is going on
+            // TODO: Replace FrontEndLevelControl with appropriate alternative from new system
+            /*
             for (int i = 0; i < results.size(); i++) {
 
                 FrontEndLevelControl controller = results.getCollision(i).getGeometry().getParent().getParent().getControl(FrontEndLevelControl.class);
@@ -128,5 +129,6 @@ public final class MainMenuInteraction implements RawInputListener {
                 currentControl.setActive(false);
                 currentControl = null;
             }
+            */
         }
 }

@@ -53,10 +53,6 @@ import toniarts.openkeeper.view.PossessionCameraState;
 import toniarts.openkeeper.view.PossessionInteractionState;
 import toniarts.openkeeper.view.SystemMessageState;
 import toniarts.openkeeper.view.control.EntityViewControl;
-import toniarts.openkeeper.world.MapLoader;
-import toniarts.openkeeper.world.WorldState;
-import toniarts.openkeeper.world.room.GenericRoom;
-import toniarts.openkeeper.world.room.RoomInstance;
 
 /**
  * The player state! GUI, camera, etc. Player interactions
@@ -502,15 +498,16 @@ public final class PlayerState extends AbstractAppState implements PlayerListene
     String getTooltipText(String text) {
         int dungeonHealth = 0;
         int paydayCost = 0;
-        MapLoader mapLoader = stateManager.getState(WorldState.class).getMapLoader();
-        for (Map.Entry<RoomInstance, GenericRoom> en : mapLoader.getRoomActuals().entrySet()) {
-            RoomInstance key = en.getKey();
-            GenericRoom value = en.getValue();
-            if (value.isDungeonHeart() && key.getOwnerId() == playerId) {
-                dungeonHealth = key.getHealthPercentage();
-                break;
-            }
-        }
+        // TODO: Replace with appropriate alternative from new system
+        // MapLoader mapLoader = stateManager.getState(WorldState.class).getMapLoader();
+        // for (Map.Entry<RoomInstance, GenericRoom> en : mapLoader.getRoomActuals().entrySet()) {
+        //     RoomInstance key = en.getKey();
+        //     GenericRoom value = en.getValue();
+        //     if (value.isDungeonHeart() && key.getOwnerId() == playerId) {
+        //         dungeonHealth = key.getHealthPercentage();
+        //         break;
+        //     }
+        // }
         // TODO payday cost calculator
         return text.replaceAll("%19%", String.valueOf(dungeonHealth))
                 .replaceAll("%20", String.valueOf(paydayCost));
