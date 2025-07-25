@@ -19,7 +19,6 @@ package toniarts.openkeeper.game.navigation.steering;
 import com.badlogic.gdx.ai.utils.Location;
 import com.badlogic.gdx.math.Vector2;
 import com.simsilica.es.EntityId;
-import toniarts.openkeeper.world.creature.steering.CreatureLocation;
 
 /**
  * Simple steerable entity. For saving games etc. I would perhaps store this
@@ -102,7 +101,9 @@ public final class SteerableEntity implements ISteerableEntity {
 
     @Override
     public Location<Vector2> newLocation() {
-        return new CreatureLocation();
+        // TODO: Replace CreatureLocation with appropriate alternative from new system
+        // return new CreatureLocation();
+        return null;
     }
 
     @Override

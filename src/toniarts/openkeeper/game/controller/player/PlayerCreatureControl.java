@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.tools.convert.map.Creature;
-import toniarts.openkeeper.world.listener.CreatureListener;
 
 /**
  * Holds a list of player creatures and functionality related to them
@@ -35,7 +34,7 @@ import toniarts.openkeeper.world.listener.CreatureListener;
  */
 public final class PlayerCreatureControl extends AbstractPlayerControl<Creature, Set<EntityId>, Short> {
 
-    private List<CreatureListener> creatureListeners;
+    // private List<CreatureListener> creatureListeners;
     private final Creature imp;
     private int creatureCount = 0;
 
@@ -67,11 +66,11 @@ public final class PlayerCreatureControl extends AbstractPlayerControl<Creature,
         // Listeners
         if (!isImp(creature)) {
             creatureCount++;
-            if (creatureListeners != null) {
-                for (CreatureListener listener : creatureListeners) {
-                    // listener.onSpawn(creature);
-                }
-            }
+            // if (creatureListeners != null) {
+            //     for (CreatureListener listener : creatureListeners) {
+            //         // listener.onSpawn(creature);
+            //     }
+            // }
         }
     }
 
@@ -86,11 +85,11 @@ public final class PlayerCreatureControl extends AbstractPlayerControl<Creature,
         // Listeners
         if (!isImp(creature)) {
             creatureCount--;
-            if (creatureListeners != null) {
-                for (CreatureListener listener : creatureListeners) {
-                    //listener.onDie(creature);
-                }
-            }
+            // if (creatureListeners != null) {
+            //     for (CreatureListener listener : creatureListeners) {
+            //         //listener.onDie(creature);
+            //     }
+            // }
         }
     }
 
@@ -119,12 +118,12 @@ public final class PlayerCreatureControl extends AbstractPlayerControl<Creature,
      *
      * @param listener the listener
      */
-    public void addCreatureListener(CreatureListener listener) {
-        if (creatureListeners == null) {
-            creatureListeners = new ArrayList<>();
-        }
-        creatureListeners.add(listener);
-    }
+    // public void addCreatureListener(CreatureListener listener) {
+    //     if (creatureListeners == null) {
+    //         creatureListeners = new ArrayList<>();
+    //     }
+    //     creatureListeners.add(listener);
+    // }
 
     private boolean isImp(Creature creature) {
         return creature.equals(imp);

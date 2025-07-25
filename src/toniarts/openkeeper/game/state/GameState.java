@@ -56,7 +56,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.utils.PauseableScheduledThreadPoolExecutor;
 import toniarts.openkeeper.view.PlayerCameraState;
-import toniarts.openkeeper.world.WorldState;
+
 
 /**
  * The GAME state!
@@ -187,16 +187,16 @@ public class GameState extends AbstractPauseAwareState implements IGameLogicUpda
                     setProgress(0.20f, Player.KEEPER4_ID);
 
                     // Create the actual level
-                    WorldState worldState = new WorldState(kwdFile, assetManager, GameState.this) {
-                        @Override
-                        protected void updateProgress(float progress) {
-                            setProgress(0.2f + progress * 0.6f, Player.KEEPER1_ID);
-                        }
-                    };
+                    // WorldState worldState = new WorldState(kwdFile, assetManager, GameState.this) {
+                    //     @Override
+                    //     protected void updateProgress(float progress) {
+                    //         setProgress(0.2f + progress * 0.6f, Player.KEEPER1_ID);
+                    //     }
+                    // };
 
                     // Initialize tasks
                     //taskManager = new TaskManager(worldState, getPlayers());
-                    GameState.this.stateManager.attach(worldState);
+                    // GameState.this.stateManager.attach(worldState);
 
                     setProgress(0.60f, Player.KEEPER1_ID);
 
@@ -357,11 +357,11 @@ public class GameState extends AbstractPauseAwareState implements IGameLogicUpda
         } else {
             exec.pause();
         }
-        stateManager.getState(WorldState.class).setEnabled(enabled);
+        // stateManager.getState(WorldState.class).setEnabled(enabled);
     }
 
     private void detachRelatedAppStates() {
-        stateManager.detach(stateManager.getState(WorldState.class));
+        // stateManager.detach(stateManager.getState(WorldState.class));
     }
 
     /**

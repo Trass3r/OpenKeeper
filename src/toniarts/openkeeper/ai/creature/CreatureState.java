@@ -18,17 +18,23 @@ package toniarts.openkeeper.ai.creature;
 
 import com.badlogic.gdx.ai.fsm.State;
 import com.badlogic.gdx.ai.msg.Telegram;
-import toniarts.openkeeper.world.creature.CreatureControl;
+// import toniarts.openkeeper.world.creature.CreatureControl;
 
 /**
  * State machine for creature AI. TODO: needs to be hierarchial so that this
  * class doesn't grow to be millions of lines
+ * 
+ * @deprecated This class was based on world.creature.CreatureControl which has been removed
  *
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 @Deprecated
-public enum CreatureState implements State<CreatureControl> {
+public enum CreatureState { // implements State<CreatureControl> {
 
+    // TODO: Replace with new creature control system
+    // All creature states have been commented out due to removal of world.creature.CreatureControl
+    
+    /*
     IDLE() {
 
         @Override
@@ -521,4 +527,5 @@ public enum CreatureState implements State<CreatureControl> {
     public boolean onMessage(CreatureControl entity, Telegram telegram) {
         return true;
     }
+    */
 }

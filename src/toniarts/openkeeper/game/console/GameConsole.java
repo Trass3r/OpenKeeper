@@ -28,7 +28,6 @@ import toniarts.openkeeper.game.state.GameClientState;
 import toniarts.openkeeper.game.state.GameState;
 import toniarts.openkeeper.game.state.PlayerState;
 import toniarts.openkeeper.tools.convert.map.Creature;
-import toniarts.openkeeper.world.WorldState;
 
 /**
  *
@@ -169,7 +168,7 @@ public final class GameConsole {
                 case ADD_GOLD:
                     try {
                         int amount = Integer.parseInt(args[1]);
-                        stateManager.getState(WorldState.class).addGold(keeper.getId(), amount);
+                        // stateManager.getState(WorldState.class).addGold(keeper.getId(), amount);
                     } catch (NumberFormatException e) {
                         console.outputError("First parameter must be a number!");
                     }
