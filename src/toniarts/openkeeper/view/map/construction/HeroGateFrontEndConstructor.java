@@ -32,7 +32,6 @@ import toniarts.openkeeper.utils.FullMoon;
 import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.map.MapViewController;
 import toniarts.openkeeper.view.map.WallSection;
-import toniarts.openkeeper.world.room.control.FrontEndLevelControl;
 
 /**
  * Loads up a hero gate, front end edition. Main menu. Most of the objects are
@@ -161,7 +160,8 @@ public final class HeroGateFrontEndConstructor extends RoomConstructor {
 
         Spatial lvl = loadObject(objName + levelnumber + (variation == null ? "" : variation),
                 assetManager, start, p);
-        lvl.addControl(new FrontEndLevelControl(new Level(type, levelnumber, variation), assetManager));
+        // TODO: Replace FrontEndLevelControl with appropriate alternative from new system
+        // lvl.addControl(new FrontEndLevelControl(new Level(type, levelnumber, variation), assetManager));
         lvl.setBatchHint(Spatial.BatchHint.Never);
         map.attachChild(lvl);
     }
