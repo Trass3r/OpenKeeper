@@ -13,7 +13,6 @@ import com.jme3.input.event.TouchEvent;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import toniarts.openkeeper.world.room.control.FrontEndLevelControl;
 
 /**
  *
@@ -21,7 +20,7 @@ import toniarts.openkeeper.world.room.control.FrontEndLevelControl;
  */
 public final class MainMenuInteraction implements RawInputListener {
     private final MainMenuState mainMenuState;
-    private FrontEndLevelControl currentControl;
+    // private FrontEndLevelControl currentControl;
 
     public MainMenuInteraction(MainMenuState mainMenuState) {
         this.mainMenuState = mainMenuState;
@@ -50,12 +49,13 @@ public final class MainMenuInteraction implements RawInputListener {
 
     @Override
     public void onMouseButtonEvent(MouseButtonEvent evt) {
-        if (currentControl != null && evt.getButtonIndex() == MouseInput.BUTTON_LEFT) {
-            evt.setConsumed();
-
-            // Select level
-            mainMenuState.selectCampaignLevel(currentControl);
-        }
+        // TODO: Restore campaign level selection functionality with new system
+        // if (currentControl != null && evt.getButtonIndex() == MouseInput.BUTTON_LEFT) {
+        //     evt.setConsumed();
+        // 
+        //     // Select level
+        //     mainMenuState.selectCampaignLevel(currentControl);
+        // }
     }
 
     @Override
@@ -67,17 +67,18 @@ public final class MainMenuInteraction implements RawInputListener {
 
         // NOT TESTED AT ALL, just for shit & giggles, may work which would be super cool
         if (!evt.isScaleSpanInProgress()) {
-            if (currentControl != null) {
-                evt.setConsumed();
-
-                // Select level
-                mainMenuState.selectCampaignLevel(currentControl);
-            } else if (currentControl == null) {
+            // TODO: Restore campaign level selection functionality with new system
+            // if (currentControl != null) {
+            //     evt.setConsumed();
+            // 
+            //     // Select level
+            //     mainMenuState.selectCampaignLevel(currentControl);
+            // } else if (currentControl == null) {
                 evt.setConsumed();
 
                 // Treat this like "on hover"
                 setCampaignMapActive((int) evt.getX(), (int) evt.getY());
-            }
+            // }
         }
     }
     
@@ -105,28 +106,6 @@ public final class MainMenuInteraction implements RawInputListener {
             // Collect intersections between ray and all nodes in results list
             mainMenuState.menuNode.collideWith(ray, results);
 
-            // See the results so we see what is going on
-            for (int i = 0; i < results.size(); i++) {
-
-                FrontEndLevelControl controller = results.getCollision(i).getGeometry().getParent().getParent().getControl(FrontEndLevelControl.class);
-                if (controller != null) {
-
-                    // Deactivate current controller
-                    if (currentControl != null && !currentControl.equals(controller)) {
-                        currentControl.setActive(false);
-                    }
-
-                    // Set and activate current controller
-                    currentControl = controller;
-                    currentControl.setActive(true);
-                    return;
-                }
-            }
-
-            // Deactivate current controller, nothing is selected
-            if (currentControl != null) {
-                currentControl.setActive(false);
-                currentControl = null;
-            }
+            // Level interaction will be implemented when the front-end interaction system is redesigned
         }
 }

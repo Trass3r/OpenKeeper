@@ -25,7 +25,7 @@ import java.util.List;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.tools.convert.map.Door;
 import toniarts.openkeeper.view.loader.ILoader;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+
 
 /**
  *
@@ -57,24 +57,6 @@ public final class DoorsLoader implements ILoader<Door> {
             root.attachChild(s);
 
             height += 2;
-        }
-
-        return root;
-    }
-
-    public Spatial load(AssetManager assetManager, EffectManagerState effectManagerState, Door object) {
-        Spatial root = load(assetManager, object);
-
-        List<Integer> effects = new ArrayList<>();
-        effects.add(object.getDeathEffectId());
-
-        float height = 1;
-        for (Integer effectId : effects) {
-            if (effectId == 0) {
-                continue;
-            }
-
-            effectManagerState.loadSingleEffect((Node) root, new Vector3f(1, height++, 1), effectId, true);
         }
 
         return root;

@@ -36,7 +36,6 @@ import toniarts.openkeeper.view.map.construction.room.PrisonConstructor;
 import toniarts.openkeeper.view.map.construction.room.StoneBridgeConstructor;
 import toniarts.openkeeper.view.map.construction.room.TempleConstructor;
 import toniarts.openkeeper.view.map.construction.room.WorkshopConstructor;
-import toniarts.openkeeper.world.effect.EffectManagerState;
 
 /**
  * A factory class you can use to build buildings
@@ -51,78 +50,63 @@ public final class RoomFactory {
         // Nope
     }
 
-    public static RoomConstructor constructRoom(RoomInstance roomInstance, AssetManager assetManager,
-            EffectManagerState effectManager, KwdFile kwdFile) {
-
+    public static RoomConstructor constructRoom(RoomInstance roomInstance, AssetManager assetManager, KwdFile kwdFile) {
         String roomName = roomInstance.getRoom().getName();
 
         switch (roomInstance.getRoom().getTileConstruction()) {
-            case _3_BY_3:
+            case _3_BY_3 -> {
                 return new ThreeByThreeConstructor(assetManager, roomInstance);
-
-            case HERO_GATE:
+            }
+            case HERO_GATE -> {
                 return new HeroGateConstructor(assetManager, roomInstance);
-
-            case HERO_GATE_FRONT_END:
+            }
+            case HERO_GATE_FRONT_END -> {
                 return new HeroGateFrontEndConstructor(assetManager, roomInstance);
-
-            case HERO_GATE_2_BY_2:
+            }
+            case HERO_GATE_2_BY_2 -> {
                 return new HeroGateTwoByTwoConstructor(assetManager, roomInstance);
-
-            case HERO_GATE_3_BY_1:
+            }
+            case HERO_GATE_3_BY_1 -> {
                 return new HeroGateThreeByOneConstructor(assetManager, roomInstance);
-
-            case _5_BY_5_ROTATED:
+            }
+            case _5_BY_5_ROTATED -> {
                 return new FiveByFiveRotatedConstructor(assetManager, roomInstance);
-
-            case NORMAL:
-//                if (roomName.equalsIgnoreCase("Lair")) {
-//                    return new Lair(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                } else if (roomName.equalsIgnoreCase("Library")) {
-//                    return new Library(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                } else if (roomName.equalsIgnoreCase("Training Room")) {
-//                    return new TrainingRoom(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                } else if (roomName.equalsIgnoreCase("Work Shop")) {
-//                    return new Workshop(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                } else if (roomName.equalsIgnoreCase("Guard Room")) {
-//                    return new GuardRoom(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                } else if (roomName.equalsIgnoreCase("Casino")) {
-//                    return new Casino(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                } else if (roomName.equalsIgnoreCase("Graveyard")) {
-//                    return new Graveyard(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                } else if (roomName.equalsIgnoreCase("Torture Chamber")) {
-//                    return new TortureChamber(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                } else if (roomName.equalsIgnoreCase("Treasury")) {
-//                    return new Treasury(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                } else if (roomName.equalsIgnoreCase("Hatchery")) {
-//                    return new Hatchery(assetManager, roomInstance, objectLoader, worldState, effectManager);
-//                }
-                if (roomName.equalsIgnoreCase("Work Shop")) {
-                    return new WorkshopConstructor(assetManager, roomInstance);
-                }
-                return new NormalConstructor(assetManager, roomInstance);
-
-            case QUAD:
-                if (roomName.equalsIgnoreCase("Hero Stone Bridge") || roomName.equalsIgnoreCase("Stone Bridge")) {
-                    return new StoneBridgeConstructor(assetManager, roomInstance);
-                }
+            }
+            case NORMAL -> {
+                return constructNormal(roomName, assetManager, roomInstance, kwdFile);
+            }
+            case DOUBLE_QUAD -> {
+                return constructDoubleQuad(roomName, assetManager, roomInstance, kwdFile);
+            }
+            case QUAD -> {
                 return new QuadConstructor(assetManager, roomInstance);
-//
-            case DOUBLE_QUAD:
-                if (roomName.equalsIgnoreCase("Prison")) {
-                    return new PrisonConstructor(assetManager, roomInstance);
-                } else if (roomName.equalsIgnoreCase("Combat Pit")) {
-                    return new CombatPitConstructor(assetManager, roomInstance);
-                }
-                else if (roomName.equalsIgnoreCase("Temple")) {
-                    return new TempleConstructor(assetManager, roomInstance, kwdFile);
-                }
-                return new DoubleQuadConstructor(assetManager, roomInstance);
-            default:
-
-                // TODO
-                logger.log(Level.WARNING, "Room {0} not exist", roomName);
+            }
+            default -> {
+                logger.log(Level.WARNING, "Room {0} construction type not implemented", roomName);
+                return new NormalConstructor(assetManager, roomInstance);
+            }
         }
-        return null;
+    }
+
+    private static RoomConstructor constructDoubleQuad(String roomName, AssetManager assetManager, RoomInstance roomInstance, KwdFile kwdFile) {
+        if (roomName.equalsIgnoreCase("Prison")) {
+            return new PrisonConstructor(assetManager, roomInstance);
+        } else if (roomName.equalsIgnoreCase("Combat Pit")) {
+            return new CombatPitConstructor(assetManager, roomInstance);
+        } else if (roomName.equalsIgnoreCase("Temple")) {
+            return new TempleConstructor(assetManager, roomInstance, kwdFile);
+        } else if (roomName.equalsIgnoreCase("Stone Bridge")) {
+            return new StoneBridgeConstructor(assetManager, roomInstance);
+        }
+
+        return new DoubleQuadConstructor(assetManager, roomInstance);
+    }
+
+    private static RoomConstructor constructNormal(String roomName, AssetManager assetManager, RoomInstance roomInstance, KwdFile kwdFile) {
+        if (roomName.equalsIgnoreCase("Work Shop")) {
+            return new WorkshopConstructor(assetManager, roomInstance);
+        }
+
+        return new NormalConstructor(assetManager, roomInstance);
     }
 }

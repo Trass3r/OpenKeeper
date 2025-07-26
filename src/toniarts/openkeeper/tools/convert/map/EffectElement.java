@@ -20,14 +20,13 @@ import java.awt.Color;
 import java.util.EnumSet;
 import javax.annotation.Nullable;
 import toniarts.openkeeper.tools.convert.IFlagEnum;
-import toniarts.openkeeper.world.effect.IEffect;
 
 /**
  * Container class for EffectElements.kwd
  *
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
-public final class EffectElement implements Comparable<EffectElement>, IEffect {
+public final class EffectElement implements Comparable<EffectElement> { // , IEffect {
 
     /**
      * Effect element flags
@@ -109,7 +108,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
     private short fadePercentage; // b3
     private int nextEffectId; // b4
 
-    @Override
     public String getName() {
         return name;
     }
@@ -118,7 +116,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.name = name;
     }
 
-    @Override
     @Nullable
     public ArtResource getArtResource() {
         return artResource;
@@ -128,7 +125,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.artResource = artResource;
     }
 
-    @Override
     public float getMass() {
         return mass;
     }
@@ -137,7 +133,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.mass = mass;
     }
 
-    @Override
     public float getAirFriction() {
         return airFriction;
     }
@@ -146,7 +141,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.airFriction = airFriction;
     }
 
-    @Override
     public float getElasticity() {
         return elasticity;
     }
@@ -155,7 +149,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.elasticity = elasticity;
     }
 
-    @Override
     public float getMinSpeedXy() {
         return minSpeedXy;
     }
@@ -164,7 +157,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.minSpeedXy = minSpeedXy;
     }
 
-    @Override
     public float getMaxSpeedXy() {
         return maxSpeedXy;
     }
@@ -173,7 +165,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.maxSpeedXy = maxSpeedXy;
     }
 
-    @Override
     public float getMinSpeedYz() {
         return minSpeedYz;
     }
@@ -182,7 +173,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.minSpeedYz = minSpeedYz;
     }
 
-    @Override
     public float getMaxSpeedYz() {
         return maxSpeedYz;
     }
@@ -191,7 +181,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.maxSpeedYz = maxSpeedYz;
     }
 
-    @Override
     public float getMinScale() {
         return minScale;
     }
@@ -200,7 +189,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.minScale = minScale;
     }
 
-    @Override
     public float getMaxScale() {
         return maxScale;
     }
@@ -233,7 +221,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.effectElementId = effectElementId;
     }
 
-    @Override
     public int getMinHp() {
         return minHp;
     }
@@ -242,7 +229,6 @@ public final class EffectElement implements Comparable<EffectElement>, IEffect {
         this.minHp = minHp;
     }
 
-    @Override
     public int getMaxHp() {
         return maxHp;
     }

@@ -17,7 +17,7 @@
 package toniarts.openkeeper.game.controller;
 
 import com.jme3.math.Vector2f;
-import toniarts.openkeeper.world.TileData;
+import toniarts.openkeeper.game.map.IMapTileInformation;
 
 /**
  * A small interface telling that the control (creature, object...) is
@@ -72,7 +72,7 @@ public interface IInteractiveControl {
      * @param playerId the player who wants to drop
      * @return the result if the control were to be dropped here
      */
-    public DroppableStatus getDroppableStatus(TileData tile, short playerId);
+    public DroppableStatus getDroppableStatus(IMapTileInformation tile, short playerId);
 
     /**
      * Drop the control on the tile
@@ -80,10 +80,9 @@ public interface IInteractiveControl {
      * @param tile tile to drop to
      * @param coordinates real world coordinates inside
      * @param control if there is already an
-     * {@link toniarts.openkeeper.world.control.IInteractiveControl} at the
-     * position
+     * interactive control at the position
      */
-    public void drop(TileData tile, Vector2f coordinates, IInteractiveControl control);
+    public void drop(IMapTileInformation tile, Vector2f coordinates, IInteractiveControl control);
 
     /**
      * Interact with the control. Typically alternative mouse button pressed

@@ -333,8 +333,6 @@ public class PlayerTriggerControl extends TriggerControl {
                 } else {
                     mapController.unFlashTiles(ap.getPoints(), playerId);
                 }
-//                    ap.getParent().getWorldState().flashTile(available, ap.getPoints());
-//                }
                 break;
 
             case REVEAL_ACTION_POINT: // AP part
