@@ -54,29 +54,4 @@ public final class ShotsLoader implements ILoader<Shot> {
 
         return root;
     }
-
-    public Spatial load(AssetManager assetManager, EffectManagerState effectManagerState, Shot object) {
-        Spatial root = load(assetManager, object);
-
-        List<Integer> effects = new ArrayList<>();
-        effects.add(object.getGeneralEffectId());
-        effects.add(object.getCreationEffectId());
-        effects.add(object.getHitLavaEffectId());
-        effects.add(object.getHitSolidEffectId());
-        effects.add(object.getHitThingEffectId());
-        effects.add(object.getHitWaterEffect());
-        effects.add(object.getHitWaterEffect());
-        effects.add(object.getDeathEffectId());
-
-        float height = 1;
-        for (Integer effectId : effects) {
-            if (effectId == 0) {
-                continue;
-            }
-
-            effectManagerState.loadSingleEffect((Node) root, new Vector3f(1, height++, 1), effectId, true);
-        }
-
-        return root;
-    }
 }

@@ -52,9 +52,8 @@ public final class RoomFactory {
 
     // TODO: Replace EffectManagerState with appropriate alternative from new system
     // Method temporarily disabled due to removal of world.effect.EffectManagerState
-    // public static RoomConstructor constructRoom(RoomInstance roomInstance, AssetManager assetManager,
-    //         EffectManagerState effectManager, KwdFile kwdFile) {
-    //     // Method body commented out - replace with new system
-    //     return null;
-    // }
+    public static RoomConstructor constructRoom(RoomInstance roomInstance, AssetManager assetManager, KwdFile kwdFile) {
+        // Method body commented out - replace with new system
+        return null;
+    }
 }

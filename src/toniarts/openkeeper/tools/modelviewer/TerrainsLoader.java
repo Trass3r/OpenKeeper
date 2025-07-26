@@ -102,23 +102,4 @@ public final class TerrainsLoader implements ILoader<Terrain> {
 
         return root;
     }
-
-    public Spatial load(AssetManager assetManager, EffectManagerState effectManagerState, Terrain object) {
-        Spatial root = load(assetManager, object);
-
-        List<Integer> effects = new ArrayList<>();
-        effects.add(object.getDestroyedEffectId());
-        effects.add(object.getMaxHealthEffectId());
-
-        float height = 1;
-        for (Integer effectId : effects) {
-            if (effectId == 0) {
-                continue;
-            }
-
-            effectManagerState.loadSingleEffect((Node) root, new Vector3f(0, height++, 0), effectId, true);
-        }
-
-        return root;
-    }
 }

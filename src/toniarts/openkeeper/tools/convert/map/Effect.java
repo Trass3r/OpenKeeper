@@ -182,7 +182,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
     private short elementsPerTurn; // f3
     private int unknown3; // f4 pad?
 
-    @Override
     public String getName() {
         return name;
     }
@@ -191,7 +190,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.name = name;
     }
 
-    @Override
     public ArtResource getArtResource() {
         return artResource;
     }
@@ -208,7 +206,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.light = light;
     }
 
-    @Override
     public float getMass() {
         return mass;
     }
@@ -217,7 +214,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.mass = mass;
     }
 
-    @Override
     public float getAirFriction() {
         return airFriction;
     }
@@ -226,7 +222,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.airFriction = airFriction;
     }
 
-    @Override
     public float getElasticity() {
         return elasticity;
     }
@@ -243,7 +238,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.radius = radius;
     }
 
-    @Override
     public float getMinSpeedXy() {
         return minSpeedXy;
     }
@@ -252,7 +246,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.minSpeedXy = minSpeedXy;
     }
 
-    @Override
     public float getMaxSpeedXy() {
         return maxSpeedXy;
     }
@@ -261,7 +254,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.maxSpeedXy = maxSpeedXy;
     }
 
-    @Override
     public float getMinSpeedYz() {
         return minSpeedYz;
     }
@@ -270,7 +262,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.minSpeedYz = minSpeedYz;
     }
 
-    @Override
     public float getMaxSpeedYz() {
         return maxSpeedYz;
     }
@@ -279,7 +270,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.maxSpeedYz = maxSpeedYz;
     }
 
-    @Override
     public float getMinScale() {
         return minScale;
     }
@@ -288,7 +278,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.minScale = minScale;
     }
 
-    @Override
     public float getMaxScale() {
         return maxScale;
     }
@@ -313,7 +302,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.effectId = effectId;
     }
 
-    @Override
     public int getMinHp() {
         return minHp;
     }
@@ -322,7 +310,6 @@ public final class Effect implements Comparable<Effect> { // , IEffect {
         this.minHp = minHp;
     }
 
-    @Override
     public int getMaxHp() {
         return maxHp;
     }

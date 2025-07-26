@@ -67,24 +67,4 @@ public final class ObjectsLoader implements ILoader<GameObject> {
 
         return root;
     }
-
-    public Spatial load(AssetManager assetManager, EffectManagerState effectManagerState, GameObject object) {
-        Spatial root = load(assetManager, object);
-
-        List<Integer> effects = new ArrayList<>();
-        effects.add(object.getSlapEffectId());
-        effects.add(object.getMiscEffectId());
-        effects.add(object.getDeathEffectId());
-
-        float height = 1;
-        for (Integer effectId : effects) {
-            if (effectId == 0) {
-                continue;
-            }
-
-            effectManagerState.loadSingleEffect((Node) root, new Vector3f(1, height++, 1), effectId, true);
-        }
-
-        return root;
-    }
 }

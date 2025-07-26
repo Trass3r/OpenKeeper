@@ -18,8 +18,10 @@ package toniarts.openkeeper.tools.modelviewer;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Quad;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
 
@@ -69,8 +71,9 @@ public final class UniversalArtResourceLoader {
             case ALPHA:
             case ADDITIVE_ALPHA:
             case SPRITE:
-                result = new EffectGeometry("effect");
-                ((EffectGeometry) result).setFrames(Math.max(1, resource.getData(ArtResource.KEY_FRAMES)));
+                // TODO: Replace EffectGeometry with appropriate alternative from new system
+                result = new Geometry("effect", new Quad(1, 1)); // Simple replacement for removed EffectGeometry
+                // Note: Frame animation functionality removed with EffectGeometry class
 
                 Material material = AssetUtils.createParticleMaterial(resource, assetManager);
                 result.setMaterial(material);

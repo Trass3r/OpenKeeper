@@ -49,12 +49,13 @@ public final class MainMenuInteraction implements RawInputListener {
 
     @Override
     public void onMouseButtonEvent(MouseButtonEvent evt) {
-        if (currentControl != null && evt.getButtonIndex() == MouseInput.BUTTON_LEFT) {
-            evt.setConsumed();
-
-            // Select level
-            mainMenuState.selectCampaignLevel(currentControl);
-        }
+        // TODO: Restore campaign level selection functionality with new system
+        // if (currentControl != null && evt.getButtonIndex() == MouseInput.BUTTON_LEFT) {
+        //     evt.setConsumed();
+        // 
+        //     // Select level
+        //     mainMenuState.selectCampaignLevel(currentControl);
+        // }
     }
 
     @Override
@@ -66,17 +67,18 @@ public final class MainMenuInteraction implements RawInputListener {
 
         // NOT TESTED AT ALL, just for shit & giggles, may work which would be super cool
         if (!evt.isScaleSpanInProgress()) {
-            if (currentControl != null) {
-                evt.setConsumed();
-
-                // Select level
-                mainMenuState.selectCampaignLevel(currentControl);
-            } else if (currentControl == null) {
+            // TODO: Restore campaign level selection functionality with new system
+            // if (currentControl != null) {
+            //     evt.setConsumed();
+            // 
+            //     // Select level
+            //     mainMenuState.selectCampaignLevel(currentControl);
+            // } else if (currentControl == null) {
                 evt.setConsumed();
 
                 // Treat this like "on hover"
                 setCampaignMapActive((int) evt.getX(), (int) evt.getY());
-            }
+            // }
         }
     }
     

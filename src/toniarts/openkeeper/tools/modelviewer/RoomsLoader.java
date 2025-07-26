@@ -64,22 +64,4 @@ public final class RoomsLoader implements ILoader<Room> {
 
         return root;
     }
-
-    public Spatial load(AssetManager assetManager, EffectManagerState effectManagerState, Room object) {
-        Spatial root = load(assetManager, object);
-
-        List<Integer> effects = new ArrayList<>();
-        effects.add(object.getFightEffectId());
-
-        float height = 1;
-        for (Integer effectId : effects) {
-            if (effectId == 0) {
-                continue;
-            }
-
-            effectManagerState.loadSingleEffect((Node) root, new Vector3f(1, height++, 1), effectId, true);
-        }
-
-        return root;
-    }
 }

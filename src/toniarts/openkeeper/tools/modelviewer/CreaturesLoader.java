@@ -74,26 +74,4 @@ public final class CreaturesLoader implements ILoader<Creature> {
 
         return root;
     }
-
-    public Spatial load(AssetManager assetManager, EffectManagerState effectManagerState, Creature object) {
-        Spatial root = load(assetManager, object);
-
-        List<Integer> effects = new ArrayList<>();
-        effects.add(object.getEntranceEffectId());
-        effects.add(object.getSlapEffectId());
-        effects.add(object.getOlhiEffectId());
-        effects.add(object.getOlhiEffectId());
-        effects.add(object.getDeathEffectId());
-
-        float height = 1;
-        for (Integer effectId : effects) {
-            if (effectId == 0) {
-                continue;
-            }
-
-            effectManagerState.loadSingleEffect((Node) root, new Vector3f(0, height++, 0), effectId, true);
-        }
-
-        return root;
-    }
 }
