@@ -32,6 +32,7 @@ import java.util.Map;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.game.component.Position;
 import toniarts.openkeeper.game.console.ConsoleState;
+import toniarts.openkeeper.game.controller.IPlayerController;
 import toniarts.openkeeper.game.controller.player.PlayerCreatureControl;
 import toniarts.openkeeper.game.controller.player.PlayerGoldControl;
 import toniarts.openkeeper.game.controller.player.PlayerRoomControl;
@@ -256,42 +257,57 @@ public final class PlayerState extends AbstractAppState implements PlayerListene
     }
 
     public PlayerStatsControl getStatsControl() {
-        Keeper keeper = getPlayer();
-//        if (keeper != null) {
-//            return keeper.getStatsControl();
-//        }
+        GameClientState gameState = stateManager.getState(GameClientState.class);
+        if (gameState != null) {
+            IPlayerController playerController = gameState.getPlayerController(playerId);
+            if (playerController != null) {
+                return playerController.getStatsControl();
+            }
+        }
         return null;
     }
 
     public PlayerGoldControl getGoldControl() {
-        Keeper keeper = getPlayer();
-//        if (keeper != null) {
-//            return keeper.getGoldControl();
-//        }
+        GameClientState gameState = stateManager.getState(GameClientState.class);
+        if (gameState != null) {
+            IPlayerController playerController = gameState.getPlayerController(playerId);
+            if (playerController != null) {
+                return playerController.getGoldControl();
+            }
+        }
         return null;
     }
 
     public PlayerCreatureControl getCreatureControl() {
-        Keeper keeper = getPlayer();
-//        if (keeper != null) {
-//            return keeper.getCreatureControl();
-//        }
+        GameClientState gameState = stateManager.getState(GameClientState.class);
+        if (gameState != null) {
+            IPlayerController playerController = gameState.getPlayerController(playerId);
+            if (playerController != null) {
+                return playerController.getCreatureControl();
+            }
+        }
         return null;
     }
 
     public PlayerRoomControl getRoomControl() {
-        Keeper keeper = getPlayer();
-//        if (keeper != null) {
-//            return keeper.getRoomControl();
-//        }
+        GameClientState gameState = stateManager.getState(GameClientState.class);
+        if (gameState != null) {
+            IPlayerController playerController = gameState.getPlayerController(playerId);
+            if (playerController != null) {
+                return playerController.getRoomControl();
+            }
+        }
         return null;
     }
 
     public PlayerSpellControl getSpellControl() {
-        Keeper keeper = getPlayer();
-//        if (keeper != null) {
-//            return keeper.getSpellControl();
-//        }
+        GameClientState gameState = stateManager.getState(GameClientState.class);
+        if (gameState != null) {
+            IPlayerController playerController = gameState.getPlayerController(playerId);
+            if (playerController != null) {
+                return playerController.getSpellControl();
+            }
+        }
         return null;
     }
 
@@ -498,17 +514,15 @@ public final class PlayerState extends AbstractAppState implements PlayerListene
     String getTooltipText(String text) {
         int dungeonHealth = 0;
         int paydayCost = 0;
-        // TODO: Replace with appropriate alternative from new system
-        // MapLoader mapLoader = stateManager.getState(WorldState.class).getMapLoader();
-        // for (Map.Entry<RoomInstance, GenericRoom> en : mapLoader.getRoomActuals().entrySet()) {
-        //     RoomInstance key = en.getKey();
-        //     GenericRoom value = en.getValue();
-        //     if (value.isDungeonHeart() && key.getOwnerId() == playerId) {
-        //         dungeonHealth = key.getHealthPercentage();
-        //         break;
-        //     }
-        // }
-        // TODO payday cost calculator
+        
+        // TODO: Get dungeon heart health from the new system
+        // Need to find the dungeon heart room entity and get its health percentage
+        // Example: GameClientState gameState = stateManager.getState(GameClientState.class);
+        // Find dungeon heart room for this player and get its health
+        
+        // TODO: Calculate payday cost from creature salaries
+        // Need to sum up all creature maintenance costs for this player
+        
         return text.replaceAll("%19%", String.valueOf(dungeonHealth))
                 .replaceAll("%20", String.valueOf(paydayCost));
     }

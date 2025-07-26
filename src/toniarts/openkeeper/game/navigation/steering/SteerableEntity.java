@@ -101,9 +101,7 @@ public final class SteerableEntity implements ISteerableEntity {
 
     @Override
     public Location<Vector2> newLocation() {
-        // TODO: Replace CreatureLocation with appropriate alternative from new system
-        // return new CreatureLocation();
-        return null;
+        return new EntityLocation();
     }
 
     @Override
