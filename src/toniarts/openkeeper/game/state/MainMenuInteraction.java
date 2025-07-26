@@ -107,7 +107,8 @@ public final class MainMenuInteraction implements RawInputListener {
             mainMenuState.menuNode.collideWith(ray, results);
 
             // See the results so we see what is going on
-            // TODO: Replace FrontEndLevelControl with appropriate alternative from new system
+            // TODO: Implement front-end level interaction using new architecture - world.FrontEndLevelControl was removed
+            // Need to create new level interaction system compatible with controller architecture
             /*
             for (int i = 0; i < results.size(); i++) {
 

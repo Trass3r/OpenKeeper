@@ -71,7 +71,7 @@ public final class UniversalArtResourceLoader {
             case ALPHA:
             case ADDITIVE_ALPHA:
             case SPRITE:
-                // TODO: Replace EffectGeometry with appropriate alternative from new system
+                // TODO: Implement effect geometry using new architecture - world.effect.EffectGeometry was removed
                 result = new Geometry("effect", new Quad(1, 1)); // Simple replacement for removed EffectGeometry
                 // Note: Frame animation functionality removed with EffectGeometry class
 

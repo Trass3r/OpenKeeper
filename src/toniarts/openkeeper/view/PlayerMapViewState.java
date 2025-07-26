@@ -103,8 +103,8 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         mapInformation = new MapInformation(mapTileContainer, kwdFile, players);
 
         // Effect manager
-        // TODO: Replace EffectManagerState with appropriate alternative from new system
-        // effectManager = new EffectManagerState(kwdFile, assetManager);
+        // TODO: Implement effect system using new architecture - world.effect.EffectManagerState was removed
+        // Need to create new effect management system compatible with controller architecture
 
         // Create the actual map
         mapLoader = new MapViewController(assetManager, kwdFile, mapInformation, playerId) {

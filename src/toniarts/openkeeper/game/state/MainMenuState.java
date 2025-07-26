@@ -511,10 +511,8 @@ public final class MainMenuState extends AbstractAppState {
      *
      * @param selectedLevel the selected level
      */
-    // TODO: Replace FrontEndLevelControl with appropriate alternative from new system
-    // protected void selectCampaignLevel(FrontEndLevelControl selectedLevel) {
-    //     this.selectedLevel = selectedLevel.getLevel();
-    //     screen.doTransition("253", "briefing", null);
+    // TODO: Implement campaign level selection using new architecture - world.FrontEndLevelControl was removed
+    // Need to create new level selection system compatible with controller architecture
     // }
 
     /**

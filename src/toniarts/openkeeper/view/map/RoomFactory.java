@@ -50,8 +50,8 @@ public final class RoomFactory {
         // Nope
     }
 
-    // TODO: Replace EffectManagerState with appropriate alternative from new system
-    // Method temporarily disabled due to removal of world.effect.EffectManagerState
+    // TODO: Implement room construction using new architecture - world.effect.EffectManagerState was removed
+    // Need to create new room construction system compatible with controller architecture
     public static RoomConstructor constructRoom(RoomInstance roomInstance, AssetManager assetManager, KwdFile kwdFile) {
         // Method body commented out - replace with new system
         return null;

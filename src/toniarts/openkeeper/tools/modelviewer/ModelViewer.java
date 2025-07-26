@@ -211,9 +211,8 @@ public final class ModelViewer extends SimpleApplication {
         assetManager.registerLoader(MP2Loader.class, "mp2");
 
         //Effects manager
-        // TODO: Replace EffectManagerState with appropriate alternative from new system
-        // this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager);
-        // stateManager.attach(effectManagerState);
+        // TODO: Implement effect system using new architecture - world.effect.EffectManagerState was removed
+        // Need to create new effect management system for model viewer
         // init sound loader
         //soundLoader = new SoundsLoader(assetManager);
 
