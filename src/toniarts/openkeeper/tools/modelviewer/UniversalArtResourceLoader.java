@@ -71,9 +71,8 @@ public final class UniversalArtResourceLoader {
             case ALPHA:
             case ADDITIVE_ALPHA:
             case SPRITE:
-                // TODO: Implement effect geometry using new architecture - world.effect.EffectGeometry was removed
-                result = new Geometry("effect", new Quad(1, 1)); // Simple replacement for removed EffectGeometry
-                // Note: Frame animation functionality removed with EffectGeometry class
+                // Effect geometry - simple quad representation for model viewer
+                result = new Geometry("effect", new Quad(1, 1));
 
                 Material material = AssetUtils.createParticleMaterial(resource, assetManager);
                 result.setMaterial(material);

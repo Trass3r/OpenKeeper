@@ -106,32 +106,6 @@ public final class MainMenuInteraction implements RawInputListener {
             // Collect intersections between ray and all nodes in results list
             mainMenuState.menuNode.collideWith(ray, results);
 
-            // See the results so we see what is going on
-            // TODO: Implement front-end level interaction using new architecture - world.FrontEndLevelControl was removed
-            // Need to create new level interaction system compatible with controller architecture
-            /*
-            for (int i = 0; i < results.size(); i++) {
-
-                FrontEndLevelControl controller = results.getCollision(i).getGeometry().getParent().getParent().getControl(FrontEndLevelControl.class);
-                if (controller != null) {
-
-                    // Deactivate current controller
-                    if (currentControl != null && !currentControl.equals(controller)) {
-                        currentControl.setActive(false);
-                    }
-
-                    // Set and activate current controller
-                    currentControl = controller;
-                    currentControl.setActive(true);
-                    return;
-                }
-            }
-
-            // Deactivate current controller, nothing is selected
-            if (currentControl != null) {
-                currentControl.setActive(false);
-                currentControl = null;
-            }
-            */
+            // Level interaction will be implemented when the front-end interaction system is redesigned
         }
 }

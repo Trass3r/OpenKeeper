@@ -168,7 +168,7 @@ public final class GameConsole {
                 case ADD_GOLD:
                     try {
                         int amount = Integer.parseInt(args[1]);
-                        // stateManager.getState(WorldState.class).addGold(keeper.getId(), amount);
+                        // Gold management to be implemented
                     } catch (NumberFormatException e) {
                         console.outputError("First parameter must be a number!");
                     }
@@ -176,7 +176,7 @@ public final class GameConsole {
                 case ADD_MANA:
                     try {
                         int amount = Integer.parseInt(args[1]);
-//                        keeper.getManaControl().addMana(amount);
+                        // Mana management to be implemented
                     } catch (NumberFormatException e) {
                         console.outputError("First parameter must be a number!");
                     }
@@ -225,12 +225,11 @@ public final class GameConsole {
     }
 
     private void spawnImp() {
-//        spawnCreature(keeper.getCreatureControl().getImp().getCreatureId(), (short) 1);
+        // Imp spawning to be implemented
     }
 
     private void spawnCreature(short creatureId, short level) {
-//        Vector2f dhEntrance = WorldUtils.pointToVector2f(((ICreatureEntrance) keeper.getRoomControl().getDungeonHeart()).getEntranceCoordinate());
-//        stateManager.getState(WorldState.class).getThingLoader().spawnCreature(creatureId, keeper.getId(), level, dhEntrance, false, null);
+        // Creature spawning to be implemented
     }
 
     private boolean showHelpMessage() {

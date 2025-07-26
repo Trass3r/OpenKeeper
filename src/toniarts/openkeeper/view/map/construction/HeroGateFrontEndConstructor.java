@@ -160,8 +160,6 @@ public final class HeroGateFrontEndConstructor extends RoomConstructor {
 
         Spatial lvl = loadObject(objName + levelnumber + (variation == null ? "" : variation),
                 assetManager, start, p);
-        // TODO: Implement front-end level control using new architecture - world.FrontEndLevelControl was removed  
-        // Need to create new level selection system compatible with controller architecture
         lvl.setBatchHint(Spatial.BatchHint.Never);
         map.attachChild(lvl);
     }

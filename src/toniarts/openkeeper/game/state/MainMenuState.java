@@ -507,15 +507,6 @@ public final class MainMenuState extends AbstractAppState {
     }
 
     /**
-     * Campaign level selected, transition the screen and display the briefing
-     *
-     * @param selectedLevel the selected level
-     */
-    // TODO: Implement campaign level selection using new architecture - world.FrontEndLevelControl was removed
-    // Need to create new level selection system compatible with controller architecture
-    // }
-
-    /**
      * Stops the level briefing sound
      */
     protected void clearLevelBriefingNarration() {
