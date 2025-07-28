@@ -169,7 +169,10 @@ public final class GameConsole {
                 case ADD_GOLD:
                     try {
                         int amount = Integer.parseInt(args[1]);
-                        stateManager.getState(WorldState.class).addGold(keeper.getId(), amount);
+                        stateManager.getState(GameClientState.class)
+                            .getPlayerController(keeper.getId())
+                            .getGoldControl()
+                            .addGold(amount);
                     } catch (NumberFormatException e) {
                         console.outputError("First parameter must be a number!");
                     }
