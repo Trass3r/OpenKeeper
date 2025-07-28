@@ -37,6 +37,7 @@ import toniarts.openkeeper.world.ThingLoader;
 import toniarts.openkeeper.world.WorldState;
 import toniarts.openkeeper.world.creature.CreatureControl;
 import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManager;
 import toniarts.openkeeper.world.object.ObjectLoader;
 import toniarts.openkeeper.world.room.control.PlugControl;
 import toniarts.openkeeper.world.room.control.RoomGoldControl;
@@ -230,7 +231,7 @@ public class FiveByFiveRotated extends GenericRoom implements ICreatureEntrance 
 
                     for (Integer id : roomInstance.getRoom().getEffects()) {
                         if (id > 0) {
-                            effectManager.load(root, new Vector3f(p.x - start.x, MapLoader.UNDERFLOOR_HEIGHT, p.y - start.y), id, true);
+                            gameEffectManager.load(root, new Vector3f(p.x - start.x, MapLoader.UNDERFLOOR_HEIGHT, p.y - start.y), id, true);
                         }
                     }
 
