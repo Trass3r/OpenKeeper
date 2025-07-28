@@ -71,6 +71,8 @@ import toniarts.openkeeper.world.control.FlashTileControl;
 import toniarts.openkeeper.world.control.IInteractiveControl;
 import toniarts.openkeeper.world.creature.CreatureControl;
 import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManager;
+import toniarts.openkeeper.game.effect.IEffectContextProvider;
 import toniarts.openkeeper.world.listener.CreatureListener;
 import toniarts.openkeeper.world.listener.RoomListener;
 import toniarts.openkeeper.world.listener.TileChangeListener;
@@ -90,7 +92,7 @@ import toniarts.openkeeper.world.room.control.RoomGoldControl;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 @Deprecated
-public abstract class WorldState extends AbstractAppState {
+public abstract class WorldState extends AbstractAppState implements IEffectContextProvider {
     
     private static final Logger logger = System.getLogger(WorldState.class.getName());
 
@@ -107,6 +109,7 @@ public abstract class WorldState extends AbstractAppState {
     private final Node thingsNode;
     //private final BulletAppState bulletAppState;
     private final EffectManagerState effectManager;
+    private final EffectManager gameEffectManager;
     private List<TileChangeListener> tileChangeListener;
     private Map<Short, List<RoomListener>> roomListeners;
     private final GameState gameState;
@@ -119,6 +122,9 @@ public abstract class WorldState extends AbstractAppState {
 
         // Effect manager
         effectManager = new EffectManagerState(kwdFile, assetManager);
+        
+        // New effect manager (modern architecture)
+        gameEffectManager = new EffectManager(kwdFile, assetManager, this);
 
         // World node
         worldNode = new Node("World");
@@ -299,6 +305,9 @@ public abstract class WorldState extends AbstractAppState {
         }
 
         flashTileControl.update(tpf);
+        
+        // Update the modern effect manager
+        gameEffectManager.update(tpf);
     }
 
     public AssetManager getAssetManager() {
@@ -1045,7 +1054,7 @@ public abstract class WorldState extends AbstractAppState {
             // TODO: effect, drop loot & checks, claimed walls should also get destroyed if all adjacent tiles are not in cotrol anymore
             // The tile is dead
             if (terrain.getDestroyedEffectId() != 0) {
-                effectManager.load(worldNode,
+                gameEffectManager.load(worldNode,
                         WorldUtils.pointToVector3f(point).addLocal(0, MapLoader.FLOOR_HEIGHT, 0),
                         terrain.getDestroyedEffectId(), false);
             }
@@ -1097,7 +1106,7 @@ public abstract class WorldState extends AbstractAppState {
             // TODO: effect & checks
             // The tile is upgraded
             if (terrain.getMaxHealthEffectId() != 0) {
-                effectManager.load(worldNode,
+                gameEffectManager.load(worldNode,
                         WorldUtils.pointToVector3f(point).addLocal(0, MapLoader.FLOOR_HEIGHT, 0),
                         terrain.getMaxHealthEffectId(), false);
             }
@@ -1106,7 +1115,7 @@ public abstract class WorldState extends AbstractAppState {
                 tile.setPlayerId(playerId);
                 terrain = tile.getTerrain();
                 if (tile.isAtFullHealth()) {
-                    effectManager.load(worldNode,
+                    gameEffectManager.load(worldNode,
                             WorldUtils.pointToVector3f(point).addLocal(0, MapLoader.FLOOR_HEIGHT, 0),
                             terrain.getMaxHealthEffectId(), false);
                 }
@@ -1245,14 +1254,14 @@ public abstract class WorldState extends AbstractAppState {
                     roomTile.setPlayerId(playerId); // Claimed!
                     roomTile.applyHealing(tile.getTerrain().getMaxHealth());
 
-                    effectManager.load(worldNode,
+                    gameEffectManager.load(worldNode,
                             WorldUtils.pointToVector3f(point).addLocal(0, MapLoader.FLOOR_HEIGHT, 0),
                             tile.getTerrain().getMaxHealthEffectId(), false);
 
                     // FIXME ROOM_CLAIM_ID is realy claim effect?
-                    effectManager.load(worldNode,
+                    gameEffectManager.load(worldNode,
                             WorldUtils.pointToVector3f(p2).addLocal(0, MapLoader.FLOOR_HEIGHT, 0),
-                            room.getRoom().getEffects().get(EffectManagerState.ROOM_CLAIM_ID), false);
+                            room.getRoom().getEffects().get(EffectManager.ROOM_CLAIM_ID), false);
 
                     // TODO: Claimed room wall tiles lose the claiming I think?
                     notifyTileChange(p2);
@@ -1410,6 +1419,15 @@ public abstract class WorldState extends AbstractAppState {
 
     public EffectManagerState getEffectManager() {
         return effectManager;
+    }
+
+    public EffectManager getGameEffectManager() {
+        return gameEffectManager;
+    }
+
+    @Override
+    public TileData getTileData(Point point) {
+        return getMapData().getTile(point);
     }
 
     /**

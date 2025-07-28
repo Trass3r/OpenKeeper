@@ -55,6 +55,7 @@ import toniarts.openkeeper.view.loader.ILoader;
 import toniarts.openkeeper.view.map.WallSection;
 import toniarts.openkeeper.view.map.WallSection.WallDirection;
 import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManager;
 import toniarts.openkeeper.world.object.ObjectLoader;
 import toniarts.openkeeper.world.room.GenericRoom;
 import toniarts.openkeeper.world.room.RoomConstructor;
@@ -94,6 +95,7 @@ public abstract class MapLoader implements ILoader<KwdFile> {
     private final MapData mapData;
     private final AssetManager assetManager;
     private final EffectManagerState effectManager;
+    private final EffectManager gameEffectManager;
     private Node roomsNode;
     private final WorldState worldState;
     private final ObjectLoader objectLoader;
@@ -109,6 +111,7 @@ public abstract class MapLoader implements ILoader<KwdFile> {
         this.kwdFile = kwdFile;
         this.assetManager = assetManager;
         this.effectManager = effectManager;
+        this.gameEffectManager = worldState.getGameEffectManager();
         this.worldState = worldState;
         this.objectLoader = objectLoader;
 
