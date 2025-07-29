@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import toniarts.openkeeper.Main;
+import toniarts.openkeeper.game.controller.IMapController;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.game.listener.MapListener;
 import toniarts.openkeeper.game.listener.PlayerActionListener;
@@ -68,11 +69,17 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
     private Map<Short, List<RoomListener>> roomListeners;
     private final FlashTileViewState flashTileControl;
     private final MapRoomContainer mapRoomContainer;
+    private final IMapController mapController; // Optional - for local tile effects
 
     public PlayerMapViewState(Main app, final KwdFile kwdFile, final AssetManager assetManager, Collection<Keeper> players, EntityData entityData, short playerId, ILoadCompleteNotifier loadCompleteNotifier) {
+        this(app, kwdFile, assetManager, players, entityData, playerId, loadCompleteNotifier, null);
+    }
+
+    public PlayerMapViewState(Main app, final KwdFile kwdFile, final AssetManager assetManager, Collection<Keeper> players, EntityData entityData, short playerId, ILoadCompleteNotifier loadCompleteNotifier, IMapController mapController) {
         this.app = app;
         this.kwdFile = kwdFile;
         this.assetManager = assetManager;
+        this.mapController = mapController;
 
         // World node
         worldNode = new Node("World");
@@ -84,7 +91,7 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         mapRoomContainer = new MapRoomContainer(entityData, kwdFile);
 
         // Make sure we load the whole map before we continue
-        mapTileContainer = new MapTileContainer(entityData, kwdFile, this::updateTiles) {
+        mapTileContainer = new MapTileContainer(entityData, kwdFile) {
 
             @Override
             protected void onLoadComplete() {
@@ -103,6 +110,14 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
             }
 
         };
+
+        // Register ourselves as a listener for tile changes
+        mapTileContainer.addMapListener(this);
+
+        // Register with the map controller for local tile effects if available
+        if (mapController != null) {
+            mapController.addListener(this);
+        }
 
         mapInformation = new MapInformation(mapTileContainer, kwdFile, players);
 
@@ -159,7 +174,13 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
 
         // The actual map data
         mapRoomContainer.stop();
+        mapTileContainer.removeMapListener(this);
         mapTileContainer.stop();
+
+        // Unregister from the map controller if we registered with it
+        if (mapController != null) {
+            mapController.removeListener(this);
+        }
 
         super.cleanup();
     }
@@ -187,54 +208,33 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
 
     @Override
     public void onTilesChange(List<Point> updatedTiles) {
-//        Point[] points = new Point[updatedTiles.size()];
-//        for (int i = 0; i < updatedTiles.size(); i++) {
-//            IMapTileInformation mapTile = updatedTiles.get(i);
-//            points[i] = new Point(mapTile.getX(), mapTile.getY());
-//        }
-//
-//        // FIXME: See in what thread we are, perhaps even do everything ready, just the attaching in render thread
-//        app.enqueue(() -> {
-//            mapLoader.updateTiles(points);
-//        });
+        Point[] points = updatedTiles.toArray(new Point[0]);
+        
+        // FIXME: See in what thread we are, perhaps even do everything ready, just the attaching in render thread
+        app.enqueue(() -> {
+            mapLoader.updateTiles(points);
+        });
     }
 
     @Override
     public void onBuild(short keeperId, List<Point> tiles) {
-//        mapClientService.setTiles(tiles);
-//        Point[] updatableTiles = new Point[tiles.size()];
-//        for (int i = 0; i < tiles.size(); i++) {
-//            updatableTiles[i] = tiles.get(i).getLocation();
-//        }
-//
-//        // FIXME: See in what thread we are, perhaps even do everything ready, just the attaching in render thread
-//        app.enqueue(() -> {
-//            mapLoader.updateTiles(updatableTiles);
-//        });
+        Point[] updatableTiles = tiles.toArray(new Point[0]);
+
+        // FIXME: See in what thread we are, perhaps even do everything ready, just the attaching in render thread
+        app.enqueue(() -> {
+            mapLoader.updateTiles(updatableTiles);
+        });
     }
 
     @Override
     public void onSold(short keeperId, List<Point> tiles) {
-
         // For now there is no difference between buying and selling
-//        onBuild(keeperId, tiles);
+        onBuild(keeperId, tiles);
     }
 
     @Override
     public void onTileFlash(List<Point> points, boolean enabled, short keeperId) {
         flashTileControl.attach(points, enabled);
-    }
-
-    public IMapInformation getMapInformation() {
-        return mapInformation;
-    }
-
-    private void updateTiles(Point[] points) {
-        mapLoader.updateTiles(points);
-    }
-
-    public IRoomsInformation getRoomsInformation() {
-        return mapRoomContainer;
     }
 
     @Override
@@ -248,6 +248,14 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
             Vector3f worldPos = new Vector3f(point.x, 0.1f, point.y); // Slightly above ground
             effectManager.load(worldNode, worldPos, effectId, infinite);
         });
+    }
+
+    public IMapInformation getMapInformation() {
+        return mapInformation;
+    }
+
+    public IRoomsInformation getRoomsInformation() {
+        return mapRoomContainer;
     }
 
     public interface ILoadCompleteNotifier {
