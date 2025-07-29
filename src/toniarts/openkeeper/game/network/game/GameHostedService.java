@@ -318,6 +318,13 @@ public final class GameHostedService extends AbstractHostedConnectionService imp
     }
 
     @Override
+    public void tileEffect(Point point, int effectId, boolean infinite) {
+        for (Map.Entry<ClientInfo, GameSessionImpl> gameSession : players.entrySet()) {
+            gameSession.getValue().onTileEffect(point, effectId, infinite);
+        }
+    }
+
+    @Override
     public boolean isInTransition() {
         for (boolean inTransition : playersInTransition.values()) {
             if (inTransition) {

@@ -262,6 +262,13 @@ public final class LocalGameSession implements GameSessionServerService, GameSes
     }
 
     @Override
+    public void tileEffect(Point point, int effectId, boolean infinite) {
+        for (GameSessionListener listener : listeners.getArray()) {
+            listener.onTileEffect(point, effectId, infinite);
+        }
+    }
+
+    @Override
     public void loadComplete() {
         for (GameSessionListener listener : listeners.getArray()) {
             listener.onLoadComplete(PLAYER_ID);

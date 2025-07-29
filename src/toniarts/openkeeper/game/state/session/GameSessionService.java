@@ -70,4 +70,14 @@ public interface GameSessionService extends PlayerListener, PlayerService {
     @Asynchronous
     public void flashTiles(List<Point> points, boolean enabled, short keeperId);
 
+    /**
+     * A tile effect should be played
+     *
+     * @param point the tile location
+     * @param effectId the effect ID to play
+     * @param infinite whether the effect is infinite
+     */
+    @Asynchronous
+    public void tileEffect(Point point, int effectId, boolean infinite);
+
 }
