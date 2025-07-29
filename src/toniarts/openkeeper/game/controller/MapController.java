@@ -48,6 +48,7 @@ import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Player;
 import toniarts.openkeeper.tools.convert.map.Terrain;
 import toniarts.openkeeper.tools.convert.map.Variable;
+import toniarts.openkeeper.game.effect.EffectManager;
 
 /**
  * This is controller for the map related functions
@@ -331,6 +332,12 @@ public final class MapController extends Container implements IMapController {
         }
     }
 
+    private void notifyTileEffect(Point point, int effectId, boolean infinite) {
+        for (MapListener mapListener : mapListeners.getArray()) {
+            mapListener.onTileEffect(point, effectId, infinite);
+        }
+    }
+
     @Override
     public Collection<IRoomController> getRoomControllers() {
         return roomControllers.values();
@@ -521,11 +528,9 @@ public final class MapController extends Container implements IMapController {
 
             // TODO: effect, drop loot & checks, claimed walls should also get destroyed if all adjacent tiles are not in cotrol anymore
             // The tile is dead
-//            if (terrain.getDestroyedEffectId() != 0) {
-//                effectManager.load(worldNode,
-//                        WorldUtils.pointToVector3f(point).addLocal(0, MapViewController.FLOOR_HEIGHT, 0),
-//                        terrain.getDestroyedEffectId(), false);
-//            }
+            if (terrain.getDestroyedEffectId() != 0) {
+                notifyTileEffect(point, terrain.getDestroyedEffectId(), false);
+            }
             changeTerrain(tile, terrain.getDestroyedTypeTerrainId());
 
 //            updateRoomWalls(tile);
@@ -576,19 +581,15 @@ public final class MapController extends Container implements IMapController {
 
             // TODO: effect & checks
             // The tile is upgraded
-//            if (terrain.getMaxHealthEffectId() != 0) {
-//                effectManager.load(worldNode,
-//                        WorldUtils.pointToVector3f(point).addLocal(0, MapViewController.FLOOR_HEIGHT, 0),
-//                        terrain.getMaxHealthEffectId(), false);
-//            }
+            if (terrain.getMaxHealthEffectId() != 0) {
+                notifyTileEffect(point, terrain.getMaxHealthEffectId(), false);
+            }
             if (terrain.getMaxHealthTypeTerrainId() != 0) {
                 changeTerrain(tile, terrain.getMaxHealthTypeTerrainId());
                 tile.setOwnerId(playerId);
 //                terrain = tile.getTerrain();
 //                if (tile.isAtFullHealth()) {
-//                    effectManager.load(worldNode,
-//                            WorldUtils.pointToVector3f(point).addLocal(0, MapViewController.FLOOR_HEIGHT, 0),
-//                            terrain.getMaxHealthEffectId(), false);
+//                    notifyTileEffect(point, terrain.getMaxHealthEffectId(), false);
 //                }
             }
 
@@ -639,14 +640,10 @@ public final class MapController extends Container implements IMapController {
                     roomTile.setOwnerId(playerId); // Claimed!
                     applyHealing(roomTile, tile.getMaxHealth());
 
-//                    effectManager.load(worldNode,
-//                            WorldUtils.pointToVector3f(point).addLocal(0, MapViewController.FLOOR_HEIGHT, 0),
-//                            tile.getTerrain().getMaxHealthEffectId(), false);
-//
-//                    // FIXME ROOM_CLAIM_ID is realy claim effect?
-//                    effectManager.load(worldNode,
-//                            WorldUtils.pointToVector3f(p2).addLocal(0, MapViewController.FLOOR_HEIGHT, 0),
-//                            room.getRoom().getEffects().get(toniarts.openkeeper.game.effect.EffectManager.ROOM_CLAIM_ID), false);
+                    notifyTileEffect(point, kwdFile.getTerrain(tile.getTerrainId()).getMaxHealthEffectId(), false);
+
+                    // FIXME ROOM_CLAIM_ID is really claim effect?
+                    notifyTileEffect(point, room.getRoom().getEffects().get(EffectManager.ROOM_CLAIM_ID), false);
                     // TODO: Claimed room wall tiles lose the claiming I think?
                 }
 

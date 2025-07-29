@@ -20,6 +20,7 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.es.EntityData;
@@ -235,6 +236,19 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
 
     public IRoomsInformation getRoomsInformation() {
         return mapRoomContainer;
+    }
+
+    @Override
+    public void onTileEffect(Point point, int effectId, boolean infinite) {
+        if (effectId == 0) {
+            return;
+        }
+        
+        // Convert point to world coordinates and show effect
+        app.enqueue(() -> {
+            Vector3f worldPos = new Vector3f(point.x, 0.1f, point.y); // Slightly above ground
+            effectManager.load(worldNode, worldPos, effectId, infinite);
+        });
     }
 
     public interface ILoadCompleteNotifier {
