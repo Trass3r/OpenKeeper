@@ -132,7 +132,8 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         this.app = (Main) app;
         this.stateManager = stateManager;
 
-        // No need to attach the new effect manager as it's not an AppState
+        // Attach the effect manager
+        stateManager.attach(effectManager);
 
         // Tile flash state
         this.stateManager.attach(flashTileControl);
@@ -153,7 +154,8 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         // Tile flash state
         stateManager.detach(flashTileControl);
 
-        // No need to detach the new effect manager as it's not an AppState
+        // Detach the effect manager
+        stateManager.detach(effectManager);
 
         // The actual map data
         mapRoomContainer.stop();
@@ -169,8 +171,7 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         mapRoomContainer.update();
         mapTileContainer.update();
         
-        // Update effects
-        effectManager.update(tpf);
+        // Effect manager will update itself as an AppState
     }
 
     public AssetManager getAssetManager() {

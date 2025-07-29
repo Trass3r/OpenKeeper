@@ -16,6 +16,9 @@
  */
 package toniarts.openkeeper.game.effect;
 
+import com.jme3.app.Application;
+import com.jme3.app.state.AbstractAppState;
+import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -32,7 +35,7 @@ import toniarts.openkeeper.tools.convert.map.KwdFile;
  *
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
-public class EffectManager {
+public class EffectManager extends AbstractAppState {
 
     private static final Logger logger = System.getLogger(EffectManager.class.getName());
     
@@ -54,7 +57,12 @@ public class EffectManager {
      *
      * @param tpf time per frame
      */
+    @Override
     public void update(float tpf) {
+        if (!isEnabled()) {
+            return;
+        }
+        
         Iterator<GameVisualEffect> iterator = activeEffects.iterator();
         // Maintain the effects (on every frame?)
         while (iterator.hasNext()) {

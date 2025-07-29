@@ -17,7 +17,6 @@
 package toniarts.openkeeper.game.effect;
 
 import java.awt.Point;
-import toniarts.openkeeper.world.TileData;
 
 /**
  * Provides context information needed by effects without depending on WorldState.
@@ -28,9 +27,16 @@ import toniarts.openkeeper.world.TileData;
 public interface IEffectContextProvider {
     
     /**
-     * Gets tile data for a given point
-     * @param point the point to get tile data for
-     * @return the tile data, or null if not found
+     * Terrain types that effects can hit
      */
-    TileData getTileData(Point point);
+    enum TerrainType {
+        LAVA, WATER, SOLID, UNKNOWN
+    }
+    
+    /**
+     * Get terrain type for the given point
+     * @param point the point to get terrain type for
+     * @return terrain type or UNKNOWN if not available
+     */
+    TerrainType getTerrainType(Point point);
 }

@@ -17,7 +17,6 @@
 package toniarts.openkeeper.game.effect;
 
 import java.awt.Point;
-import toniarts.openkeeper.world.TileData;
 
 /**
  * A null implementation of IEffectContextProvider for cases where
@@ -28,7 +27,7 @@ import toniarts.openkeeper.world.TileData;
 public class NullEffectContextProvider implements IEffectContextProvider {
     
     @Override
-    public TileData getTileData(Point point) {
-        return null;
+    public TerrainType getTerrainType(Point point) {
+        return TerrainType.UNKNOWN;
     }
 }

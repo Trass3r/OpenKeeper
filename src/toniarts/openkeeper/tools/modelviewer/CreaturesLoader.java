@@ -29,7 +29,7 @@ import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.tools.convert.map.Creature;
 import toniarts.openkeeper.tools.convert.map.Creature.AnimationType;
 import toniarts.openkeeper.view.loader.ILoader;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManager;
 
 /**
  *
@@ -75,7 +75,7 @@ public final class CreaturesLoader implements ILoader<Creature> {
         return root;
     }
 
-    public Spatial load(AssetManager assetManager, EffectManagerState effectManagerState, Creature object) {
+    public Spatial load(AssetManager assetManager, EffectManager effectManager, Creature object) {
         Spatial root = load(assetManager, object);
 
         List<Integer> effects = new ArrayList<>();
@@ -91,7 +91,7 @@ public final class CreaturesLoader implements ILoader<Creature> {
                 continue;
             }
 
-            effectManagerState.loadSingleEffect((Node) root, new Vector3f(0, height++, 0), effectId, true);
+            effectManager.loadSingleEffect((Node) root, new Vector3f(0, height++, 0), effectId, true);
         }
 
         return root;

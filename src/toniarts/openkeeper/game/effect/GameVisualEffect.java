@@ -42,10 +42,9 @@ import toniarts.openkeeper.tools.convert.map.Effect;
 import toniarts.openkeeper.tools.convert.map.EffectElement;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Light;
-import toniarts.openkeeper.tools.convert.map.Terrain;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
-import toniarts.openkeeper.world.TileData;
+import toniarts.openkeeper.game.effect.IEffectContextProvider.TerrainType;
 import toniarts.openkeeper.world.effect.EffectControl;
 import toniarts.openkeeper.world.effect.EffectElementControl;
 import toniarts.openkeeper.world.effect.EffectEmitter;
@@ -155,17 +154,14 @@ public class GameVisualEffect {
 
                 @Override
                 public void onHit(Vector3f location) {
-                    TileData tile = effectManager.getContextProvider().getTileData(WorldUtils.vectorToPoint(location));
-                    if (tile == null) {
-                        logger.log(Level.WARNING, "Effect hit error");
-                        return;
+                    TerrainType terrainType = effectManager.getContextProvider().getTerrainType(WorldUtils.vectorToPoint(location));
+                    if (terrainType == null) {
+                        terrainType = TerrainType.UNKNOWN;
                     }
 
-                    if (tile.getTerrain().getFlags().contains(Terrain.TerrainFlag.LAVA)
-                            && effect.getHitLavaEffectId() != 0) {
+                    if (terrainType == TerrainType.LAVA && effect.getHitLavaEffectId() != 0) {
                         GameVisualEffect.this.addEffect(effect.getHitLavaEffectId(), location);
-                    } else if (tile.getTerrain().getFlags().contains(Terrain.TerrainFlag.WATER)
-                            && effect.getHitWaterEffectId() != 0) {
+                    } else if (terrainType == TerrainType.WATER && effect.getHitWaterEffectId() != 0) {
                         GameVisualEffect.this.addEffect(effect.getHitWaterEffectId(), location);
                     } else if (effect.getHitSolidEffectId() != 0) {
                         if (effect.getFlags().contains(Effect.EffectFlag.DIE_WHEN_HIT_SOLID)) {
@@ -304,17 +300,14 @@ public class GameVisualEffect {
 
                     @Override
                     public void onHit(Vector3f location) {
-                        TileData tile = effectManager.getContextProvider().getTileData(WorldUtils.vectorToPoint(location));
-                        if (tile == null) {
-                            logger.log(Level.WARNING, "Effect hit error");
-                            return;
+                        TerrainType terrainType = effectManager.getContextProvider().getTerrainType(WorldUtils.vectorToPoint(location));
+                        if (terrainType == null) {
+                            terrainType = TerrainType.UNKNOWN;
                         }
 
-                        if (tile.getTerrain().getFlags().contains(Terrain.TerrainFlag.LAVA)
-                                && element.getHitLavaElementId() != 0) {
+                        if (terrainType == TerrainType.LAVA && element.getHitLavaElementId() != 0) {
                             GameVisualEffect.this.addEffectElement(element.getHitLavaElementId(), location);
-                        } else if (tile.getTerrain().getFlags().contains(Terrain.TerrainFlag.WATER)
-                                && element.getHitWaterElementId() != 0) {
+                        } else if (terrainType == TerrainType.WATER && element.getHitWaterElementId() != 0) {
                             GameVisualEffect.this.addEffectElement(element.getHitWaterElementId(), location);
                         } else if (element.getHitSolidElementId() != 0) {
                             if (element.getFlags().contains(EffectElement.EffectElementFlag.DIE_WHEN_HIT_SOLID)) {
