@@ -36,7 +36,7 @@ import toniarts.openkeeper.world.MapLoader;
 import toniarts.openkeeper.world.ThingLoader;
 import toniarts.openkeeper.world.WorldState;
 import toniarts.openkeeper.world.creature.CreatureControl;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 import toniarts.openkeeper.world.object.ObjectLoader;
 import toniarts.openkeeper.world.room.control.PlugControl;
 import toniarts.openkeeper.world.room.control.RoomGoldControl;

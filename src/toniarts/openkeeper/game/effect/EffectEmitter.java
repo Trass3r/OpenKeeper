@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenKeeper.  If not, see <http://www.gnu.org/licenses/>.
  */
-package toniarts.openkeeper.world.effect;
+package toniarts.openkeeper.game.effect;
 
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
@@ -24,10 +24,8 @@ import toniarts.openkeeper.tools.convert.map.Effect;
 import toniarts.openkeeper.tools.convert.map.EffectElement;
 
 /**
- *
- * @author ArchDemon
+ * Migrated from world.effect.EffectEmitter, adapted for game.effect.
  */
-@Deprecated
 public abstract class EffectEmitter extends Node {
     private boolean enabled = true;
 

@@ -26,7 +26,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.view.map.WallSection;
 import toniarts.openkeeper.view.map.WallSection.WallDirection;
 import toniarts.openkeeper.world.WorldState;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 import toniarts.openkeeper.world.object.ObjectLoader;
 
 /**

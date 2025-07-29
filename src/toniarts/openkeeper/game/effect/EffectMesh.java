@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenKeeper.  If not, see <http://www.gnu.org/licenses/>.
  */
-package toniarts.openkeeper.world.effect;
+package toniarts.openkeeper.game.effect;
 
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
@@ -22,12 +22,9 @@ import com.jme3.scene.VertexBuffer;
 import java.nio.FloatBuffer;
 
 /**
- *
- * @author ArchDemon
+ * Migrated from world.effect.EffectMesh, adapted for game.effect.
  */
-@Deprecated
-public class EffectMesh extends Mesh {
-
+public final class EffectMesh extends Mesh {
     private float scale = 1;
     private int frames = 1;
     private boolean uniqueTexCoords = false;

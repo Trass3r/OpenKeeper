@@ -28,7 +28,6 @@ import toniarts.openkeeper.game.state.GameClientState;
 import toniarts.openkeeper.game.state.GameState;
 import toniarts.openkeeper.game.state.PlayerState;
 import toniarts.openkeeper.tools.convert.map.Creature;
-import toniarts.openkeeper.world.WorldState;
 
 /**
  *

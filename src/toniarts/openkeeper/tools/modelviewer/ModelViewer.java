@@ -90,7 +90,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.view.animation.AnimationLoader;
 import toniarts.openkeeper.view.animation.LoopMode;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 
 /**
  * Simple model viewer
@@ -211,7 +211,7 @@ public final class ModelViewer extends SimpleApplication {
         assetManager.registerLoader(MP2Loader.class, "mp2");
 
         //Effects manager
-        this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager);
+        this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager, null);
         stateManager.attach(effectManagerState);
         // init sound loader
         //soundLoader = new SoundsLoader(assetManager);

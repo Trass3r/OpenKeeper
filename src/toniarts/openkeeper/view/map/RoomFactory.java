@@ -36,7 +36,7 @@ import toniarts.openkeeper.view.map.construction.room.PrisonConstructor;
 import toniarts.openkeeper.view.map.construction.room.StoneBridgeConstructor;
 import toniarts.openkeeper.view.map.construction.room.TempleConstructor;
 import toniarts.openkeeper.view.map.construction.room.WorkshopConstructor;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 
 /**
  * A factory class you can use to build buildings

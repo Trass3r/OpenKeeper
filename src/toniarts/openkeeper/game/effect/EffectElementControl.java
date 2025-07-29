@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 OpenKeeper
+ * Copyright (C) 2014-2025 OpenKeeper
  *
  * OpenKeeper is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenKeeper.  If not, see <http://www.gnu.org/licenses/>.
  */
-package toniarts.openkeeper.world.effect;
+package toniarts.openkeeper.game.effect;
 
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
@@ -24,19 +24,15 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.AbstractControl;
 import java.lang.System.Logger;
 import toniarts.openkeeper.tools.convert.map.EffectElement;
-import static toniarts.openkeeper.world.effect.EffectControl.calculateVelocity;
+
+import static toniarts.openkeeper.game.effect.EffectControl.calculateVelocity;
 
 /**
- *
- * @author ArchDemon
+ * Migrated from world.effect.EffectElementControl, adapted for game.effect.
  */
-@Deprecated
 public abstract class EffectElementControl extends AbstractControl {
-    
     private static final Logger log = System.getLogger(EffectElementControl.class.getName());
-    
     private EffectElement effect;
-
     private float hpCurrent;
     private float hp;
     private float height;
@@ -53,10 +49,9 @@ public abstract class EffectElementControl extends AbstractControl {
 
     public EffectElementControl(EffectElement effect) {
         this.effect = effect;
-        initiazize();
+        initialize();
     }
-
-    private void initiazize() {
+    private void initialize() {
         hp = hpCurrent = FastMath.nextRandomInt(effect.getMaxHp(), effect.getMaxHp());
 
         velocity = calculateVelocity(effect);
@@ -85,9 +80,8 @@ public abstract class EffectElementControl extends AbstractControl {
 
     @Override
     protected void controlUpdate(float tpf) {
-        if (!enabled || spatial == null) {
+        if (!enabled || spatial == null)
             return;
-        }
 
         if (effect.getFlags().contains(EffectElement.EffectElementFlag.SHRINK)) {
             scale.sub(scaleRatio);
@@ -103,7 +97,6 @@ public abstract class EffectElementControl extends AbstractControl {
                 location.y = height;
             }
             spatial.setLocalTranslation(location);
-            //System.out.println(location);
         }
 
         if (effect.getAirFriction() != 0) {

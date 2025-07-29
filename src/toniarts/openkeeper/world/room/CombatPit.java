@@ -24,7 +24,7 @@ import java.awt.Point;
 import toniarts.openkeeper.utils.AssetUtils;
 import static toniarts.openkeeper.world.MapLoader.TILE_WIDTH;
 import toniarts.openkeeper.world.WorldState;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 import toniarts.openkeeper.world.object.ObjectLoader;
 
 /**

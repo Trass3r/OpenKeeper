@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenKeeper.  If not, see <http://www.gnu.org/licenses/>.
  */
-package toniarts.openkeeper.world.effect;
+package toniarts.openkeeper.game.effect;
 
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -26,11 +26,9 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.control.AbstractControl;
 
 /**
- *
- * @author ArchDemon
+ * Migrated from world.effect.EffectGeometry, adapted for game.effect.
  */
-@Deprecated
-public class EffectGeometry extends Geometry {
+public final class EffectGeometry extends Geometry {
     private EffectMesh particleMesh;
     private int frameIndex = 0;
     private ColorRGBA color;

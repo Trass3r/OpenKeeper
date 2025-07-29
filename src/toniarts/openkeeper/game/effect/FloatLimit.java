@@ -14,14 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenKeeper.  If not, see <http://www.gnu.org/licenses/>.
  */
-package toniarts.openkeeper.world.effect;
+package toniarts.openkeeper.game.effect;
 
 /**
  *
- * @author ArchDemon
  */
-@Deprecated
-public class FloatLimit {
+public final class FloatLimit {
     private Float upperLimit = null;
     private Float lowerLimit = null;
     private float value;

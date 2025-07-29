@@ -14,11 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenKeeper.  If not, see <http://www.gnu.org/licenses/>.
  */
-package toniarts.openkeeper.world.effect;
+package toniarts.openkeeper.game.effect;
 
-import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
-import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
@@ -26,40 +24,41 @@ import java.lang.System.Logger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import toniarts.openkeeper.game.map.IMapInformation;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
-import toniarts.openkeeper.world.WorldState;
 
 /**
- * An app state to manage ALL the effects in the world. Mainly their lifetime.
- *
- * @author ArchDemon
- * @author Toni Helenius <helenius.toni@gmail.com>
+ * Modern effect manager that manages the lifecycle of visual effects.
+ * This replaces the deprecated EffectManagerState and removes dependencies
+ * on WorldState and other deprecated world types.
  */
-@Deprecated
-public class EffectManagerState extends AbstractAppState {
+public final class EffectManagerState extends AbstractAppState {
 
     private static final Logger logger = System.getLogger(EffectManagerState.class.getName());
-    
-    public static int ROOM_CLAIM_ID = 2;
+
+    public static final int ROOM_CLAIM_ID = 2;
 
     private final KwdFile kwdFile;
     private final AssetManager assetManager;
     private final List<VisualEffect> activeEffects = new ArrayList<>();
-    private AppStateManager stateManager;
+    private IMapInformation mapInfo;
 
-    public EffectManagerState(KwdFile kwdFile, AssetManager assetManager) {
+    public EffectManagerState(KwdFile kwdFile, AssetManager assetManager, IMapInformation mapInfo) {
         this.kwdFile = kwdFile;
         this.assetManager = assetManager;
+        this.mapInfo = mapInfo;
     }
 
-    @Override
-    public void initialize(AppStateManager stateManager, Application app) {
-        super.initialize(stateManager, app);
-        this.stateManager = stateManager;
-    }
-
+    /**
+     * Updates all active effects. Should be called every frame.
+     *
+     * @param tpf time per frame
+     */
     @Override
     public void update(float tpf) {
+        if (!isEnabled()) {
+            return;
+        }
 
         Iterator<VisualEffect> iterator = activeEffects.iterator();
         // Maintain the effects (on every frame?)
@@ -72,7 +71,7 @@ public class EffectManagerState extends AbstractAppState {
     }
 
     /**
-     * Loads up an particle effect
+     * Loads up a single particle effect, clearing any previous effects
      *
      * @param node the node to attach the effect to
      * @param location particle effect node location, maybe {@code null}
@@ -98,7 +97,7 @@ public class EffectManagerState extends AbstractAppState {
     }
 
     /**
-     * Loads up an particle effect
+     * Loads up a particle effect
      *
      * @param node the node to attach the effect to
      * @param location particle effect node location, maybe {@code null}
@@ -112,15 +111,15 @@ public class EffectManagerState extends AbstractAppState {
         if (effectId == 0) {
             return;
         }
-        VisualEffect visualEffect = new VisualEffect(this, node, location, kwdFile.getEffect(effectId), infinite);
+        var visualEffect = new VisualEffect(this, node, location, kwdFile.getEffect(effectId), infinite);
         activeEffects.add(visualEffect);
     }
 
-    public WorldState getWorldState() {
-        return stateManager.getState(WorldState.class);
+    public IMapInformation getMapInfo() {
+        return mapInfo;
     }
 
-    public AssetManager getAssetManger() {
+    public AssetManager getAssetManager() {
         return assetManager;
     }
 

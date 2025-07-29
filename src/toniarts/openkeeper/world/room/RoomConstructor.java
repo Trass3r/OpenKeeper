@@ -21,7 +21,7 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import static toniarts.openkeeper.tools.convert.map.Room.TileConstruction.*;
 import toniarts.openkeeper.world.WorldState;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 import toniarts.openkeeper.world.object.ObjectLoader;
 
 /**

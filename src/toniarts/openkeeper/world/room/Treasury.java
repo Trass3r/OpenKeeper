@@ -19,7 +19,7 @@ package toniarts.openkeeper.world.room;
 import com.jme3.asset.AssetManager;
 import toniarts.openkeeper.tools.convert.map.Variable.MiscVariable.MiscType;
 import toniarts.openkeeper.world.WorldState;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 import toniarts.openkeeper.world.object.ObjectLoader;
 import toniarts.openkeeper.world.room.control.RoomGoldControl;
 

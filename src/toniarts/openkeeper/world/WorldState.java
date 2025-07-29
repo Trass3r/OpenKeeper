@@ -70,7 +70,7 @@ import toniarts.openkeeper.view.selection.SelectionArea;
 import toniarts.openkeeper.world.control.FlashTileControl;
 import toniarts.openkeeper.world.control.IInteractiveControl;
 import toniarts.openkeeper.world.creature.CreatureControl;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 import toniarts.openkeeper.world.listener.CreatureListener;
 import toniarts.openkeeper.world.listener.RoomListener;
 import toniarts.openkeeper.world.listener.TileChangeListener;
@@ -118,7 +118,7 @@ public abstract class WorldState extends AbstractAppState {
         this.gameState = gameState;
 
         // Effect manager
-        effectManager = new EffectManagerState(kwdFile, assetManager);
+        effectManager = new EffectManagerState(kwdFile, assetManager, null);
 
         // World node
         worldNode = new Node("World");
@@ -185,7 +185,7 @@ public abstract class WorldState extends AbstractAppState {
     private void initPlayerCreatures() {
 
         // Add the initial creatures and add the listeners
-        Map<Short, List<CreatureControl>> playerCreatures = thingLoader.getCreatures().stream().collect(Collectors.groupingBy(c -> c.getOwnerId()));
+        Map<Short, List<CreatureControl>> playerCreatures = thingLoader.getCreatures().stream().collect(Collectors.groupingBy(CreatureControl::getOwnerId));
         for (Keeper player : gameState.getPlayers()) {
             List<CreatureControl> creatures = playerCreatures.get(player.getId());
 //            player.getCreatureControl().init(creatures, kwdFile.getImp());
@@ -743,8 +743,7 @@ public abstract class WorldState extends AbstractAppState {
         if (genericRoom.canStoreGold()) {
             synchronized (goldLock) {
                 for (ObjectControl objectControl : thingLoader.getObjects()) {
-                    if (objectControl instanceof GoldObjectControl && instance.hasCoordinate(objectControl.getTile().getLocation())) {
-                        GoldObjectControl gold = (GoldObjectControl) objectControl;
+                    if (objectControl instanceof GoldObjectControl gold && instance.hasCoordinate(objectControl.getTile().getLocation())) {
                         int goldLeft = (int) genericRoom.getObjectControl(GenericRoom.ObjectType.GOLD).addItem(gold.getGold(), gold.getTile().getLocation(), thingLoader, null);
                         if (goldLeft == 0) {
                             gold.removeObject();
@@ -1442,10 +1441,9 @@ public abstract class WorldState extends AbstractAppState {
         // Floor: If the drop point is quite accurately on top of another pile of gold -> fuse the gold together. Otherwise create another pile, even to the same tile.
         // Room: Add to the room, but any excess gold IS added to the floor tile of the room as loose gold. This loose gold is then automatically transfered to the room when there is room with a small delay.
         // Merge to another loose gold
-        if (control != null && control instanceof GoldObjectControl && ((GoldObjectControl) control).getState() == ObjectControl.ObjectState.NORMAL) {
+        if (control != null && control instanceof GoldObjectControl goc && goc.getState() == ObjectControl.ObjectState.NORMAL) {
 
             // Merge
-            GoldObjectControl goc = (GoldObjectControl) control;
             goc.setGold(goc.getGold() + gold.getGold());
             return;
         }
