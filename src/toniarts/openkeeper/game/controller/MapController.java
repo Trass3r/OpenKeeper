@@ -48,7 +48,7 @@ import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Player;
 import toniarts.openkeeper.tools.convert.map.Terrain;
 import toniarts.openkeeper.tools.convert.map.Variable;
-import toniarts.openkeeper.game.effect.EffectManager;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 
 /**
  * This is controller for the map related functions
@@ -643,7 +643,7 @@ public final class MapController extends Container implements IMapController {
                     notifyTileEffect(point, kwdFile.getTerrain(tile.getTerrainId()).getMaxHealthEffectId(), false);
 
                     // FIXME ROOM_CLAIM_ID is really claim effect?
-                    notifyTileEffect(point, room.getRoom().getEffects().get(EffectManager.ROOM_CLAIM_ID), false);
+                    notifyTileEffect(point, room.getRoom().getEffects().get(EffectManagerState.ROOM_CLAIM_ID), false);
                     // TODO: Claimed room wall tiles lose the claiming I think?
                 }
 

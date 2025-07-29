@@ -35,9 +35,9 @@ import toniarts.openkeeper.tools.convert.map.KwdFile;
  *
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
-public class EffectManager extends AbstractAppState {
+public class EffectManagerState extends AbstractAppState {
 
-    private static final Logger logger = System.getLogger(EffectManager.class.getName());
+    private static final Logger logger = System.getLogger(EffectManagerState.class.getName());
     
     public static final int ROOM_CLAIM_ID = 2;
 
@@ -46,7 +46,7 @@ public class EffectManager extends AbstractAppState {
     private final List<GameVisualEffect> activeEffects = new ArrayList<>();
     private final IEffectContextProvider contextProvider;
 
-    public EffectManager(KwdFile kwdFile, AssetManager assetManager, IEffectContextProvider contextProvider) {
+    public EffectManagerState(KwdFile kwdFile, AssetManager assetManager, IEffectContextProvider contextProvider) {
         this.kwdFile = kwdFile;
         this.assetManager = assetManager;
         this.contextProvider = contextProvider;

@@ -66,19 +66,19 @@ public class GameVisualEffect {
     private final Node effectNode;
     private final KwdFile kwdFile;
     private final AssetManager assetManager;
-    private final EffectManager effectManager;
+    private final EffectManagerState effectManagerState;
     private boolean infinite;
     private PointLight light;
 
-    public GameVisualEffect(EffectManager effectManager, Node node, Effect effect) {
-        this(effectManager, node, null, effect, false);
+    public GameVisualEffect(EffectManagerState effectManagerState, Node node, Effect effect) {
+        this(effectManagerState, node, null, effect, false);
     }
 
-    public GameVisualEffect(EffectManager effectManager, Node node, Vector3f location, Effect effect, boolean infinite) {
+    public GameVisualEffect(EffectManagerState effectManagerState, Node node, Vector3f location, Effect effect, boolean infinite) {
         this.effect = effect;
-        this.kwdFile = effectManager.getKwdFile();
-        this.assetManager = effectManager.getAssetManager();
-        this.effectManager = effectManager;
+        this.kwdFile = effectManagerState.getKwdFile();
+        this.assetManager = effectManagerState.getAssetManager();
+        this.effectManagerState = effectManagerState;
         this.infinite = infinite;
 
         // Create the lists
@@ -154,7 +154,7 @@ public class GameVisualEffect {
 
                 @Override
                 public void onHit(Vector3f location) {
-                    TerrainType terrainType = effectManager.getContextProvider().getTerrainType(WorldUtils.vectorToPoint(location));
+                    TerrainType terrainType = effectManagerState.getContextProvider().getTerrainType(WorldUtils.vectorToPoint(location));
                     if (terrainType == null) {
                         terrainType = TerrainType.UNKNOWN;
                     }
@@ -199,7 +199,7 @@ public class GameVisualEffect {
     }
 
     private void addEffect(Integer id, Vector3f location) {
-        GameVisualEffect visualEffect = new GameVisualEffect(effectManager, effectNode, location, kwdFile.getEffect(id), false);
+        GameVisualEffect visualEffect = new GameVisualEffect(effectManagerState, effectNode, location, kwdFile.getEffect(id), false);
         effects.add(visualEffect);
         effectNode.attachChild(visualEffect.effectNode);
     }
@@ -300,7 +300,7 @@ public class GameVisualEffect {
 
                     @Override
                     public void onHit(Vector3f location) {
-                        TerrainType terrainType = effectManager.getContextProvider().getTerrainType(WorldUtils.vectorToPoint(location));
+                        TerrainType terrainType = effectManagerState.getContextProvider().getTerrainType(WorldUtils.vectorToPoint(location));
                         if (terrainType == null) {
                             terrainType = TerrainType.UNKNOWN;
                         }

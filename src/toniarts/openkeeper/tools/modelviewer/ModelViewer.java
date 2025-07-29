@@ -90,7 +90,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.view.animation.AnimationLoader;
 import toniarts.openkeeper.view.animation.LoopMode;
-import toniarts.openkeeper.game.effect.EffectManager;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 import toniarts.openkeeper.game.effect.NullEffectContextProvider;
 
 /**
@@ -152,7 +152,7 @@ public final class ModelViewer extends SimpleApplication {
     private static final String KEY_MAPPING_TOGGLE_WIREFRAME = "toggle wireframe";
     private static final String KEY_MAPPING_TOGGLE_ROTATION = "toggle rotation";
 
-    private EffectManager effectManager;
+    private EffectManagerState effectManagerState;
     private MapLoaderAppState mapLoaderAppState;
 
     private final ActionListener actionListener = new ActionListener() {
@@ -212,8 +212,8 @@ public final class ModelViewer extends SimpleApplication {
         assetManager.registerLoader(MP2Loader.class, "mp2");
 
         //Effects manager
-        this.effectManager = new EffectManager(getKwdFile(), assetManager, new NullEffectContextProvider());
-        stateManager.attach(effectManager);
+        this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager, new NullEffectContextProvider());
+        stateManager.attach(effectManagerState);
         // init sound loader
         //soundLoader = new SoundsLoader(assetManager);
 
@@ -426,7 +426,7 @@ public final class ModelViewer extends SimpleApplication {
     }
 
     public void onSelectionChanged(Object selection) {
-        effectManager.setEnabled(false);
+        effectManagerState.setEnabled(false);
 
         switch (screen.getTypeControl().getSelection()) {
             case MODELS: {
@@ -440,9 +440,9 @@ public final class ModelViewer extends SimpleApplication {
             case TERRAIN: {
                 // Load the selected terrain
                 Terrain terrain = (Terrain) selection;
-                effectManager.setEnabled(true);
+                effectManagerState.setEnabled(true);
                 Node spat = (Node) new TerrainsLoader().load(this.getAssetManager(),
-                        effectManager, terrain);
+                        effectManagerState, terrain);
                 setupModel(spat, false);
 
                 screen.setupItem(terrain, loadSoundCategory(terrain));
@@ -462,9 +462,9 @@ public final class ModelViewer extends SimpleApplication {
             case OBJECTS: {
                 // Load the selected object
                 GameObject object = (GameObject) selection;
-                effectManager.setEnabled(true);
+                effectManagerState.setEnabled(true);
                 Node spat = (Node) new ObjectsLoader().load(this.getAssetManager(),
-                        effectManager, object);
+                        effectManagerState, object);
                 setupModel(spat, false);
 
                 screen.setupItem(object, loadSoundCategory(object));
@@ -473,9 +473,9 @@ public final class ModelViewer extends SimpleApplication {
             case CREATURES: {
                 // Load the selected creature
                 Creature creature = (Creature) selection;
-                effectManager.setEnabled(true);
+                effectManagerState.setEnabled(true);
                 Node spat = (Node) new CreaturesLoader().load(this.getAssetManager(),
-                        effectManager, creature);
+                        effectManagerState, creature);
                 setupModel(spat, false);
 
                 screen.setupItem(creature, loadSoundCategory(creature));
@@ -484,9 +484,9 @@ public final class ModelViewer extends SimpleApplication {
             case TRAPS: {
                 // Load the selected trap
                 Trap trap = (Trap) selection;
-                effectManager.setEnabled(true);
+                effectManagerState.setEnabled(true);
                 Node spat = (Node) new TrapsLoader().load(this.getAssetManager(),
-                        effectManager, trap);
+                        effectManagerState, trap);
                 setupModel(spat, false);
 
                 screen.setupItem(trap, loadSoundCategory(trap));
@@ -495,9 +495,9 @@ public final class ModelViewer extends SimpleApplication {
             case DOORS: {
                 // Load the selected door
                 Door door = (Door) selection;
-                effectManager.setEnabled(true);
+                effectManagerState.setEnabled(true);
                 Node spat = (Node) new DoorsLoader().load(this.getAssetManager(),
-                        effectManager, door);
+                        effectManagerState, door);
                 setupModel(spat, false);
 
                 screen.setupItem(door, loadSoundCategory(door));
@@ -506,9 +506,9 @@ public final class ModelViewer extends SimpleApplication {
             case ROOMS: {
                 // Load the selected room
                 Room room = (Room) selection;
-                effectManager.setEnabled(true);
+                effectManagerState.setEnabled(true);
                 Node spat = (Node) new RoomsLoader().load(this.getAssetManager(),
-                        effectManager, room);
+                        effectManagerState, room);
                 setupModel(spat, false);
 
                 screen.setupItem(room, loadSoundCategory(room));
@@ -517,9 +517,9 @@ public final class ModelViewer extends SimpleApplication {
             case SHOTS: {
                 // Load the selected shot
                 Shot shot = (Shot) selection;
-                effectManager.setEnabled(true);
+                effectManagerState.setEnabled(true);
                 Node spat = (Node) new ShotsLoader().load(this.getAssetManager(),
-                        effectManager, shot);
+                        effectManagerState, shot);
                 setupModel(spat, false);
 
                 screen.setupItem(shot, loadSoundCategory(shot));
@@ -529,9 +529,9 @@ public final class ModelViewer extends SimpleApplication {
                 // Load the selected effect
                 Node spat = new Node();
                 Effect effect = (Effect) selection;
-                effectManager.setEnabled(true);
+                effectManagerState.setEnabled(true);
                 // Load the selected effect
-                effectManager.loadSingleEffect(spat, new Vector3f(0, 0, 0),
+                effectManagerState.loadSingleEffect(spat, new Vector3f(0, 0, 0),
                         effect.getEffectId(), true);
                 setupModel(spat, false);
 

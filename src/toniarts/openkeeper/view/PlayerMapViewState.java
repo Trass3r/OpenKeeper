@@ -42,8 +42,8 @@ import toniarts.openkeeper.view.map.FlashTileViewState;
 import toniarts.openkeeper.view.map.MapRoomContainer;
 import toniarts.openkeeper.view.map.MapTileContainer;
 import toniarts.openkeeper.view.map.MapViewController;
-import toniarts.openkeeper.game.effect.EffectManager;
-import toniarts.openkeeper.game.effect.NullEffectContextProvider;
+import toniarts.openkeeper.game.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.MapInformationEffectContextProvider;
 import toniarts.openkeeper.world.listener.RoomListener;
 import toniarts.openkeeper.world.listener.TileChangeListener;
 
@@ -64,7 +64,7 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
     private final AssetManager assetManager;
     private final MapTileContainer mapTileContainer;
     private Node worldNode;
-    private final EffectManager effectManager;
+    private final EffectManagerState effectManagerState;
     private List<TileChangeListener> tileChangeListener;
     private Map<Short, List<RoomListener>> roomListeners;
     private final FlashTileViewState flashTileControl;
@@ -108,7 +108,7 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         mapInformation = new MapInformation(mapTileContainer, kwdFile, players);
 
         // Effect manager
-        effectManager = new EffectManager(kwdFile, assetManager, new NullEffectContextProvider());
+        effectManagerState = new EffectManagerState(kwdFile, assetManager, new MapInformationEffectContextProvider(mapInformation));
 
         // Create the actual map
         mapLoader = new MapViewController(assetManager, kwdFile, mapInformation, playerId) {
@@ -134,7 +134,7 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         this.stateManager = stateManager;
 
         // Attach the effect manager
-        stateManager.attach(effectManager);
+        stateManager.attach(effectManagerState);
 
         // Tile flash state
         this.stateManager.attach(flashTileControl);
@@ -156,7 +156,7 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         stateManager.detach(flashTileControl);
 
         // Detach the effect manager
-        stateManager.detach(effectManager);
+        stateManager.detach(effectManagerState);
 
         // The actual map data
         mapRoomContainer.stop();
@@ -247,7 +247,7 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         // Convert point to world coordinates and show effect
         app.enqueue(() -> {
             Vector3f worldPos = new Vector3f(point.x, 0.1f, point.y); // Slightly above ground
-            effectManager.load(worldNode, worldPos, effectId, infinite);
+            effectManagerState.load(worldNode, worldPos, effectId, infinite);
         });
     }
 

@@ -25,7 +25,7 @@ import java.util.List;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.tools.convert.map.GameObject;
 import toniarts.openkeeper.view.loader.ILoader;
-import toniarts.openkeeper.game.effect.EffectManager;
+import toniarts.openkeeper.game.effect.EffectManagerState;
 
 /**
  *
@@ -68,7 +68,7 @@ public final class ObjectsLoader implements ILoader<GameObject> {
         return root;
     }
 
-    public Spatial load(AssetManager assetManager, EffectManager effectManager, GameObject object) {
+    public Spatial load(AssetManager assetManager, EffectManagerState effectManagerState, GameObject object) {
         Spatial root = load(assetManager, object);
 
         List<Integer> effects = new ArrayList<>();
@@ -82,7 +82,7 @@ public final class ObjectsLoader implements ILoader<GameObject> {
                 continue;
             }
 
-            effectManager.loadSingleEffect((Node) root, new Vector3f(1, height++, 1), effectId, true);
+            effectManagerState.loadSingleEffect((Node) root, new Vector3f(1, height++, 1), effectId, true);
         }
 
         return root;
