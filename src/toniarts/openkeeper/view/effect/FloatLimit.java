@@ -18,9 +18,8 @@ package toniarts.openkeeper.view.effect;
 
 /**
  *
- * @author ArchDemon
  */
-public class FloatLimit {
+public final class FloatLimit {
     private Float upperLimit = null;
     private Float lowerLimit = null;
     private float value;

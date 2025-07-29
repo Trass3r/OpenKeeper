@@ -27,15 +27,13 @@ import toniarts.openkeeper.tools.convert.map.Effect;
 import java.lang.System.Logger;
 
 /**
- *
- * @author ArchDemon
+ * Migrated from world.effect.EffectControl, adapted for game.effect.
  */
 public abstract class EffectControl extends AbstractControl {
-    
-    private static final Logger log = System.getLogger(EffectControl.class.getName());
-    
-    private Effect effect;
 
+	private static final Logger log = System.getLogger(EffectControl.class.getName());
+
+	private Effect effect;
     private float hpCurrent;
     private float hp;
     private float height;
@@ -52,35 +50,36 @@ public abstract class EffectControl extends AbstractControl {
 
     public EffectControl(Effect effect) {
         this.effect = effect;
-        initiazize();
+        initialize();
     }
 
-    private void initiazize() {
-        hp = hpCurrent = FastMath.nextRandomInt(effect.getMaxHp(), effect.getMaxHp());
+	private void initialize() {
+		hp = hpCurrent = FastMath.nextRandomInt(effect.getMaxHp(), effect.getMaxHp());
 
-        velocity = calculateVelocity(effect);
-        height = FastMath.nextRandomInt(effect.getLowerHeightLimit(), effect.getUpperHeightLimit());
+		velocity = calculateVelocity(effect);
+		height = FastMath.nextRandomInt(effect.getLowerHeightLimit(), effect.getUpperHeightLimit());
 
-        if (effect.getFlags().contains(Effect.EffectFlag.SHRINK)) {
-            scale = new FloatLimit(effect.getMaxScale(), effect.getMaxScale(), effect.getMinScale());
-            scaleRatio = (effect.getMaxScale() - effect.getMinScale()) / hp;
-        } else if (effect.getFlags().contains(Effect.EffectFlag.EXPAND)) {
-            scale = new FloatLimit(effect.getMinScale(), effect.getMaxScale(), effect.getMinScale());
-            scaleRatio = (effect.getMaxScale() - effect.getMinScale()) / hp;
-        } else if (effect.getFlags().contains(Effect.EffectFlag.EXPAND_THEN_SHRINK)) {
-            scale  = new FloatLimit(effect.getMinScale(), effect.getMaxScale(), effect.getMinScale());
-            scaleRatio = (effect.getMaxScale() - effect.getMinScale()) * 2 / hp;
-        } else {
-            scale = new FloatLimit(effect.getMinScale() + FastMath.nextRandomFloat() * (effect.getMaxScale() - effect.getMinScale()));
-            scaleRatio = 0;
-        }
-    }
+		if (effect.getFlags().contains(Effect.EffectFlag.SHRINK)) {
+			scale = new FloatLimit(effect.getMaxScale(), effect.getMaxScale(), effect.getMinScale());
+			scaleRatio = (effect.getMaxScale() - effect.getMinScale()) / hp;
+		} else if (effect.getFlags().contains(Effect.EffectFlag.EXPAND)) {
+			scale = new FloatLimit(effect.getMinScale(), effect.getMaxScale(), effect.getMinScale());
+			scaleRatio = (effect.getMaxScale() - effect.getMinScale()) / hp;
+		} else if (effect.getFlags().contains(Effect.EffectFlag.EXPAND_THEN_SHRINK)) {
+			scale = new FloatLimit(effect.getMinScale(), effect.getMaxScale(), effect.getMinScale());
+			scaleRatio = (effect.getMaxScale() - effect.getMinScale()) * 2 / hp;
+		} else {
+			scale = new FloatLimit(
+					effect.getMinScale() + FastMath.nextRandomFloat() * (effect.getMaxScale() - effect.getMinScale()));
+			scaleRatio = 0;
+		}
+	}
 
-    public static Vector3f calculateVelocity(IEffect speed) {
+	public static Vector3f calculateVelocity(IEffect speed) {
 
-        float xzAngle = FastMath.nextRandomFloat() * FastMath.TWO_PI;
+		float xzAngle = FastMath.nextRandomFloat() * FastMath.TWO_PI;
         float xzSpeed = speed.getMinSpeedXy()+ FastMath.nextRandomFloat() * (speed.getMaxSpeedXy() - speed.getMinSpeedXy());
-        Vector3f vel = new Vector3f(-(float) Math.sin(xzAngle), 0, (float) Math.cos(xzAngle)).multLocal(xzSpeed);
+		var vel = new Vector3f(-(float) Math.sin(xzAngle), 0, (float) Math.cos(xzAngle)).multLocal(xzSpeed);
 
         // float zyAngle = FastMath.nextRandomFloat() * FastMath.TWO_PI;
         float zySpeed = speed.getMinSpeedYz() + FastMath.nextRandomFloat() * (speed.getMaxSpeedYz() - speed.getMinSpeedYz());
@@ -114,9 +113,8 @@ public abstract class EffectControl extends AbstractControl {
 
     @Override
     protected void controlUpdate(float tpf) {
-        if (!enabled || spatial == null) {
+        if (!enabled || spatial == null)
             return;
-        }
 
         if (effect.getFlags().contains(Effect.EffectFlag.SHRINK)) {
             scale.sub(scaleRatio * tpf);
@@ -140,7 +138,6 @@ public abstract class EffectControl extends AbstractControl {
                 location.y = height;
             }
             spatial.setLocalTranslation(location);
-            //System.out.println(location);
         }
 
         if (effect.getAirFriction() != 0) {

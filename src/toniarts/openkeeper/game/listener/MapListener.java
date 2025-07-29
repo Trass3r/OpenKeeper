@@ -45,4 +45,16 @@ public interface MapListener {
     @Asynchronous
     public void onTileFlash(List<Point> points, boolean enabled, short keeperId);
 
+    /**
+     * Show effect at tile location
+     *
+     * @param point the map coordinate where the effect should be shown
+     * @param effectId the effect ID to show
+     * @param infinite whether the effect should loop infinitely
+     */
+    @Asynchronous
+    default void onTileEffect(Point point, int effectId, boolean infinite) {
+        // Default empty implementation for backward compatibility
+    }
+
 }

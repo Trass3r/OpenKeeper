@@ -39,19 +39,13 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
- * An effect & its elements, or a tree of effects & their elements. The logic is
- * quite here now, how the effects are chained and what they do, but:<br>
- * TODO
- * <ul>
- * <li>We probably need our own particle emitter, the stock wont probably do..
- * Just pass the Effect & EffectElement to our custom one and boom</li>
- * <li>Maybe cache the emitters?</li>
- * </ul>
+ * Modern visual effect class that replaces the deprecated VisualEffect.
+ * This class manages effects without depending on WorldState or deprecated world types.
  *
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
-public class VisualEffect {
-    
+public final class VisualEffect {
+
     private static final Logger logger = System.getLogger(VisualEffect.class.getName());
 
     private final Effect effect;
@@ -71,7 +65,7 @@ public class VisualEffect {
     public VisualEffect(EffectManagerState effectManagerState, Node node, Vector3f location, Effect effect, boolean infinite) {
         this.effect = effect;
         this.kwdFile = effectManagerState.getKwdFile();
-        this.assetManager = effectManagerState.getAssetManger();
+        this.assetManager = effectManagerState.getAssetManager();
         this.effectManagerState = effectManagerState;
         this.infinite = infinite;
 
@@ -133,12 +127,6 @@ public class VisualEffect {
 
                 AnimControl animControl = (AnimControl) model.getControl(AnimControl.class);
                 if (animControl != null) {
-//                    AnimChannel channel = animControl.getChannel(0);
-//                    channel.setAnim(ANIM_NAME);
-//                    resource.getData(ArtResource.KEY_FPS);
-//                    resource.getData(ArtResource.KEY_FRAMES);
-//                    channel.setSpeed(speed);
-//                    channel.setTime(time);
                     animControl.setEnabled(true);
                 }
             }
@@ -168,7 +156,7 @@ public class VisualEffect {
                             && effect.getHitWaterEffectId() != 0) {
                         VisualEffect.this.addEffect(effect.getHitWaterEffectId(), location);
                     } else if (effect.getHitSolidEffectId() != 0) {
-                        // && tile.getTerrain().getFlags().contains(Terrain.TerrainFlag.SOLID)) {
+                        // && terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
                         if (effect.getFlags().contains(Effect.EffectFlag.DIE_WHEN_HIT_SOLID)) {
                             onDie(location);
                         } else {
@@ -246,7 +234,7 @@ public class VisualEffect {
             case ALPHA:
             case ADDITIVE_ALPHA:
             case SPRITE: {
-                ParticleEmitter emitter = new ParticleEmitter(element.getName(),
+                var emitter = new ParticleEmitter(element.getName(),
                         ParticleMesh.Type.Triangle,
                         effect.getElementsPerTurn());
                 emitter.setParticlesPerSec(0);
@@ -294,7 +282,7 @@ public class VisualEffect {
             case MESH:
             case ANIMATING_MESH:
             case PROCEDURAL_MESH: {
-                EffectEmitter emitter = new EffectEmitter(element, effect) {
+                var emitter = new EffectEmitter(element, effect) {
 
                     @Override
                     public void onDeath(Vector3f location) {
@@ -319,7 +307,7 @@ public class VisualEffect {
                                 && element.getHitWaterElementId() != 0) {
                             VisualEffect.this.addEffectElement(element.getHitWaterElementId(), location);
                         } else if (element.getHitSolidElementId() != 0) {
-                            // && tile.getTerrain().getFlags().contains(Terrain.TerrainFlag.SOLID)) {
+                            // && terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
                             if (element.getFlags().contains(EffectElement.EffectElementFlag.DIE_WHEN_HIT_SOLID)) {
                                 onDeath(location);
                             } else {
@@ -343,12 +331,6 @@ public class VisualEffect {
 
                     AnimControl animControl = (AnimControl) model.getControl(AnimControl.class);
                     if (animControl != null) {
-//                        AnimChannel channel = animControl.getChannel(0);
-//                        channel.setAnim(ANIM_NAME);
-//                        resource.getData(ArtResource.KEY_FPS);
-//                        resource.getData(ArtResource.KEY_FRAMES);
-//                        channel.setSpeed(speed);
-//                        channel.setTime(time);
                         animControl.setEnabled(true);
                     }
                 }

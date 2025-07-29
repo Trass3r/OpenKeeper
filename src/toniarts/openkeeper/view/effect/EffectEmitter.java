@@ -24,8 +24,7 @@ import toniarts.openkeeper.tools.convert.map.Effect;
 import toniarts.openkeeper.tools.convert.map.EffectElement;
 
 /**
- *
- * @author ArchDemon
+ * Migrated from world.effect.EffectEmitter, adapted for game.effect.
  */
 public abstract class EffectEmitter extends Node {
     private boolean enabled = true;
