@@ -646,7 +646,7 @@ public final class MapController extends Container implements IMapController {
 //                    // FIXME ROOM_CLAIM_ID is realy claim effect?
 //                    effectManager.load(worldNode,
 //                            WorldUtils.pointToVector3f(p2).addLocal(0, MapViewController.FLOOR_HEIGHT, 0),
-//                            room.getRoom().getEffects().get(EffectManagerState.ROOM_CLAIM_ID), false);
+//                            room.getRoom().getEffects().get(toniarts.openkeeper.game.effect.EffectManager.ROOM_CLAIM_ID), false);
                     // TODO: Claimed room wall tiles lose the claiming I think?
                 }
 

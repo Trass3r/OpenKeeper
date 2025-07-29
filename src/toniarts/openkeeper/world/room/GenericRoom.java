@@ -39,7 +39,6 @@ import toniarts.openkeeper.view.map.WallSection;
 import toniarts.openkeeper.world.MapLoader;
 import toniarts.openkeeper.world.WorldState;
 import toniarts.openkeeper.world.effect.EffectManagerState;
-import toniarts.openkeeper.game.effect.EffectManager;
 import toniarts.openkeeper.world.object.ObjectControl;
 import toniarts.openkeeper.world.object.ObjectLoader;
 import toniarts.openkeeper.world.room.control.RoomObjectControl;
@@ -86,7 +85,6 @@ public abstract class GenericRoom {
     protected String tooltip;
     private static String notOwnedTooltip = null;
     protected final EffectManagerState effectManager;
-    protected final EffectManager gameEffectManager;
     private ObjectType defaultObjectType;
     private final Map<ObjectType, RoomObjectControl> objectControls = new HashMap<>();
     protected boolean destroyed = false;
@@ -121,7 +119,6 @@ public abstract class GenericRoom {
         this.assetManager = assetManager;
         this.roomInstance = roomInstance;
         this.effectManager = effectManager;
-        this.gameEffectManager = worldState.getGameEffectManager();
         this.objectLoader = objectLoader;
         this.worldState = worldState;
 

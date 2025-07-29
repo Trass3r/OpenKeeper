@@ -36,7 +36,7 @@ import toniarts.openkeeper.view.map.construction.room.PrisonConstructor;
 import toniarts.openkeeper.view.map.construction.room.StoneBridgeConstructor;
 import toniarts.openkeeper.view.map.construction.room.TempleConstructor;
 import toniarts.openkeeper.view.map.construction.room.WorkshopConstructor;
-import toniarts.openkeeper.world.effect.EffectManagerState;
+import toniarts.openkeeper.game.effect.EffectManager;
 
 /**
  * A factory class you can use to build buildings
@@ -52,7 +52,7 @@ public final class RoomFactory {
     }
 
     public static RoomConstructor constructRoom(RoomInstance roomInstance, AssetManager assetManager,
-            EffectManagerState effectManager, KwdFile kwdFile) {
+            EffectManager effectManager, KwdFile kwdFile) {
 
         String roomName = roomInstance.getRoom().getName();
 
