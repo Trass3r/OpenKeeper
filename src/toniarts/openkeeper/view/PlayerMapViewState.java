@@ -25,7 +25,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.simsilica.es.EntityData;
 import toniarts.openkeeper.Main;
-import toniarts.openkeeper.game.controller.IMapController;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.game.listener.MapListener;
 import toniarts.openkeeper.game.listener.PlayerActionListener;
@@ -42,6 +41,7 @@ import toniarts.openkeeper.view.map.MapTileContainer;
 import toniarts.openkeeper.view.map.MapViewController;
 
 import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Collection;
 import java.util.List;
 
@@ -65,17 +65,11 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
     private final EffectManagerState effectManager;
     private final FlashTileViewState flashTileControl;
     private final MapRoomContainer mapRoomContainer;
-    private final IMapController mapController; // Optional - for local tile effects
 
     public PlayerMapViewState(Main app, final KwdFile kwdFile, final AssetManager assetManager, Collection<Keeper> players, EntityData entityData, short playerId, ILoadCompleteNotifier loadCompleteNotifier) {
-        this(app, kwdFile, assetManager, players, entityData, playerId, loadCompleteNotifier, null);
-    }
-
-    public PlayerMapViewState(Main app, final KwdFile kwdFile, final AssetManager assetManager, Collection<Keeper> players, EntityData entityData, short playerId, ILoadCompleteNotifier loadCompleteNotifier, IMapController mapController) {
         this.app = app;
         this.kwdFile = kwdFile;
         this.assetManager = assetManager;
-        this.mapController = mapController;
 
         // World node
         worldNode = new Node("World");
@@ -106,14 +100,6 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
             }
 
         };
-
-        // Register ourselves as a listener for tile changes
-        mapTileContainer.addMapListener(this);
-
-        // Register with the map controller for local tile effects if available
-        if (mapController != null) {
-            mapController.addListener(this);
-        }
 
         mapInformation = new MapInformation(mapTileContainer, kwdFile, players);
 
@@ -173,11 +159,6 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         mapTileContainer.removeMapListener(this);
         mapTileContainer.stop();
 
-        // Unregister from the map controller if we registered with it
-        if (mapController != null) {
-            mapController.removeListener(this);
-        }
-
         super.cleanup();
     }
 
@@ -235,13 +216,13 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
 
     @Override
     public void onTileEffect(Point point, int effectId, boolean infinite) {
-        if (effectId == 0) {
+        logger.log(Level.INFO, "{0}, effectId={1}, infinite={2}", point, effectId, infinite);
+        if (effectId == 0)
             return;
-        }
 
         // Convert point to world coordinates and show effect
         app.enqueue(() -> {
-            Vector3f worldPos = new Vector3f(point.x, 0.1f, point.y); // Slightly above ground
+            var worldPos = new Vector3f(point.x, 0.2f, point.y); // Slightly above ground
             effectManager.load(worldNode, worldPos, effectId, infinite);
         });
     }
