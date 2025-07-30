@@ -44,6 +44,8 @@ import toniarts.openkeeper.tools.convert.map.Terrain;
 import toniarts.openkeeper.tools.convert.map.Variable;
 import toniarts.openkeeper.utils.Point;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,6 +60,8 @@ import java.util.Set;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class MapController extends Container implements IMapController {
+
+    private static final Logger logger = System.getLogger(MapController.class.getName());
 
     private final IMapData mapData;
     private final KwdFile kwdFile;
@@ -335,9 +339,9 @@ public final class MapController extends Container implements IMapController {
     }
 
     private void notifyTileEffect(Point point, int effectId, boolean infinite) {
-        for (MapListener mapListener : mapListeners.getArray()) {
+        logger.log(Level.INFO, "{0}, effectId={1}, infinite={2}, listeners={3}", point, effectId, infinite, mapListeners.size());
+        for (MapListener mapListener : mapListeners.getArray())
             mapListener.onTileEffect(point, effectId, infinite);
-        }
     }
 
     @Override
@@ -626,6 +630,7 @@ public final class MapController extends Container implements IMapController {
                     notifyTileEffect(point, kwdFile.getTerrain(tile.getTerrainId()).getMaxHealthEffectId(), false);
 
                     // FIXME ROOM_CLAIM_ID is really claim effect?
+                    logger.log(Level.INFO, "Room claimed! Triggering claim effect for room at {0}", point);
                     notifyTileEffect(point, room.getRoom().getEffects().get(EffectManagerState.ROOM_CLAIM_ID), false);
                     // TODO: Claimed room wall tiles lose the claiming I think?
                 }
