@@ -21,6 +21,7 @@ import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -111,7 +112,11 @@ public final class EffectManagerState extends AbstractAppState {
         if (effectId == 0) {
             return;
         }
-        var visualEffect = new VisualEffect(this, node, location, kwdFile.getEffect(effectId), infinite);
+
+        var effect = kwdFile.getEffect(effectId);
+        logger.log(Level.INFO, "Starting effect {0}={1} at {2}, Infinite={3}", effectId, effect.getName(), location, infinite);
+
+        var visualEffect = new VisualEffect(this, node, location, effect, infinite);
         activeEffects.add(visualEffect);
     }
 
