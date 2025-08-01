@@ -228,8 +228,42 @@ public final class GameConsole {
     }
 
     private void spawnCreature(short creatureId, short level) {
-//        Vector2f dhEntrance = WorldUtils.pointToVector2f(((ICreatureEntrance) keeper.getRoomControl().getDungeonHeart()).getEntranceCoordinate());
-//        stateManager.getState(WorldState.class).getThingLoader().spawnCreature(creatureId, keeper.getId(), level, dhEntrance, false, null);
+        // Use the new system: get the entrance location and spawn via CreatureControl
+        /*
+        PlayerState playerState = stateManager.getState(PlayerState.class);
+        if (playerState == null) {
+            console.outputError("PlayerState not found");
+            return;
+        }
+        PlayerRoomControl roomControl = playerState.getRoomControl();
+        if (roomControl == null) {
+            console.outputError("PlayerRoomControl not found");
+            return;
+        }
+        IRoomController dungeonHeart = roomControl.getDungeonHeart();
+        if (dungeonHeart == null) {
+            console.outputError("Dungeon Heart not found");
+            return;
+        }
+        if (!(dungeonHeart instanceof ICreatureEntrance)) {
+            console.outputError("Dungeon Heart does not implement ICreatureEntrance");
+            return;
+        }
+        Point entrance = ((ICreatureEntrance) dungeonHeart).getEntranceCoordinate();
+        if (entrance == null) {
+            console.outputError("Dungeon Heart entrance not found");
+            return;
+        }
+        Vector2f dhEntrance = WorldUtils.pointToVector2f(entrance);
+        GameClientState gameClientState = stateManager.getState(GameClientState.class);
+        ICreaturesController creaturesController = gameClientState.getPlayerController(keeper.getId()).getCreaturesController();
+        if (creaturesController == null) {
+            console.outputError("CreaturesController not found");
+            return;
+        }
+        ICreaturesController.SpawnType spawnType = ICreaturesController.SpawnType.ENTRANCE;
+        creaturesController.spawnCreature(creatureId, keeper.getId(), level, dhEntrance, spawnType);
+        */
     }
 
     private boolean showHelpMessage() {

@@ -40,6 +40,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.game.data.ResearchableEntity;
+import toniarts.openkeeper.game.listener.MapTileChange;
 import toniarts.openkeeper.game.network.NetworkConstants;
 import toniarts.openkeeper.game.network.message.GameLoadProgressData;
 import toniarts.openkeeper.game.state.CheatState;
@@ -321,6 +322,13 @@ public final class GameHostedService extends AbstractHostedConnectionService imp
     public void tileEffect(Point point, int effectId, boolean infinite) {
         for (Map.Entry<ClientInfo, GameSessionImpl> gameSession : players.entrySet()) {
             gameSession.getValue().onTileEffect(point, effectId, infinite);
+        }
+    }
+
+    @Override
+    public void onTilesChanged(List<MapTileChange> changes) {
+        for (Map.Entry<ClientInfo, GameSessionImpl> gameSession : players.entrySet()) {
+            gameSession.getValue().onTilesChanged(changes);
         }
     }
 
@@ -688,6 +696,11 @@ public final class GameHostedService extends AbstractHostedConnectionService imp
         @Override
         public void onTileFlash(List<Point> points, boolean enabled, short keeperId) {
             getCallback().onTileFlash(points, enabled, keeperId);
+        }
+
+        @Override
+        public void onTilesChanged(List<MapTileChange> changes) {
+            getCallback().onTilesChanged(changes);
         }
 
         @Override

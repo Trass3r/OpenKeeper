@@ -35,6 +35,7 @@ import toniarts.openkeeper.game.controller.player.PlayerSpellControl;
 import toniarts.openkeeper.game.controller.player.PlayerTrapControl;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.game.listener.MapListener;
+import toniarts.openkeeper.game.listener.MapTileChange;
 import toniarts.openkeeper.game.listener.PlayerActionListener;
 import toniarts.openkeeper.game.state.loop.GameLoopManager;
 import toniarts.openkeeper.game.state.session.GameSessionServerService;
@@ -386,6 +387,12 @@ public final class GameServerState extends AbstractAppState {
         @Override
         public void onTileEffect(Point point, int effectId, boolean infinite) {
             gameService.tileEffect(point, effectId, infinite);
+        }
+
+        @Override
+        public void onTilesChanged(List<MapTileChange> changes) {
+            // Forward fine-grained changes to clients - use new method to preserve change types
+            gameService.onTilesChanged(changes);
         }
     }
 

@@ -65,6 +65,7 @@ import toniarts.openkeeper.game.controller.room.AbstractRoomController.ObjectTyp
 import toniarts.openkeeper.game.controller.room.IRoomController;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.game.listener.MapListener;
+import toniarts.openkeeper.game.listener.MapTileChange;
 import toniarts.openkeeper.game.listener.PlayerActionListener;
 import toniarts.openkeeper.game.listener.RoomListener;
 import toniarts.openkeeper.game.logic.IEntityPositionLookup;
@@ -326,6 +327,20 @@ public final class TaskManager implements ITaskManager, IGameLogicUpdatable {
             @Override
             public void onTileFlash(List<Point> points, boolean enabled, short keeperId) {
                 // Not interested
+            }
+
+            @Override
+            public void onTileEffect(Point point, int effectId, boolean infinite) {
+                // Not interested
+            }
+
+            @Override
+            public void onTilesChanged(List<MapTileChange> changes) {
+                // Use the fine-grained changes for optimized processing
+                List<Point> updatedTiles = changes.stream()
+                    .map(change -> change.getLocation())
+                    .collect(Collectors.toList());
+                onTilesChange(updatedTiles);
             }
 
         });

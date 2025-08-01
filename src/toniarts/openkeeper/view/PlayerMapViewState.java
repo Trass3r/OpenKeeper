@@ -26,7 +26,9 @@ import com.jme3.scene.Spatial;
 import com.simsilica.es.EntityData;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.game.data.Keeper;
+import toniarts.openkeeper.game.listener.MapChangeType;
 import toniarts.openkeeper.game.listener.MapListener;
+import toniarts.openkeeper.game.listener.MapTileChange;
 import toniarts.openkeeper.game.listener.PlayerActionListener;
 import toniarts.openkeeper.game.map.IMapInformation;
 import toniarts.openkeeper.game.map.IRoomsInformation;
@@ -42,8 +44,7 @@ import toniarts.openkeeper.view.map.MapViewController;
 
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Handles the handling of game world for a player, visually
@@ -190,6 +191,49 @@ public abstract class PlayerMapViewState extends AbstractAppState implements Map
         // FIXME: See in what thread we are, perhaps even do everything ready, just the attaching in render thread
         app.enqueue(() -> {
             mapLoader.updateTiles(points);
+        });
+    }
+
+    @Override
+    public void onTilesChanged(List<MapTileChange> changes) {
+        logger.log(System.Logger.Level.DEBUG, "PlayerMapViewState.onTilesChanged: {0} changes", changes.size());
+        
+        // Group changes by type for optimized processing
+        Map<MapChangeType, List<Point>> changesByType = changes.stream()
+                .collect(groupingBy(MapTileChange::getChangeType,
+                        mapping(MapTileChange::getLocation, toList())));
+        
+        app.enqueue(() -> {
+            // Handle selection changes efficiently (overlay updates only)
+            if (changesByType.containsKey(MapChangeType.SELECTION)) {
+                List<Point> selectionChanges = changesByType.get(MapChangeType.SELECTION);
+                logger.log(System.Logger.Level.DEBUG, "Updating selection overlay for {0} tiles", selectionChanges.size());
+                mapLoader.updateTileSelections(selectionChanges.toArray(new Point[0]));
+            }
+            
+            // Handle ownership changes (may need material updates)
+            if (changesByType.containsKey(MapChangeType.OWNERSHIP)) {
+                List<Point> ownershipChanges = changesByType.get(MapChangeType.OWNERSHIP);
+                logger.log(System.Logger.Level.DEBUG, "Updating ownership for {0} tiles", ownershipChanges.size());
+                mapLoader.updateTileOwnership(ownershipChanges.toArray(new Point[0]));
+            }
+            
+            // Handle structural changes (full reconstruction needed)
+            List<Point> structuralChanges = new ArrayList<>();
+            if (changesByType.containsKey(MapChangeType.TERRAIN)) {
+                structuralChanges.addAll(changesByType.get(MapChangeType.TERRAIN));
+            }
+            if (changesByType.containsKey(MapChangeType.ROOM_STRUCTURE)) {
+                structuralChanges.addAll(changesByType.get(MapChangeType.ROOM_STRUCTURE));
+            }
+            if (changesByType.containsKey(MapChangeType.UNKNOWN)) {
+                structuralChanges.addAll(changesByType.get(MapChangeType.UNKNOWN));
+            }
+            
+            if (!structuralChanges.isEmpty()) {
+                logger.log(System.Logger.Level.DEBUG, "Full reconstruction needed for {0} tiles", structuralChanges.size());
+                mapLoader.updateTiles(structuralChanges.toArray(new Point[0]));
+            }
         });
     }
 

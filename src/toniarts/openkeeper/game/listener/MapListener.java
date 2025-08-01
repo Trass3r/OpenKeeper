@@ -28,12 +28,20 @@ import java.util.List;
 public interface MapListener {
 
     /**
-     * On tiles changed
+     * On tiles changed (legacy method - use onTilesChanged with change types when possible)
      *
      * @param updatedTiles the tiles that changed
      */
     @Asynchronous
     public void onTilesChange(List<Point> updatedTiles);
+
+    /**
+     * On tiles changed with detailed change information for optimized updates
+     *
+     * @param changes the specific changes that occurred
+     */
+    @Asynchronous
+    public void onTilesChanged(List<MapTileChange> changes);
 
     /**
      * Map tile should flash

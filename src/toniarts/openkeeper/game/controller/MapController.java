@@ -29,7 +29,9 @@ import toniarts.openkeeper.game.controller.room.AbstractRoomController.ObjectTyp
 import toniarts.openkeeper.game.controller.room.IRoomController;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.view.effect.EffectManagerState;
+import toniarts.openkeeper.game.listener.MapChangeType;
 import toniarts.openkeeper.game.listener.MapListener;
+import toniarts.openkeeper.game.listener.MapTileChange;
 import toniarts.openkeeper.game.listener.RoomListener;
 import toniarts.openkeeper.game.map.IMapData;
 import toniarts.openkeeper.game.map.IMapInformation;
@@ -264,7 +266,7 @@ public final class MapController extends Container implements IMapController {
 
     @Override
     public void selectTiles(Vector2f start, Vector2f end, boolean select, short playerId) {
-        List<Point> updatableTiles = new ArrayList<>();
+        List<MapTileChange> changes = new ArrayList<>();
         for (int x = (int) Math.max(0, start.x); x < Math.min(kwdFile.getMap().getWidth(), end.x + 1); x++) {
             for (int y = (int) Math.max(0, start.y); y < Math.min(kwdFile.getMap().getHeight(), end.y + 1); y++) {
                 IMapTileController tile = getMapData().getTile(x, y);
@@ -275,15 +277,20 @@ public final class MapController extends Container implements IMapController {
                 if (!terrain.getFlags().contains(Terrain.TerrainFlag.TAGGABLE)) {
                     continue;
                 }
+                boolean wasSelected = tile.isSelected(playerId);
                 tile.setSelected(select, playerId);
-                updatableTiles.add(tile.getLocation());
+                
+                // Only notify if selection actually changed
+                if (wasSelected != select) {
+                    changes.add(new MapTileChange(tile.getLocation(), MapChangeType.SELECTION, wasSelected, select));
+                }
             }
         }
-        //Point[] tiles = updatableTiles.toArray(new Point[updatableTiles.size()]);
-        //mapLoader.updateTiles(tiles);
 
-        // Notify
-        notifyTileChange(updatableTiles);
+        // Notify with fine-grained selection changes
+        if (!changes.isEmpty()) {
+            notifyTileChanges(changes);
+        }
     }
 
     @Override
@@ -336,6 +343,31 @@ public final class MapController extends Container implements IMapController {
         for (MapListener mapListener : mapListeners.getArray()) {
             mapListener.onTilesChange(updatedTiles);
         }
+    }
+
+    /**
+     * Notify listeners of specific tile changes with detailed context
+     */
+    private void notifyTileChanges(List<MapTileChange> changes) {
+        for (MapListener mapListener : mapListeners.getArray()) {
+            mapListener.onTilesChanged(changes);
+        }
+    }
+
+    /**
+     * Notify of a single tile change with specific type
+     */
+    private void notifyTileChange(Point location, MapChangeType changeType) {
+        List<MapTileChange> changes = List.of(new MapTileChange(location, changeType));
+        notifyTileChanges(changes);
+    }
+
+    /**
+     * Notify of a single tile change with old/new values
+     */
+    private void notifyTileChange(Point location, MapChangeType changeType, Object oldValue, Object newValue) {
+        List<MapTileChange> changes = List.of(new MapTileChange(location, changeType, oldValue, newValue));
+        notifyTileChanges(changes);
     }
 
     private void notifyTileEffect(Point point, int effectId, boolean infinite) {
@@ -622,10 +654,15 @@ public final class MapController extends Container implements IMapController {
             if (applyDamage(roomTile, damagePerTile)) {
 
                 // If one of the tiles runs out (everyone should run out of the same time, unless a new tile has recently being added..)
+                List<MapTileChange> ownershipChanges = new ArrayList<>();
                 for (Point p2 : roomTiles) {
                     roomTile = getMapData().getTile(p2);
+                    short oldOwner = roomTile.getOwnerId();
                     roomTile.setOwnerId(playerId); // Claimed!
                     applyHealing(roomTile, tile.getMaxHealth());
+
+                    // Track ownership change
+                    ownershipChanges.add(new MapTileChange(p2, MapChangeType.OWNERSHIP, oldOwner, playerId));
 
                     notifyTileEffect(point, kwdFile.getTerrain(tile.getTerrainId()).getMaxHealthEffectId(), false);
 
@@ -635,8 +672,8 @@ public final class MapController extends Container implements IMapController {
                     // TODO: Claimed room wall tiles lose the claiming I think?
                 }
 
-                // Notify
-                notifyTileChange(roomTiles);
+                // Notify with fine-grained ownership changes
+                notifyTileChanges(ownershipChanges);
                 room.captured(playerId);
                 room.setHealth(room.getMaxHealth());
                 notifyOnCapturedByEnemy(owner, room);

@@ -29,6 +29,7 @@ import java.util.List;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.game.data.ResearchableEntity;
+import toniarts.openkeeper.game.listener.MapTileChange;
 import toniarts.openkeeper.game.state.CheatState;
 import toniarts.openkeeper.game.state.GameClientState;
 import toniarts.openkeeper.game.state.GameServerState;
@@ -265,6 +266,13 @@ public final class LocalGameSession implements GameSessionServerService, GameSes
     public void tileEffect(Point point, int effectId, boolean infinite) {
         for (GameSessionListener listener : listeners.getArray()) {
             listener.onTileEffect(point, effectId, infinite);
+        }
+    }
+
+    @Override
+    public void onTilesChanged(List<MapTileChange> changes) {
+        for (GameSessionListener listener : listeners.getArray()) {
+            listener.onTilesChanged(changes);
         }
     }
 

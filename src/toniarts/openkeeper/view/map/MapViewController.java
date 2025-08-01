@@ -158,6 +158,9 @@ public abstract class MapViewController implements ILoader<KwdFile> {
      * @param points tile coordinates to update
      */
     public void updateTiles(Point... points) {
+        long startTime = System.nanoTime();
+        logger.log(Level.DEBUG, "MapViewController.updateTiles: Updating {0} tiles", points.length);
+
         Set<Point> pointsToUpdate = new HashSet<>();
 
         // FIXME: This is really quite heavy and unneeded, just a quick "fix"
@@ -185,6 +188,9 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 }
             }
         }
+
+        logger.log(Level.DEBUG, "MapViewController.updateTiles: Expanded {0} input tiles to {1} tiles to update", 
+                   points.length, pointsToUpdate.size());
 
         // Reconstruct all tiles in the area
         Set<BatchNode> nodesNeedBatching = new HashSet<>();
@@ -221,6 +227,86 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         // Batch
         for (BatchNode batchNode : nodesNeedBatching) {
             batchNode.batch();
+        }
+        
+        long endTime = System.nanoTime();
+        long durationMs = (endTime - startTime) / 1_000_000;
+        logger.log(Level.DEBUG, "MapViewController.updateTiles: Completed in {0}ms, updated {1} tiles", 
+                   durationMs, pointsToUpdate.size());
+    }
+
+    /**
+     * Optimized update for selection changes - only updates visual overlay
+     */
+    public void updateTileSelections(Point... points) {
+        long startTime = System.nanoTime();
+        logger.log(Level.DEBUG, "MapViewController.updateTileSelections: Updating selection for {0} tiles", points.length);
+        
+        // For selection changes, we only need to update the material properties, not reconstruct geometry
+        for (Point point : points) {
+            IMapTileInformation tile = getMapData().getTile(point);
+            if (tile != null) {
+                Node terrainNode = (Node) map.getChild(TERRAIN_NODE);
+                Node pageNode = getPageNode(point, terrainNode);
+                
+                // Update materials on existing geometries
+                updateTileMaterials(tile, pageNode);
+            }
+        }
+        
+        long endTime = System.nanoTime();
+        long durationMs = (endTime - startTime) / 1_000_000;
+        logger.log(Level.DEBUG, "MapViewController.updateTileSelections: Completed in {0}ms", durationMs);
+    }
+
+    /**
+     * Optimized update for ownership changes - updates materials but may need texture changes
+     */
+    public void updateTileOwnership(Point... points) {
+        long startTime = System.nanoTime();
+        logger.log(Level.DEBUG, "MapViewController.updateTileOwnership: Updating ownership for {0} tiles", points.length);
+        
+        // For ownership changes, we need to update materials and possibly textures
+        Set<BatchNode> nodesNeedBatching = new HashSet<>();
+        
+        for (Point point : points) {
+            IMapTileInformation tile = getMapData().getTile(point);
+            if (tile != null) {
+                Node terrainNode = (Node) map.getChild(TERRAIN_NODE);
+                Node pageNode = getPageNode(point, terrainNode);
+                
+                // Update tile materials for new ownership
+                updateTileMaterials(tile, pageNode);
+                
+                // Mark batch nodes for potential re-batching if materials changed significantly
+                nodesNeedBatching.add((BatchNode) pageNode.getChild(FLOOR_INDEX));
+                nodesNeedBatching.add((BatchNode) pageNode.getChild(WALL_INDEX));
+                nodesNeedBatching.add((BatchNode) pageNode.getChild(TOP_INDEX));
+            }
+        }
+        
+        // Re-batch affected nodes
+        for (BatchNode batchNode : nodesNeedBatching) {
+            batchNode.batch();
+        }
+        
+        long endTime = System.nanoTime();
+        long durationMs = (endTime - startTime) / 1_000_000;
+        logger.log(Level.DEBUG, "MapViewController.updateTileOwnership: Completed in {0}ms", durationMs);
+    }
+
+    /**
+     * Helper method to update tile materials without full reconstruction
+     */
+    private void updateTileMaterials(IMapTileInformation tile, Node pageNode) {
+        for (int index = 0; index < 3; index++) { // FLOOR, WALL, TOP
+            Node layerNode = (Node) pageNode.getChild(index);
+            if (layerNode != null) {
+                Node tileNode = getTileNode(tile.getLocation(), layerNode);
+                if (tileNode != null) {
+                    setTileMaterialToGeometries(tile, tileNode);
+                }
+            }
         }
     }
 

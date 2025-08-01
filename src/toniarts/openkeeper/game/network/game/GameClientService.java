@@ -40,6 +40,7 @@ import toniarts.openkeeper.game.network.message.GameLoadProgressData;
 import toniarts.openkeeper.game.state.CheatState;
 import toniarts.openkeeper.game.state.session.GameSession;
 import toniarts.openkeeper.game.state.session.GameSessionClientService;
+import toniarts.openkeeper.game.listener.MapTileChange;
 import toniarts.openkeeper.game.state.session.GameSessionListener;
 import toniarts.openkeeper.tools.convert.map.TriggerAction;
 
@@ -422,6 +423,13 @@ public final class GameClientService extends AbstractClientService
         public void setPossession(EntityId target) {
             for (GameSessionListener l : listeners.getArray()) {
                 l.setPossession(target);
+            }
+        }
+
+        @Override
+        public void onTilesChanged(List<MapTileChange> changes) {
+            for (GameSessionListener l : listeners.getArray()) {
+                l.onTilesChanged(changes);
             }
         }
     }

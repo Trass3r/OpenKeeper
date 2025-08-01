@@ -22,6 +22,7 @@ import toniarts.openkeeper.utils.Point;
 import java.util.Collection;
 import java.util.List;
 import toniarts.openkeeper.game.data.Keeper;
+import toniarts.openkeeper.game.listener.MapTileChange;
 import toniarts.openkeeper.game.listener.PlayerListener;
 
 /**
@@ -59,6 +60,14 @@ public interface GameSessionService extends PlayerListener, PlayerService {
      */
     @Asynchronous
     public void updateTiles(List<Point> updatedTiles);
+
+    /**
+     * Signals that map tiles have been changed with detailed change information
+     *
+     * @param changes the specific changes that occurred
+     */
+    @Asynchronous
+    public void onTilesChanged(List<MapTileChange> changes);
 
     /**
      * Map tiles should be set flashing

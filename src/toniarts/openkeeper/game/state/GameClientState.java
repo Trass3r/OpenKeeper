@@ -36,6 +36,7 @@ import toniarts.openkeeper.game.controller.PlayerController;
 import toniarts.openkeeper.game.data.Keeper;
 import toniarts.openkeeper.game.data.ResearchableEntity;
 import toniarts.openkeeper.game.data.ResearchableType;
+import toniarts.openkeeper.game.listener.MapTileChange;
 import toniarts.openkeeper.game.map.IMapInformation;
 import toniarts.openkeeper.game.state.loading.IPlayerLoadingProgress;
 import toniarts.openkeeper.game.state.loading.MultiplayerLoadingState;
@@ -417,6 +418,11 @@ public final class GameClientState extends AbstractPauseAwareState {
         @Override
         public void onTileEffect(Point point, int effectId, boolean infinite) {
             playerMapViewState.onTileEffect(point, effectId, infinite);
+        }
+
+        @Override
+        public void onTilesChanged(List<MapTileChange> changes) {
+            playerMapViewState.onTilesChanged(changes);
         }
 
         @Override

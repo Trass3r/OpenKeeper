@@ -16,6 +16,9 @@
  */
 package toniarts.openkeeper.game.state.session;
 
+import java.util.List;
+import toniarts.openkeeper.game.listener.MapTileChange;
+
 /**
  * A generous game client services for the esteemed guests!
  *
@@ -26,5 +29,7 @@ public interface GameSessionServerService extends GameSessionService {
     public void addGameSessionServiceListener(GameSessionServiceListener l);
 
     public void removeGameSessionServiceListener(GameSessionServiceListener l);
+
+    public void onTilesChanged(List<MapTileChange> changes);
 
 }

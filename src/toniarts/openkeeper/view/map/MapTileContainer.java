@@ -20,16 +20,17 @@ import com.simsilica.es.Entity;
 import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityContainer;
 import com.simsilica.es.EntityData;
+import com.simsilica.es.EntitySet;
 import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import toniarts.openkeeper.game.component.Gold;
 import toniarts.openkeeper.game.component.Health;
-import toniarts.openkeeper.game.component.Mana;
 import toniarts.openkeeper.game.component.MapTile;
 import toniarts.openkeeper.game.component.Owner;
 import toniarts.openkeeper.game.listener.MapListener;
+import toniarts.openkeeper.game.listener.MapTileChange;
+import toniarts.openkeeper.game.listener.MapChangeType;
 import toniarts.openkeeper.game.map.AbstractMapTileInformation;
 import toniarts.openkeeper.game.map.IMapDataInformation;
 import toniarts.openkeeper.game.map.IMapTileInformation;
@@ -48,9 +49,16 @@ public abstract class MapTileContainer extends EntityContainer<IMapTileInformati
     private final IMapTileInformation[][] tiles;
     private final List<MapListener> mapListeners;
     private int tilesAdded = 0;
+    
+    // Fine-grained component listeners for different change types
+    private final EntitySet ownerChanges;
+    private final EntitySet healthChanges;
+    // Note: Gold/Mana changes are intentionally NOT tracked to avoid performance issues
+    // from mining operations that don't affect visual appearance
 
     protected MapTileContainer(EntityData entityData, KwdFile kwdFile) {
-        super(entityData, MapTile.class, Owner.class, Health.class, Gold.class, Mana.class);
+        // Only watch MapTile component for structural changes (terrain, room changes)
+        super(entityData, MapTile.class);
 
         this.mapListeners = new ArrayList<>();
         width = kwdFile.getMap().getWidth();
@@ -58,6 +66,13 @@ public abstract class MapTileContainer extends EntityContainer<IMapTileInformati
 
         // Duplicate the map
         this.tiles = new IMapTileInformation[width][height];
+        
+        // Set up fine-grained component change tracking
+        // Owner changes affect visual ownership overlay
+        this.ownerChanges = entityData.getEntities(MapTile.class, Owner.class);
+        
+        // Health changes affect visual damage appearance  
+        this.healthChanges = entityData.getEntities(MapTile.class, Health.class);
     }
 
     @Override
@@ -75,6 +90,63 @@ public abstract class MapTileContainer extends EntityContainer<IMapTileInformati
 
         return result;
     }
+    
+    @Override
+    public void start() {
+        super.start();
+        
+        // Initialize component-specific change tracking
+        ownerChanges.applyChanges();
+        healthChanges.applyChanges();
+    }
+    
+    @Override
+    public void stop() {
+        // Clean up component change tracking
+        ownerChanges.release();
+        healthChanges.release();
+        
+        super.stop();
+    }
+    
+    @Override
+    public boolean update() {
+        boolean hasChanges = super.update(); // Handle MapTile component changes
+        
+        // Check for fine-grained component changes
+        List<MapTileChange> changes = new ArrayList<>();
+        
+        // Handle ownership changes (affects visual overlay)
+        if (ownerChanges.applyChanges()) {
+            for (Entity entity : ownerChanges.getChangedEntities()) {
+                IMapTileInformation tile = getObject(entity.getId());
+                if (tile != null) {
+                    Point location = tile.getLocation();
+                    changes.add(new MapTileChange(location, MapChangeType.OWNERSHIP));
+                }
+            }
+            hasChanges = true;
+        }
+        
+        // Handle health changes (affects visual damage appearance)
+        if (healthChanges.applyChanges()) {
+            for (Entity entity : healthChanges.getChangedEntities()) {
+                IMapTileInformation tile = getObject(entity.getId());
+                if (tile != null) {
+                    Point location = tile.getLocation();
+                    changes.add(new MapTileChange(location, MapChangeType.HEALTH));
+                }
+            }
+            hasChanges = true;
+        }
+        
+        // Send fine-grained notifications for component-specific changes
+        if (!changes.isEmpty()) {
+            notifyTileChanges(changes);
+        }
+        
+        return hasChanges;
+    }
 
     @Override
     protected void updateObjects(Set<Entity> set) {
@@ -82,29 +154,50 @@ public abstract class MapTileContainer extends EntityContainer<IMapTileInformati
             return;
         }
 
-        logger.log(System.Logger.Level.TRACE, "MapTileContainer.updateObjects({0})", set.size());
+        logger.log(System.Logger.Level.TRACE, "MapTileContainer.updateObjects({0}) - MapTile structural changes", set.size());
 
-        // Collect the tiles
-        Point[] updatableTiles = new Point[set.size()];
-        int i = 0;
+        // This method only handles MapTile component changes (structural: terrain, room changes)
+        // Owner and Health changes are handled separately via fine-grained EntitySet tracking
+        List<MapTileChange> changes = new ArrayList<>();
+        
         for (Entity e : set) {
             IMapTileInformation object = getObject(e.getId());
             if (object == null) {
                 logger.log(Level.WARNING, "Update: No matching object for entity:{0}", e);
                 continue;
             }
-            updatableTiles[i] = object.getLocation();
-            i++;
+            
+            Point location = object.getLocation();
+            
+            // MapTile changes are structural (terrain, room modifications)
+            MapTile mapTile = e.get(MapTile.class);
+            MapChangeType changeType;
+            if (mapTile != null) {
+                // Check if this is a selection/flashing change (frequent, visual-only)
+                if ((mapTile.selection != null && !mapTile.selection.isEmpty()) ||
+                    (mapTile.flashing != null && !mapTile.flashing.isEmpty())) {
+                    changeType = MapChangeType.SELECTION;
+                } else if (mapTile.room != null) {
+                    changeType = MapChangeType.ROOM_STRUCTURE;
+                } else {
+                    changeType = MapChangeType.TERRAIN;
+                }
+            } else {
+                changeType = MapChangeType.UNKNOWN;
+            }
+            
+            changes.add(new MapTileChange(location, changeType));
         }
 
-        // Update the batch
-        notifyTileChange(updatableTiles);
+        // Send notifications for structural changes
+        if (!changes.isEmpty()) {
+            notifyTileChanges(changes);
+        }
     }
 
-    private void notifyTileChange(Point[] updatedTiles) {
-        List<Point> tileList = List.of(updatedTiles);
+    private void notifyTileChanges(List<MapTileChange> changes) {
         for (MapListener mapListener : mapListeners) {
-            mapListener.onTilesChange(tileList);
+            mapListener.onTilesChanged(changes);
         }
     }
 
