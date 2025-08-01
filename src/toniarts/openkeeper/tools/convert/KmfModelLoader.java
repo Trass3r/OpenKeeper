@@ -530,6 +530,13 @@ public final class KmfModelLoader implements AssetLoader {
             meshPrimitiveModel.setMaterialModel(materialModel);
             meshModel.addMeshPrimitiveModel(meshPrimitiveModel);
 
+            //materialModel.setExtensions(ImmutableMap.of("KHR_materials_unlit", new HashMap()) );
+            /*materialModel.setExtensions(ImmutableMap.of("KHR_materials_pbrSpecularGlossiness", ImmutableMap.of(
+                "diffuseFactor", new float[] { 1.0f, 1.0f, 1.0f, 1.0f },
+                "specularFactor", new float[] { 1.0f, 1.0f, 1.0f },
+                "glossinessFactor", 2*shininess)));
+            */
+
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, subMesh.getMaterialIndex());
 
@@ -600,6 +607,11 @@ public final class KmfModelLoader implements AssetLoader {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        //gltfModelBuilder.extens
+
+        //gltfModel.getExtensionsModel();
+        //gltfModel.addExtension("KHR_materials_unlit", new Object());
 
         // Create the animation itself and attach the animation
         var animClip = new AnimClip(DUMMY_ANIM_CLIP_NAME);
