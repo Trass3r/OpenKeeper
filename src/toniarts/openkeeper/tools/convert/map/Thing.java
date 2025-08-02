@@ -607,11 +607,11 @@ public abstract class Thing {
         }
 
         public float getZoomValueMax() {
-            return zoomValueMax;
+            return zoomValueMax * 50;
         }
 
         protected void setZoomValueMax(float zoom) {
-            this.zoomValueMax = zoom;
+            this.zoomValueMax = 50;
         }
 
         public float getLensValue() {
