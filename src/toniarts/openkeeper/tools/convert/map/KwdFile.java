@@ -683,6 +683,9 @@ public final class KwdFile {
         artResource.setName(reader.readString(64).trim());
         artResource.setFlags(reader.readIntegerAsFlag(ArtResource.ArtResourceFlag.class));
 
+        if (!artResource.getFlags().isEmpty()) {
+            //logger.log(Level.INFO, "ArtResource {0}: {1}", artResource.getName(), artResource.getFlags());
+        }
         reader.mark();
         reader.position(reader.position() + 12);
         artResource.setType(reader.readByteAsEnum(ArtResource.ArtResourceType.class));
