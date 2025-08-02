@@ -20,6 +20,7 @@ import com.jme3.app.Application;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.cinematic.events.CinematicEvent;
 import com.jme3.cinematic.events.CinematicEventListener;
+import com.jme3.input.FlyByCamera;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
@@ -27,6 +28,7 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
@@ -67,6 +69,12 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
     private PlayerCamera camera;
     private Camera storedCamera;
     private final Player player;
+
+
+    private FlyByCamera flyCam;
+    private boolean flyCamEnabled = false;
+    private Vector3f lastPlayerCamLocation;
+    private Quaternion lastPlayerCamRotation;
 
     private final Set<Integer> keys = new HashSet<>();
 
@@ -124,6 +132,15 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
         if (isEnabled()) {
             setEnabled(true);
         }
+
+        // Initialize flycam but keep it disabled initially
+        flyCam = new FlyByCamera(app.getCamera());
+        flyCam.setEnabled(false);
+        flyCam.setMoveSpeed(20f); // Adjust speed as needed
+
+        // Add key mapping for camera toggle - using 'C' key as an example
+        inputManager.addMapping("ToggleCamera", new KeyTrigger(KeyInput.KEY_C));
+        inputManager.addListener(this, "ToggleCamera");
     }
 
     @Override
@@ -264,7 +281,9 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
 
     @Override
     public void cleanup() {
-
+        if (flyCam != null) {
+            flyCam.setEnabled(false);
+        }
         // Unregister controls
         unregisterInput();
 
@@ -335,6 +354,11 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
         if (!isEnabled()) {
             return;
         }
+        // Add camera toggle handling
+        if (name.equals("ToggleCamera") && isPressed) {
+            toggleCamera();
+            return;
+        }
 
         if (name.equals(Setting.USE_ATTACK.name())) {
             if (isPressed) {
@@ -377,6 +401,31 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
                     keys.remove(KeyInput.KEY_RSHIFT);
                 }
                 break;
+        }
+    }
+
+    // Add this method to handle camera switching
+    private void toggleCamera() {
+        flyCamEnabled = !flyCamEnabled;
+
+        if (flyCamEnabled) {
+            // Store current camera state
+            lastPlayerCamLocation = app.getCamera().getLocation().clone();
+            lastPlayerCamRotation = app.getCamera().getRotation().clone();
+
+            // Enable flycam
+            flyCam.setEnabled(true);
+            setEnabled(false);
+            inputManager.setCursorVisible(false);
+        } else {
+            // Disable flycam
+            flyCam.setEnabled(false);
+            setEnabled(true);
+            inputManager.setCursorVisible(true);
+
+            // Restore player camera state
+            app.getCamera().setLocation(lastPlayerCamLocation);
+            app.getCamera().setRotation(lastPlayerCamRotation);
         }
     }
 
