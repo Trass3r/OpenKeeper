@@ -234,6 +234,23 @@ public final class GameClientState extends AbstractPauseAwareState {
 
         // Set the processors
         GameClientState.this.app.setViewProcessors();
+
+        // Start recording video
+        //app.setTimer(new IsoTimer(30));
+        /*
+        try {
+            var video = java.io.File.createTempFile("JME-video", ".avi");
+            var audio = java.io.File.createTempFile("JME-audio", ".wav");
+            stateManager.attach(new com.jme3.app.state.VideoRecorderAppState(video, 1.0f));
+            //Capture.captureVideo(app, video);
+            //var audioRenderer = app.getAudioRenderer();
+            //audioRenderer.setListener(new com.jme3.audio.Listener());
+            // com.aurellem.capture.Capture.captureAudio(app, audio);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        */
     }
 
     private void onGameLoad() {
