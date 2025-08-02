@@ -290,9 +290,14 @@ public abstract class MapViewController implements ILoader<KwdFile> {
     private void generatePages(Node root) {
         pages = new ArrayList<>(((int) Math.ceil(getMapData().getHeight() / (float) PAGE_SQUARE_SIZE))
                 * ((int) Math.ceil(getMapData().getWidth() / (float) PAGE_SQUARE_SIZE)));
+        java.util.Random rand = new java.util.Random();
         for (int y = 0; y < (int) Math.ceil(getMapData().getHeight() / (float) PAGE_SQUARE_SIZE); y++) {
             for (int x = 0; x < (int) Math.ceil(getMapData().getWidth() / (float) PAGE_SQUARE_SIZE); x++) {
                 Node page = new Node(x + "_" + y);
+
+                // Generate and store a random color for this page
+                ColorRGBA debugColor = new ColorRGBA(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 1f);
+                page.setUserData("debugColor", debugColor);
 
                 // Create batch nodes for ceiling, floor and walls
                 BatchNode floor = new BatchNode("floor");
@@ -614,6 +619,23 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         }
 
         topTileNode.attachChild(spatial);
+        // DEBUG: Apply page debug color to all geometries just attached
+        ColorRGBA debugColor = ((Node) pageNode).getUserData("debugColor");
+        if (debugColor != null) {
+            spatial.depthFirstTraversal(new SceneGraphVisitor() {
+                @Override
+                public void visit(Spatial s) {
+                    if (s instanceof Geometry) {
+                        Material mat = ((Geometry) s).getMaterial();
+                        if (mat != null) {
+                            mat.setColor("Diffuse", debugColor);
+                            mat.setColor("Ambient", debugColor);
+                            mat.setBoolean("UseMaterialColors", true);
+                        }
+                    }
+                }
+            });
+        }
         setTileMaterialToGeometries(tile, topTileNode);
         AssetUtils.translateToTile(topTileNode, p);
     }
@@ -622,11 +644,28 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         Point p = tile.getLocation();
         Node sideTileNode = getTileNode(p, (Node) pageNode.getChild(WALL_INDEX));
 
+        ColorRGBA debugColor = ((Node)pageNode).getUserData("debugColor");
         for (WallDirection direction : WallDirection.values()) {
             Spatial wall = getWallSpatial(tile, direction);
             if (wall != null) {
                 wall.rotate(0, direction.getAngle(), 0);
                 sideTileNode.attachChild(wall);
+                // DEBUG: Apply page debug color to wall geometry
+                if (debugColor != null) {
+                    wall.depthFirstTraversal(new SceneGraphVisitor() {
+                        @Override
+                        public void visit(Spatial s) {
+                            if (s instanceof Geometry) {
+                                Material mat = ((Geometry) s).getMaterial();
+                                if (mat != null) {
+                                    mat.setColor("Diffuse", debugColor);
+                                    mat.setColor("Ambient", debugColor);
+                                    mat.setBoolean("UseMaterialColors", true);
+                                }
+                            }
+                        }
+                    });
+                }
             }
         }
 
