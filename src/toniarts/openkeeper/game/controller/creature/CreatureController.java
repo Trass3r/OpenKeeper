@@ -460,7 +460,7 @@ public final class CreatureController extends EntityController implements ICreat
     private boolean createNavigation(Point currentLocation, Point destination, Point faceTarget) {
         GraphPath<IMapTileInformation> path = navigationService.findPath(currentLocation, destination, this);
         if (path == null) {
-            logger.log(Level.WARNING, "No path from {0} to {1}", getCreatureCoordinates(), destination);
+            logger.log(Level.DEBUG, "No path from {0} to {1}", getCreatureCoordinates(), destination);
             return true;
         }
         entityData.setComponent(entityId, new Navigation(destination, faceTarget, SteeringUtils.pathToList(path)));

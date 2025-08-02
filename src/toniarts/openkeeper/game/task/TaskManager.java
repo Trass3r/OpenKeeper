@@ -516,7 +516,7 @@ public final class TaskManager implements ITaskManager, IGameLogicUpdatable {
             tasksByIds.put(task.getId(), task);
             logger.log(Level.INFO, "Added task {0} for player {1}!", new Object[]{task, playerId});
         } else {
-            logger.log(Level.WARNING, "Already a task {0} for player {1}!", new Object[]{task, playerId});
+            logger.log(Level.DEBUG, "Already a task {0} for player {1}!", new Object[]{task, playerId});
         }
     }
 
