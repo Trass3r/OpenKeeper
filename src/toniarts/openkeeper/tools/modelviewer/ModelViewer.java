@@ -35,6 +35,7 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.niftygui.NiftyJmeDisplay;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.opengl.GLRenderer;
 import com.jme3.renderer.queue.RenderQueue;
@@ -44,6 +45,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
+import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.util.TangentBinormalGenerator;
@@ -128,7 +130,6 @@ public final class ModelViewer extends SimpleApplication {
 
     //private final static float SCALE = 2;
     private static String dkIIFolder;
-    private final Vector3f lightDir = new Vector3f(-1, -1, .5f).normalizeLocal();
     private DirectionalLight dl;
     private NiftyJmeDisplay niftyDisplay;
     private ModelViewerScreenController screen;
@@ -302,7 +303,7 @@ public final class ModelViewer extends SimpleApplication {
 
         // To make shadows, sun
         dl = new DirectionalLight();
-        dl.setDirection(lightDir);
+        dl.setDirection(new Vector3f(-1, -1, -1));
         dl.setColor(ColorRGBA.White);
         rootNode.addLight(dl);
 
@@ -312,13 +313,23 @@ public final class ModelViewer extends SimpleApplication {
         rootNode.addLight(al);
 
         /* Drop shadows */
-        final int SHADOWMAP_SIZE = 1024;
-        DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(getAssetManager(), SHADOWMAP_SIZE, 3);
+        final int SHADOWMAP_SIZE = 512;
+        if (true) {
+        } else if (false) {
+            var dlsr = new DirectionalLightShadowRenderer(assetManager, SHADOWMAP_SIZE, 2);
         dlsr.setLight(dl);
-        dlsr.setLambda(0.55f);
-        dlsr.setShadowIntensity(0.6f);
-        dlsr.setEdgeFilteringMode(EdgeFilteringMode.PCF8);
-        getViewPort().addProcessor(dlsr);
+            //dlsr.setLambda(0.55f);
+            //dlsr.setShadowIntensity(0.6f);
+            dlsr.setEdgeFilteringMode(EdgeFilteringMode.Bilinear);
+            viewPort.addProcessor(dlsr);
+        } else {
+            var fpp = new FilterPostProcessor(assetManager);
+            var dlsf = new DirectionalLightShadowFilter(assetManager, SHADOWMAP_SIZE, 2);
+            dlsf.setLight(dl);
+            dlsf.setEnabled(true);
+            fpp.addFilter(dlsf);
+            viewPort.addProcessor(fpp);
+        }
 
         // Default light probe
         Spatial probeHolder = assetManager.loadModel("Models/ModelViewer/studio.j3o");
@@ -583,6 +594,8 @@ public final class ModelViewer extends SimpleApplication {
 
         // Animate!
         spat.depthFirstTraversal((Spatial spatial) -> {
+            //logger.log(Level.INFO, "spatial {0} {1}", new Object[] { spatial.getName(), spatial.getShadowMode() });
+            spatial.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
             var animComposer = spatial.getControl(AnimComposer.class);
             if (animComposer != null) {
                 animComposer.setGlobalSpeed(0.5f);
