@@ -78,10 +78,10 @@ public final class TorchControl extends BillboardControl {
 
                 result = new Geometry("torch flame", createMesh(0.5f, 0.5f));
                 result.setMaterial(material);
-                result.setQueueBucket(RenderQueue.Bucket.Translucent);
+                result.setQueueBucket(RenderQueue.Bucket.Transparent);
                 result.setBatchHint(BatchHint.Never); // prevent constant updates of the wall batches
                 result.move(0.14f, 0.2f, 0);
-                result.setShadowMode(RenderQueue.ShadowMode.Off);
+                result.setShadowMode(RenderQueue.ShadowMode.Receive);
 
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Can't create torch flame", e);
@@ -150,6 +150,7 @@ public final class TorchControl extends BillboardControl {
         result.setInt("Speed", FRAMES); // FIXME: correct value
 
         result.setTransparent(true);
+        result.setReceivesShadows(true);
         result.setFloat("AlphaDiscardThreshold", 0.1f);
 
         result.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
