@@ -397,8 +397,9 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
                 if (terrain.getFlags().contains(Terrain.TerrainFlag.ROOM)) {
                     tooltip.setText(getRoomTooltip(tile, terrain));
                 } else {
-                    tooltip.setText(textParser.getMapTileTextParser().parseText(Utils.getMainTextResourceBundle().getString(Integer.toString(terrain.getTooltipStringId())), tile));
+                    //tooltip.setText(textParser.getMapTileTextParser().parseText(Utils.getMainTextResourceBundle().getString(Integer.toString(terrain.getTooltipStringId())), tile));
                 }
+                tooltip.setText(terrain.getFlags().toString());
             } else {
                 tooltip.setText("");
             }
@@ -411,9 +412,9 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
                 p = WorldUtils.vectorToPoint(((AbstractControl) interactiveControl).getSpatial().getWorldTranslation());
             }
             sb.append("(");
-            sb.append(p.x + 1);  // 1-based coordinates
+            sb.append(p.x);
             sb.append(", ");
-            sb.append(p.y + 1);  // 1-based coordinates
+            sb.append(p.y);
             sb.append("): ");
             sb.append(tooltip.getText());
             tooltip.setText(sb.toString());
