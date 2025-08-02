@@ -402,6 +402,7 @@ public final class PlayerScreenController implements IPlayerScreenController {
                     // Init the HUD items
                     initHud = false;
                     initHudItems(state.assetManager, entityData);
+                    nifty.gotoScreen(SCREEN_EMPTY_ID); // don't show UI at startup
                 }
 
                 break;

@@ -416,7 +416,7 @@ public final class Main extends SimpleApplication {
                     MainMenuState mainMenuState = new MainMenuState(!params.containsKey("level"), assetManager, Main.this);
                     DetailedProfilerState detailedProfilerState = new DetailedProfilerState();
                     detailedProfilerState.setEnabled(false); // F6
-                    getStateManager().getState(StatsAppState.class).toggleStats(); // F5
+                    //getStateManager().getState(StatsAppState.class).toggleStats(); // F5
 
                     getStateManager().attach(new SoundState(false));
                     loadSounds();
