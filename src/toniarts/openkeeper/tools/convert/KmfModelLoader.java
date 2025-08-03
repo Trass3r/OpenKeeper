@@ -235,6 +235,64 @@ public final class KmfModelLoader implements AssetLoader {
         return node;
     }
 
+    void analyzeThresholds(Anim anim, int threshold) {
+        // First get key positions per frame
+        int[] keyPositionsPerFrame = new int[anim.getFrames()];
+        var geometries = anim.getGeometries();
+        for (var geom : geometries)
+            keyPositionsPerFrame[geom.getFrameBase()]++;
+
+        double totalError = 0;
+        int lastKey = 0;  // index of last vertex where we kept the frame
+        int lastKeyFrame = 0;  // frame number we last kept
+        int keptKeyPositions = 0;
+        double maxError = 0;
+
+        for (int i = 0; i < geometries.size(); i++) {
+            var geom = geometries.get(i);
+            int curFrame = geom.getFrameBase();
+            var curCoord = geom.getGeometry();
+
+            if (keyPositionsPerFrame[curFrame] >= threshold) {
+                // Found a frame we want to keep
+                keptKeyPositions++;
+
+                // Compute errors for all vertices between lastKey and current position
+                for (int j = lastKey + 1; j < i; j++) {
+                    var skipped = geometries.get(j);
+                    short skippedFrame = skipped.getFrameBase();
+                    var skippedCoord = skipped.getGeometry();
+
+                    var lastCoord = geometries.get(lastKey).getGeometry();
+                    short lastFrame = geometries.get(lastKey).getFrameBase();
+
+                    float geomFactor = curFrame <= lastFrame ? 0
+                            : (float) ((skippedFrame & 0x7f) - lastFrame) / (float) (curFrame - lastFrame);
+
+                    // interpolate and convert to Y-up
+                    var v = new Vector3f(
+                          lastCoord.x + (curCoord.x - lastCoord.x) * geomFactor,
+                        -(lastCoord.z + (curCoord.z - lastCoord.z) * geomFactor),
+                          lastCoord.y + (curCoord.y - lastCoord.y) * geomFactor);
+                    var error = v.subtract(skippedCoord.x, -skippedCoord.z, skippedCoord.y).length();
+                    totalError += error;
+                    if (error > maxError) maxError = error;
+                }
+            //
+                lastKey = i;
+                lastKeyFrame = curFrame;
+            }
+        }
+
+        int keptFrames = 0;
+        for (int i : keyPositionsPerFrame)
+            if (i >= threshold)
+                keptFrames++;
+
+        System.out.printf("Threshold %d/%d: kept %d keypoints of out %d, %d frames out of %d, total error %.2f max error %.2f\n",
+                    threshold, anim.getIndexes(), keptKeyPositions, anim.getGeometries().size(), keptFrames, anim.getFrames(), totalError, maxError);
+    }
+
     /**
      * Handle mesh creation
      *
@@ -243,6 +301,9 @@ public final class KmfModelLoader implements AssetLoader {
      * @param root the root node
      */
     private Node handleAnim(Anim anim, Map<Integer, List<Material>> materials) {
+
+        //for (int i = anim.getIndexes()/4; i <= anim.getIndexes()*2/3; i += 10)
+        //    analyzeThresholds(anim, i);
 
         var node = new Node(anim.getName());
         node.setUserData(FRAME_FACTOR_FUNCTION, anim.getFrameFactorFunction().name());
