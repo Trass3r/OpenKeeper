@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jme3tools.optimize.GeometryBatchFactory;
 import toniarts.openkeeper.animation.Pose;
 import toniarts.openkeeper.animation.PoseTrack;
 import toniarts.openkeeper.animation.PoseTrack.PoseFrame;
@@ -519,14 +520,32 @@ public final class KmfModelLoader implements AssetLoader {
             ++subMeshIndex;
         }
 
+        if (false) {
+            var mesh = new Mesh();
+            GeometryBatchFactory.mergeGeometries(node.getChildren().stream().map(s -> (Geometry) s).toList(), mesh);
+            var geom = new Geometry(anim.getName(), mesh);
+            node.detachAllChildren();
+            node.attachChild(geom);
+        } else if (false) {
+            var geoms = GeometryBatchFactory.makeBatches(node.getChildren().stream().map(s -> (Geometry) s).toList(), false);
+            node.detachAllChildren();
+            for (var geom : geoms)
+                node.attachChild(geom);
+        }
+
         // Create the animation itself and attach the animation
+        //if (true) {
         var animation = new AnimClip(DUMMY_ANIM_CLIP_NAME);
         animation.setTracks(poseTracks.toArray(new PoseTrack[0]));
+        //animation.setTracks(new PoseTrack[] { poseTracks.get(0) });// .toArray(new PoseTrack[0]));
         var composer = new AnimComposer();
         composer.addAnimClip(animation);
         node.addControl(composer);
         // we could also do setCurrentAction here but it wouldn't get serialized
+        //}
 
+        node.updateModelBound();
+        System.out.printf("Bounds: %s", node.getWorldBound());
         return node;
     }
 
