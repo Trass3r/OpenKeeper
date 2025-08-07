@@ -4,6 +4,7 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'idea'
+    id 'com.gradleup.shadow' version '9.0.0'
 }
 
 ext {
@@ -97,6 +98,12 @@ jar {
             'Build-OS': "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
         )
     }
+}
+
+shadowJar {
+    archiveBaseName.set('OpenKeeper')
+    archiveClassifier.set('')
+    archiveVersion.set('1.0')
 }
 
 eclipse {
