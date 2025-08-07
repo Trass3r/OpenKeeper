@@ -127,27 +127,30 @@ jobs:
             DK2
             openkeeper.properties
             /home/runner/.OpenKeeper/openkeeper.properties
-      - name: Build OpenKeeper
-        run: ./gradlew build --no-daemon
+      - name: Build
+        run: ./gradlew shadowJar --no-daemon
       - name: Start Xvfb
         run: |
           Xvfb :99 -screen 0 1280x720x24 &
           echo "DISPLAY=:99" >> $GITHUB_ENV
-      - name: Record JFR profile
+      - name: Run and profile
         env:
           JAVA_OPTS: '-XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=30s,maxsize=10M,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,path-to-gc-roots=true'
         run: |
           set -eux
           sudo apt update
-          sudo apt install -y linux-modules-extra-$(uname -r)
-          ls /lib/modules/$(uname -r)/**
+          sudo apt install -y xdotool
+          #sudo apt install -y linux-modules-extra-$(uname -r)
           sudo modprobe --verbose snd-dummy || true
           sudo sysctl kernel.perf_event_paranoid=0
           sudo sysctl kernel.kptr_restrict=0
-          ./gradlew run --no-daemon --args="-level Conquest" &
-          pid=$(pgrep -f 'java.*OpenKeeper')
+          #./gradlew run --no-daemon --args="-level Conquest" &
+          java -jar build/libs/OpenKeeper-1.0.jar -level Conquest &
           sleep 60
-          kill $pid
+          pid=$(pgrep -f 'java.*OpenKeeper')
+          window_id=$(xdotool search --pid $pid | head -n 1)
+          xdotool key --window $window_id Escape
+          #kill $pid
 
       - uses: actions/upload-artifact@v4
         with:
