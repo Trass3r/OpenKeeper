@@ -229,13 +229,6 @@ public final class PossessionCameraState extends AbstractPauseAwareState impleme
         super.cleanup();
     }
 
-    @Override
-    public void update(float tpf) {
-        // Update audio listener position
-        app.getListener().setLocation(app.getCamera().getLocation());
-        app.getListener().setRotation(app.getCamera().getRotation());
-    }
-
     public void setTarget(EntityId target) {
         this.target = target;
         //creature = this.target.getCreature();
