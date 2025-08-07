@@ -246,8 +246,8 @@ public final class Cinematic extends com.jme3.cinematic.Cinematic {
     }
 
     private static void updateAudioListenerPosition(final Listener audioListener, final Camera cam) {
-        audioListener.setLocation(cam.getLocation());
-        audioListener.setRotation(cam.getRotation());
+        //audioListener.setLocation(cam.getLocation());
+        //audioListener.setRotation(cam.getRotation());
     }
 
     /**
@@ -259,3 +259,4 @@ public final class Cinematic extends com.jme3.cinematic.Cinematic {
         return 30f;
     }
 }
+
