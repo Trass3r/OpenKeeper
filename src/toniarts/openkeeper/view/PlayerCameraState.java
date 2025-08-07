@@ -277,10 +277,6 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
 
         // Update the container
         container.update(tpf);
-
-        // Update audio listener position
-        app.getListener().setLocation(app.getCamera().getLocation());
-        app.getListener().setRotation(app.getCamera().getRotation());
     }
 
     private void addKeyMapping(Setting s) {
@@ -448,3 +444,4 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
         return false;
     }
 }
+
