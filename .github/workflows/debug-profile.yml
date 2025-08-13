@@ -75,7 +75,7 @@ jobs:
         run: |
           wget -nv https://renderdoc.org/stable/1.39/renderdoc_1.39.tar.gz -O renderdoc.tar.gz
           sudo tar xv --strip-components=1 -C /usr/local -f renderdoc.tar.gz
-          #export PATH=$PWD/renderdoc_1.39/bin:$PATH
+          sudo apt install -y libproxy1v5
           ls /usr/local/**
       - name: Build
         run: ./gradlew shadowJar --no-daemon
@@ -108,13 +108,16 @@ jobs:
           if-no-files-found: error
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.6' 
+          python-version: '3.13' 
       - name: Postprocess .rdc for draw call analysis
         run: |
           set -eux
-          export
-          export PYTHONPATH="$PYTHONPATH:/usr/local/share/renderdoc/pylibs/lib/python3.6/"
-          python .github/scripts/renderdoc_drawcalls.py *.rdc
+          qrenderdoc --ui-python .github/scripts/renderdoc_drawcalls.py *.rdc &
+          sleep 30
+          killall -v qrenderdoc
+          #export
+          #export PYTHONPATH="$PYTHONPATH:/usr/local/share/renderdoc/pylibs/lib/python3.6/"
+          #python .github/scripts/renderdoc_drawcalls.py *.rdc
         shell: bash
       - uses: actions/upload-artifact@v4
         with:
