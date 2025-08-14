@@ -115,8 +115,8 @@ jobs:
           qrenderdoc --ui-python .github/scripts/renderdoc_drawcalls.py *.rdc &
           sleep 30
           killall -v qrenderdoc
-          export
-          export PYTHONPATH="$PYTHONPATH:/usr/local/share/renderdoc/pylibs/lib/python3.6/"
+          #export
+          #export PYTHONPATH="$PYTHONPATH:/usr/local/share/renderdoc/pylibs/lib/python3.6/"
           #python .github/scripts/renderdoc_drawcalls.py *.rdc
         shell: bash
       - uses: actions/upload-artifact@v4
