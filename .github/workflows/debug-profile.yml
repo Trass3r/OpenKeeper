@@ -89,16 +89,9 @@ jobs:
           #renderdoccmd capture --wait-for-exit --opt-hook-children ./gradlew run --no-daemon --args="-debug -level Conquest" &
           renderdoccmd capture -w -d `pwd` --capture-file OpenKeeper java -jar build/libs/OpenKeeper-1.0.jar -debug -level Conquest &
           sleep 30
-          #pid=$(pgrep -f 'java.*OpenKeeper')
-          #window_id=$(xdotool search --pid $pid | head -n1)
-          #window_arg=${window_id:+--window $window_id}
-          window_arg=
-          xdotool key $window_arg F12
-          sleep 3
-          xdotool key $window_arg Print
+          xdotool key Print
           sleep 2
-          #kill $pid
-          xdotool key $window_arg Escape
+          xdotool key Escape
       - uses: actions/upload-artifact@v4
         with:
           name: renderdoc-capture
