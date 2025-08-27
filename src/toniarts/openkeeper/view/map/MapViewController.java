@@ -61,7 +61,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
     private static final Logger logger = System.getLogger(MapViewController.class.getName());
 
     public final static ColorRGBA COLOR_FLASH = new ColorRGBA(0.8f, 0, 0, 1);
-    private final static ColorRGBA COLOR_TAG = new ColorRGBA(0.6f, 0.6f, 1, 1);
+    private final static ColorRGBA COLOR_TAG = new ColorRGBA(0.5f, 0.5f, 1, 1);
     private final static int PAGE_SQUARE_SIZE = 8; // Divide the terrain to square "pages"
     private final static int FLOOR_INDEX = 0;
     private final static int WALL_INDEX = 1;
@@ -266,10 +266,12 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 }
                 if (isFlashing(tile)) {
                     material.setColor("Ambient", COLOR_FLASH);
+                    material.setColor("Diffuse", COLOR_FLASH);
                     material.setBoolean("UseMaterialColors", true);
                 }
                 if (tile.isSelected(playerId)) {
                     material.setColor("Ambient", COLOR_TAG);
+                    material.setColor("Diffuse", COLOR_TAG);
                     material.setBoolean("UseMaterialColors", true);
                 }
 
