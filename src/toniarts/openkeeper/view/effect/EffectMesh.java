@@ -22,11 +22,9 @@ import com.jme3.scene.VertexBuffer;
 import java.nio.FloatBuffer;
 
 /**
- *
- * @author ArchDemon
+ * Migrated from world.effect.EffectMesh, adapted for game.effect.
  */
-public class EffectMesh extends Mesh {
-
+public final class EffectMesh extends Mesh {
     private float scale = 1;
     private int frames = 1;
     private boolean uniqueTexCoords = false;

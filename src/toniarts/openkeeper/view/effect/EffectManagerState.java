@@ -22,6 +22,7 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
+import toniarts.openkeeper.game.map.IMapInformation;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.view.PlayerMapViewState;
 
@@ -39,17 +40,19 @@ import java.util.List;
 public class EffectManagerState extends AbstractAppState {
 
     private static final Logger logger = System.getLogger(EffectManagerState.class.getName());
-    
-    public static int ROOM_CLAIM_ID = 2;
+
+    public static final int ROOM_CLAIM_ID = 2;
 
     private final KwdFile kwdFile;
     private final AssetManager assetManager;
     private final List<VisualEffect> activeEffects = new ArrayList<>();
     private AppStateManager stateManager;
+    private IMapInformation mapInfo;
 
-    public EffectManagerState(KwdFile kwdFile, AssetManager assetManager) {
+    public EffectManagerState(KwdFile kwdFile, AssetManager assetManager, IMapInformation mapInfo) {
         this.kwdFile = kwdFile;
         this.assetManager = assetManager;
+        this.mapInfo = mapInfo;
     }
 
     @Override
@@ -60,6 +63,9 @@ public class EffectManagerState extends AbstractAppState {
 
     @Override
     public void update(float tpf) {
+        if (!isEnabled()) {
+            return;
+        }
 
         Iterator<VisualEffect> iterator = activeEffects.iterator();
         // Maintain the effects (on every frame?)
@@ -72,7 +78,7 @@ public class EffectManagerState extends AbstractAppState {
     }
 
     /**
-     * Loads up an particle effect
+     * Loads up a single particle effect, clearing any previous effects
      *
      * @param node the node to attach the effect to
      * @param location particle effect node location, maybe {@code null}
@@ -98,7 +104,7 @@ public class EffectManagerState extends AbstractAppState {
     }
 
     /**
-     * Loads up an particle effect
+     * Loads up a particle effect
      *
      * @param node the node to attach the effect to
      * @param location particle effect node location, maybe {@code null}
@@ -112,7 +118,7 @@ public class EffectManagerState extends AbstractAppState {
         if (effectId == 0) {
             return;
         }
-        VisualEffect visualEffect = new VisualEffect(this, node, location, kwdFile.getEffect(effectId), infinite);
+        var visualEffect = new VisualEffect(this, node, location, kwdFile.getEffect(effectId), infinite);
         activeEffects.add(visualEffect);
     }
 
@@ -120,7 +126,7 @@ public class EffectManagerState extends AbstractAppState {
         return stateManager.getState(PlayerMapViewState.class);
     }
 
-    public AssetManager getAssetManger() {
+    public AssetManager getAssetManager() {
         return assetManager;
     }
 

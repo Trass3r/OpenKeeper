@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 OpenKeeper
+ * Copyright (C) 2014-2025 OpenKeeper
  *
  * OpenKeeper is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,15 +29,11 @@ import java.lang.System.Logger;
 import static toniarts.openkeeper.view.effect.EffectControl.calculateVelocity;
 
 /**
- *
- * @author ArchDemon
+ * Migrated from world.effect.EffectElementControl, adapted for game.effect.
  */
 public abstract class EffectElementControl extends AbstractControl {
-    
     private static final Logger log = System.getLogger(EffectElementControl.class.getName());
-    
     private EffectElement effect;
-
     private float hpCurrent;
     private float hp;
     private float height;
@@ -54,10 +50,9 @@ public abstract class EffectElementControl extends AbstractControl {
 
     public EffectElementControl(EffectElement effect) {
         this.effect = effect;
-        initiazize();
+        initialize();
     }
-
-    private void initiazize() {
+    private void initialize() {
         hp = hpCurrent = FastMath.nextRandomInt(effect.getMaxHp(), effect.getMaxHp());
 
         velocity = calculateVelocity(effect);
@@ -86,9 +81,8 @@ public abstract class EffectElementControl extends AbstractControl {
 
     @Override
     protected void controlUpdate(float tpf) {
-        if (!enabled || spatial == null) {
+        if (!enabled || spatial == null)
             return;
-        }
 
         if (effect.getFlags().contains(EffectElement.EffectElementFlag.SHRINK)) {
             scale.sub(scaleRatio);
@@ -104,7 +98,6 @@ public abstract class EffectElementControl extends AbstractControl {
                 location.y = height;
             }
             spatial.setLocalTranslation(location);
-            //System.out.println(location);
         }
 
         if (effect.getAirFriction() != 0) {
