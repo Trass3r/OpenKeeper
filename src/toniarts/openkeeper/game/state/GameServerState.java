@@ -382,6 +382,11 @@ public final class GameServerState extends AbstractAppState {
         public void onTileFlash(List<Point> points, boolean enabled, short keeperId) {
             gameService.flashTiles(points, enabled, keeperId);
         }
+
+        @Override
+        public void onTileEffect(Point point, int effectId, boolean infinite) {
+            gameService.tileEffect(point, effectId, infinite);
+        }
     }
 
     /**

@@ -571,20 +571,19 @@ public final class MapController extends Container implements IMapController {
             if (terrain.getMaxHealthTypeTerrainId() != 0) {
                 changeTerrain(tile, terrain.getMaxHealthTypeTerrainId());
                 tile.setOwnerId(playerId);
-//                terrain = tile.getTerrain();
-//                if (tile.isAtFullHealth()) {
-//                    notifyTileEffect(point, terrain.getMaxHealthEffectId(), false);
-//                }
+                terrain = getTerrain(tile);
+                if (tile.isAtFullHealth() && terrain.getMaxHealthEffectId() != 0) {
+                    notifyTileEffect(point, terrain.getMaxHealthEffectId(), false);
+                }
             }
 
 //            updateRoomWalls(tile);
 //            mapLoader.updateTiles(mapLoader.getSurroundingTiles(tile.getLocation(), true));
             // Notify
-//            notifyTileChange(point);
-            // Notify
+            assert point.equals(tile.getLocation());
             notifyTileChange(tile.getLocation());
         } else if (terrain.getFlags().contains(Terrain.TerrainFlag.DECAY)) {
-//            mapLoader.updateTiles(point);
+            // mapLoader.updateTiles(point);
         }
     }
 

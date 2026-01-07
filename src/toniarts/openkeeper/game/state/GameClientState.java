@@ -411,8 +411,12 @@ public final class GameClientState extends AbstractPauseAwareState {
 
         @Override
         public void onTilesChange(List<Point> updatedTiles) {
-            //mapInformation.setTiles(updatedTiles);
-            //playerMapViewState.onTilesChange(updatedTiles);
+            playerMapViewState.onTilesChange(updatedTiles);
+        }
+
+        @Override
+        public void onTileEffect(Point point, int effectId, boolean infinite) {
+            playerMapViewState.onTileEffect(point, effectId, infinite);
         }
 
         @Override

@@ -21,14 +21,15 @@ import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityContainer;
 import com.simsilica.es.EntityData;
 import java.lang.System.Logger.Level;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import toniarts.openkeeper.game.component.Gold;
 import toniarts.openkeeper.game.component.Health;
 import toniarts.openkeeper.game.component.Mana;
 import toniarts.openkeeper.game.component.MapTile;
 import toniarts.openkeeper.game.component.Owner;
+import toniarts.openkeeper.game.listener.MapListener;
 import toniarts.openkeeper.game.map.AbstractMapTileInformation;
 import toniarts.openkeeper.game.map.IMapDataInformation;
 import toniarts.openkeeper.game.map.IMapTileInformation;
@@ -45,13 +46,13 @@ public abstract class MapTileContainer extends EntityContainer<IMapTileInformati
     private final int width;
     private final int height;
     private final IMapTileInformation[][] tiles;
-    private final Consumer<Point[]> tileUpdateCallback;
+    private final List<MapListener> mapListeners;
     private int tilesAdded = 0;
 
-    protected MapTileContainer(EntityData entityData, KwdFile kwdFile, Consumer<Point[]> tileUpdateCallback) {
+    protected MapTileContainer(EntityData entityData, KwdFile kwdFile) {
         super(entityData, MapTile.class, Owner.class, Health.class, Gold.class, Mana.class);
 
-        this.tileUpdateCallback = tileUpdateCallback;
+        this.mapListeners = new ArrayList<>();
         width = kwdFile.getMap().getWidth();
         height = kwdFile.getMap().getHeight();
 
@@ -97,7 +98,34 @@ public abstract class MapTileContainer extends EntityContainer<IMapTileInformati
         }
 
         // Update the batch
-        tileUpdateCallback.accept(updatableTiles);
+        notifyTileChange(updatableTiles);
+    }
+
+    private void notifyTileChange(Point[] updatedTiles) {
+        List<Point> tileList = List.of(updatedTiles);
+        for (MapListener mapListener : mapListeners) {
+            mapListener.onTilesChange(tileList);
+        }
+    }
+
+    /**
+     * Add a listener for tile changes
+     *
+     * @param listener the listener to add
+     */
+    public void addMapListener(MapListener listener) {
+        if (!mapListeners.contains(listener)) {
+            mapListeners.add(listener);
+        }
+    }
+
+    /**
+     * Remove a listener for tile changes
+     *
+     * @param listener the listener to remove
+     */
+    public void removeMapListener(MapListener listener) {
+        mapListeners.remove(listener);
     }
 
     @Override
