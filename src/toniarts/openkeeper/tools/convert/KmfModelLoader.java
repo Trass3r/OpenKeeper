@@ -18,8 +18,6 @@ package toniarts.openkeeper.tools.convert;
 
 import com.jme3.anim.AnimClip;
 import com.jme3.anim.AnimComposer;
-import com.jme3.anim.MorphControl;
-import com.jme3.anim.MorphTrack;
 import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetLoader;
 import com.jme3.asset.MaterialKey;
@@ -39,7 +37,6 @@ import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
-import com.jme3.scene.mesh.MorphTarget;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
@@ -60,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import toniarts.openkeeper.game.data.Settings;
 import toniarts.openkeeper.tools.convert.kmf.Anim;
 import toniarts.openkeeper.tools.convert.kmf.Grop;
 import toniarts.openkeeper.tools.convert.kmf.KmfFile;
@@ -115,7 +113,10 @@ public final class KmfModelLoader implements AssetLoader {
             dkIIFolder = PathUtils.fixFilePath(args[1]);
         }
 
-        ModelViewer app = new ModelViewer(Paths.get(args[0]), dkIIFolder);
+        var app = new ModelViewer(Paths.get(args[0]), dkIIFolder);
+        app.setSettings(Settings.getInstance().getAppSettings());
+        app.setShowSettings(true);
+        BufferUtils.setTrackDirectMemoryEnabled(true);
         app.start();
     }
 
@@ -249,15 +250,10 @@ public final class KmfModelLoader implements AssetLoader {
         node.setLocalTranslation(new Vector3f(anim.getPos().x, -anim.getPos().z, anim.getPos().y));
 
         // Create one track per submesh
-        List<MorphTrack> animTracks = new ArrayList<>(anim.getSprites().size());
+        List<PoseTrack> animTracks = new ArrayList<>(anim.getSprites().size());
 
         // Create times (same for all tracks)
-        // we subsample the frames to reduce the size
-        // always take the last frame
-        final int lastFrame = anim.getFrames() - 1;
-        assert lastFrame > 0;
-        final int numFrames = lastFrame + 1; // ceiling division + 1
-        final int numMorphTracks = numFrames-1; // first frame doesn't need one
+        final int numFrames = anim.getFrames();
         float[] times = new float[numFrames];
         for (int i = 0; i < numFrames; ++i)
             times[i] = i / 30f;
@@ -290,20 +286,16 @@ public final class KmfModelLoader implements AssetLoader {
                 ++i;
             }
 
-            // set up weights as identity matrix
-            // frames are rows, morph targets are columns
-            // first row is 0
-            var weights = new float[numFrames * numMorphTracks];
-            for (i = 1; i < numFrames; ++i)
-                weights[i * numMorphTracks + i-1] = 1;
+            // Prepare concatenated per-frame absolute position data and create a single combined VBO
+            final int vertexCount = subMesh.getVertices().size();
+            final int comps = 3; // x,y,z
+            final int floatsPerFrame = vertexCount * comps;
+            final int totalFloats = numFrames * floatsPerFrame;
+            float[] combined = new float[totalFloats];
 
-            // now get the vertices for each frame, make sure we pick the last frame too
-            for (int frame = 0; frame < anim.getFrames(); frame += 1)
-            {
+            for (int frame = 0; frame < numFrames; ++frame) {
                 i = 0;
-                for (var animVertex : subMesh.getVertices())
-                {
-                    // the split into base + offset is just a file size optimization
+                for (var animVertex : subMesh.getVertices()) {
                     int geomBase = anim.getItab()[frame >> 7][animVertex.getItabIndex()];
                     short geomOffset = anim.getOffsets()[animVertex.getItabIndex()][frame];
                     int geomIndex = geomBase + geomOffset;
@@ -314,33 +306,93 @@ public final class KmfModelLoader implements AssetLoader {
                     var nextCoord       = animGeometries.get(geomIndex + 1).getGeometry();
                     short nextFrameBase = animGeometries.get(geomIndex + 1).getFrameBase();
 
-                    // the last frame will have an extra duplicate entry
-                    // so prevent division by zero
                     float geomFactor = nextFrameBase <= frameBase ? 0 :
                         (float) ((frame & 0x7f) - frameBase) / (float) (nextFrameBase - frameBase);
 
                     // interpolate and convert to Y-up
-                    vertices[i] = new Vector3f(
-                        coord.x + (nextCoord.x - coord.x) * geomFactor,
-                      -(coord.z + (nextCoord.z - coord.z) * geomFactor),
-                        coord.y + (nextCoord.y - coord.y) * geomFactor);
+                    float vx = coord.x + (nextCoord.x - coord.x) * geomFactor;
+                    float vy = -(coord.z + (nextCoord.z - coord.z) * geomFactor);
+                    float vz = coord.y + (nextCoord.y - coord.y) * geomFactor;
+
+                    int baseIndex = frame * floatsPerFrame + i * comps;
+                    combined[baseIndex] = vx;
+                    combined[baseIndex + 1] = vy;
+                    combined[baseIndex + 2] = vz;
+
+                    vertices[i] = new Vector3f(vx, vy, vz);
                     ++i;
                 }
 
                 if (frame == 0) {
-                    // we need a valid position buffer for BVH generation etc.
-                    mesh.setBuffer(Type.Position, 3, BufferUtils.createFloatBuffer(vertices));
+                    // store base vertices for BVH generation etc.; do not attach a separate position buffer
                     for (i = 0; i < vertices.length; ++i)
                         baseVertices[i] = new Vector3f(vertices[i]);
-                    continue;
                 }
-                // create a relative morph target
-                var morphTarget = new MorphTarget("submesh " + subMeshIndex + " frame " + frame);
-                for (i = 0; i < vertices.length; ++i)
-                    vertices[i].subtractLocal(baseVertices[i]);
-                morphTarget.setBuffer(Type.Position, BufferUtils.createFloatBuffer(vertices));
-                mesh.addMorphTarget(morphTarget);
             }
+
+            // create combined VBO containing all frames (positions)
+            var combinedFb = BufferUtils.createFloatBuffer(combined);
+            var combinedVb = new VertexBuffer(Type.Position);
+            combinedVb.setupData(VertexBuffer.Usage.Static, comps, VertexBuffer.Format.Float, combinedFb);
+            // attach combined position VBO to mesh (offset will be updated by PoseTrack at runtime)
+            mesh.setBuffer(combinedVb);
+
+            // Compute per-frame normals (frame 0 is provided by "normals"), average per-vertex
+            float[] combinedNormals = new float[totalFloats];
+            // copy frame 0 normals
+            for (int vi = 0; vi < vertexCount; ++vi) {
+                int idx0 = vi * 3;
+                combinedNormals[idx0] = normals[vi].x;
+                combinedNormals[idx0 + 1] = normals[vi].y;
+                combinedNormals[idx0 + 2] = normals[vi].z;
+            }
+
+            // use L0 triangle list to compute face normals
+            var triangles = subMesh.getTriangles().get(0);
+            for (int frame = 1; frame < numFrames; ++frame) {
+                var acc = new Vector3f[vertexCount];
+                for (int a = 0; a < vertexCount; ++a)
+                    acc[a] = new Vector3f(0,0,0);
+
+                int baseFloat = frame * floatsPerFrame;
+
+                for (var tri : triangles) {
+                    byte[] t = tri.getTriangle();
+                    int aOff = baseFloat + (t[2] & 0xFF) * 3;
+                    int bOff = baseFloat + (t[1] & 0xFF) * 3;
+                    int cOff = baseFloat + (t[0] & 0xFF) * 3;
+
+                    var va = new Vector3f(combined[aOff], combined[aOff+1], combined[aOff+2]);
+                    var vb = new Vector3f(combined[bOff], combined[bOff+1], combined[bOff+2]);
+                    var vc = new Vector3f(combined[cOff], combined[cOff+1], combined[cOff+2]);
+
+                    var e1 = vb.subtract(va);
+                    var e2 = vc.subtract(va);
+                    var face = e1.cross(e2);
+                    face.normalizeLocal();
+
+                    acc[t[2] & 0xFF].addLocal(face);
+                    acc[t[1] & 0xFF].addLocal(face);
+                    acc[t[0] & 0xFF].addLocal(face);
+                }
+
+                for (int vi = 0; vi < vertexCount; ++vi) {
+                    Vector3f n = acc[vi];
+                    if (n.lengthSquared() == 0) n.set(normals[vi]);
+                    else n.normalizeLocal();
+
+                    int outOff = frame * floatsPerFrame + vi * 3;
+                    combinedNormals[outOff] = n.x;
+                    combinedNormals[outOff + 1] = n.y;
+                    combinedNormals[outOff + 2] = n.z;
+                }
+            }
+
+            // create combined normal VBO and attach
+            var combinedNormalsFb = BufferUtils.createFloatBuffer(combinedNormals);
+            var combinedNormalVb = new VertexBuffer(Type.Normal);
+            combinedNormalVb.setupData(VertexBuffer.Usage.Static, comps, com.jme3.scene.VertexBuffer.Format.Float, combinedNormalsFb);
+            mesh.setBuffer(combinedNormalVb);
 
             // Create LOD levels
             // FIXME: LODs are broken so we only take L0
@@ -349,28 +401,34 @@ public final class KmfModelLoader implements AssetLoader {
             //mesh.setLodLevels(lodLevels); // needs to include L0!
 
             mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(uvs));
-            mesh.setBuffer(Type.Normal, 3, BufferUtils.createFloatBuffer(normals));
             mesh.setStatic();
 
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, subMesh.getMaterialIndex());
+            for (var buffer : mesh.getBufferList())
+                buffer.setName(geom.getName() + ' ' + buffer.getBufferType().name() + 's');
 
-            var morphTrack = new MorphTrack(geom, times, weights, numMorphTracks);
-            animTracks.add(morphTrack);
+            // create a PoseTrack which updates the combined VBO offset when
+            // the animation system queries the track. This avoids needing a
+            // separate render-time control.
+            int bytesPerFrame = vertexCount * 3 * Float.BYTES;
+            var frameTrack = new PoseTrack(geom, numFrames, 1f/30f, bytesPerFrame, times);
+            animTracks.add(frameTrack);
 
-            //Attach the geometry to the node
+            // Attach the geometry to the node
             node.attachChild(geom);
             ++subMeshIndex;
         }
 
         // Create the animation itself and attach the animation
         var animClip = new AnimClip(DUMMY_ANIM_CLIP_NAME);
-        animClip.setTracks(animTracks.toArray(new MorphTrack[0]));
+        animClip.setTracks(animTracks.toArray(new PoseTrack[0]));
         var composer = new AnimComposer();
         composer.addAnimClip(animClip);
         node.addControl(composer);
-        node.addControl(new MorphControl());
         // we could also do setCurrentAction(DUMMY_ANIM_CLIP_NAME) here but it wouldn't get serialized
+        // start the dummy clip so ClipAction updates morph state each frame
+        //composer.setCurrentAction(DUMMY_ANIM_CLIP_NAME);
 
         return node;
     }
