@@ -157,6 +157,7 @@ public final class ConvertModels extends ConversionTask {
         }
 
         // And the groups (now they can be linked)
+        // TODO: Is this needed?
         for (Map.Entry<String, KmfFile> entry : kmfs.entrySet()) {
             convertModel(assetManager, entry.getKey(), entry.getValue(), destination, total, progress);
 
