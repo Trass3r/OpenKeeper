@@ -21,6 +21,7 @@ import com.jme3.anim.tween.Tweens;
 import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.AssetKey;
+import com.jme3.asset.ModelKey;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.audio.AudioNode;
 import com.jme3.input.KeyInput;
@@ -262,6 +263,14 @@ public final class ModelViewer extends SimpleApplication {
         setupDebug();
 
         // Open a KMF model if set
+        if (kmfModel == null) {
+            kmfModel = java.nio.file.Path.of("IMP-Idle4.kmf"); // case-sensitive!
+            Node node = (Node) assetManager.loadModel(new ModelKey(kmfModel.toString()));
+            setupModel(node, false);
+            //Node spat = (Node) AssetUtils.loadAsset(assetManager, kmfModel.toString(), null);
+            //String filename = AssetsConverter.MODELS_FOLDER + File.separator + kmfModel + ".j3o";
+            //ModelKey assetKey = new ModelKey(AssetUtils.getCanonicalAssetKey(filename));
+        } else
         if (kmfModel != null) {
             try {
                 KmfFile kmf = new KmfFile(kmfModel);

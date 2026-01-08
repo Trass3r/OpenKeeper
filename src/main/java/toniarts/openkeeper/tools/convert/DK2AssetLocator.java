@@ -72,15 +72,15 @@ public final class DK2AssetLocator implements AssetLocator {
 
         // Try to locate textures from EngineTextures
         if (name.startsWith(AssetsConverter.TEXTURES_FOLDER))
-            return locateTextureFromEngineTextures(key, name);
+            return locateTextureFromEngineTextures(manager, key, name);
 
         // Try to locate KMF models from Meshes.WAD
         if (ext.equals("kmf"))
-            return locateModelFromWad(key, name);
+            return locateModelFromWad(manager, key, name);
         return null;
     }
 
-    private AssetInfo locateModelFromWad(AssetKey key, String name) {
+    private AssetInfo locateModelFromWad(AssetManager manager, AssetKey key, String name) {
         WadFile meshesWad = wadFiles.get("Meshes");
         if (meshesWad == null) {
             return null;
@@ -88,12 +88,12 @@ public final class DK2AssetLocator implements AssetLocator {
 
         try {
             // Extract model name from path: Models/filename.kmf -> filename.kmf
-            String modelName = name.substring(AssetsConverter.MODELS_FOLDER.length() + 1);
+            String modelName = name.replace(AssetsConverter.MODELS_FOLDER, "").toLowerCase();
 
             // Check if the model exists in the WAD
             if (meshesWad.getWadFileEntries().contains(modelName)) {
                 byte[] modelData = meshesWad.getFileData(modelName);
-                return new WadAssetInfo(key, new ByteArrayInputStream(modelData));
+                return new WadAssetInfo(manager, key, new ByteArrayInputStream(modelData));
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to load model from WAD: " + name, e);
@@ -102,7 +102,7 @@ public final class DK2AssetLocator implements AssetLocator {
         return null;
     }
 
-    private AssetInfo locateTextureFromEngineTextures(AssetKey key, String name) {
+    private AssetInfo locateTextureFromEngineTextures(AssetManager manager, AssetKey key, String name) {
         if (engineTextures == null) {
             return null;
         }
@@ -118,7 +118,7 @@ public final class DK2AssetLocator implements AssetLocator {
                 // Extract texture data to byte array
                 byte[] textureData = extractTextureData(entry, textureName);
                 if (textureData != null) {
-                    return new WadAssetInfo(key, new ByteArrayInputStream(textureData));
+                    return new WadAssetInfo(manager, key, new ByteArrayInputStream(textureData));
                 }
             }
         } catch (Exception e) {
@@ -156,8 +156,8 @@ public final class DK2AssetLocator implements AssetLocator {
     private static class WadAssetInfo extends AssetInfo {
         private final InputStream inputStream;
 
-        public WadAssetInfo(AssetKey key, InputStream inputStream) {
-            super(null, key);
+        public WadAssetInfo(AssetManager manager, AssetKey key, InputStream inputStream) {
+            super(manager, key);
             this.inputStream = inputStream;
         }
 
