@@ -144,7 +144,7 @@ jobs:
           echo "DISPLAY=:99" >> $GITHUB_ENV
       - name: Run and profile
         env:
-          JDK_JAVA_OPTIONS: '-XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=30s,maxsize=10M,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,path-to-gc-roots=true'
+          JDK_JAVA_OPTIONS: '-XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=15s,duration=45s,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,path-to-gc-roots=true'
         run: |
           set -eux
           sudo apt update
