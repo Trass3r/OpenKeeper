@@ -176,6 +176,7 @@ jobs:
         run: |
           OPTS='--threads -s runnable -X ".+glfwSwapBuffers|.+emitEvent" --total --simple --dot --highlight "State[.$]|Control|System"'
           jfrconv $OPTS --cpu recording.jfr cpu.html
+          jfrconv $OPTS --wall recording.jfr wall.html
           jfrconv $OPTS -o heatmap recording.jfr heatmap.html
           jfrconv $OPTS -o pb.gz recording.jfr
       - uses: actions/upload-artifact@v4
