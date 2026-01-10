@@ -144,7 +144,7 @@ jobs:
           echo "DISPLAY=:99" >> $GITHUB_ENV
       - name: Run and profile
         env:
-          JDK_JAVA_OPTIONS: '-XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=15s,duration=45s,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,path-to-gc-roots=true'
+          JDK_JAVA_OPTIONS: '-XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=15s,duration=45s,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,jdk.CPUTimeSample#enabled=true,path-to-gc-roots=true'
         run: |
           set -eux
           sudo apt update
@@ -174,8 +174,12 @@ jobs:
           sudo tar xv --strip-components=1 -C /usr/local -f async-profiler.tar.gz
       - name: Postprocess JFR
         run: |
+          jfr view cpu-time-statistics recording.jfr
+          jfr view cpu-time-hot-methods recording.jfr
+
           OPTS='--threads -s runnable -X ".+glfwSwapBuffers|.+emitEvent" --total --simple --dot --highlight "State[.$]|Control|System"'
           jfrconv $OPTS --cpu recording.jfr cpu.html
+          jfrconv $OPTS --cpu-time recording.jfr cpu-time.html
           jfrconv $OPTS --wall recording.jfr wall.html
           jfrconv $OPTS -o heatmap recording.jfr heatmap.html
           jfrconv $OPTS -o pb.gz recording.jfr
