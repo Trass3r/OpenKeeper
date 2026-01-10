@@ -36,6 +36,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.VertexBuffer.Format;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
@@ -267,14 +268,17 @@ public final class KmfModelLoader implements AssetLoader {
             final int numVertices = subMesh.getVertices().size();
             var baseVertices = new Vector3f[numVertices];
             var vertices = new Vector3f[numVertices];
-            var uvs      = new Vector2f[numVertices];
+            //var uvs      = new Vector2f[numVertices];
+            var uvs = BufferUtils.createShortBuffer(numVertices * 2);
             var normals  = new Vector3f[numVertices];
 
             // first the UVs and normals since they are frame-independent
             int i = 0;
             for (var animVertex : subMesh.getVertices()) {
                 var uv = animVertex.getUv();
-                uvs[i] = new Vector2f(uv.getUv()[0] / 32768f, uv.getUv()[1] / 32768f);
+                // uvs[i] = new Vector2f(uv.getUv()[0] / 32768f, uv.getUv()[1] / 32768f);
+                uvs.put(i * 2, (short) uv.getUv()[0]);
+                uvs.put(i * 2 + 1, (short) uv.getUv()[1]);
 
                 var v = animVertex.getNormal();
                 normals[i] = new Vector3f(v.x, -v.z, v.y);
@@ -385,9 +389,15 @@ public final class KmfModelLoader implements AssetLoader {
             }
 
             // create combined normal VBO and attach
-            var combinedNormalsFb = BufferUtils.createFloatBuffer(combinedNormals);
+            //var combinedNormalsFb = BufferUtils.createFloatBuffer(combinedNormals);
+            var combinedNormalsFb = BufferUtils.createByteBuffer(combinedNormals.length);
+            for (int ni = 0; ni < combinedNormals.length; ++ni)
+                combinedNormalsFb.put((byte) (combinedNormals[ni] * 127)); // convert to signed byte
+            combinedNormalsFb.flip();
             var combinedNormalVb = new VertexBuffer(Type.Normal);
-            combinedNormalVb.setupData(VertexBuffer.Usage.Static, comps, com.jme3.scene.VertexBuffer.Format.Float, combinedNormalsFb);
+            combinedNormalVb.setNormalized(true);
+            combinedNormalVb.setupData(VertexBuffer.Usage.Static, comps, VertexBuffer.Format.Byte, combinedNormalsFb);
+            //combinedNormalVb.convertToHalf();
             mesh.setBuffer(combinedNormalVb);
 
             // Create LOD levels
@@ -396,7 +406,8 @@ public final class KmfModelLoader implements AssetLoader {
             mesh.setBuffer(lodLevels[0]);
             //mesh.setLodLevels(lodLevels); // needs to include L0!
 
-            mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(uvs));
+            mesh.setBuffer(Type.TexCoord, 2, Format.Short, uvs); //, BufferUtils.createFloatBuffer(uvs));
+            mesh.getBuffer(Type.TexCoord).setNormalized(true);
             mesh.setStatic();
 
             // Create geometry
