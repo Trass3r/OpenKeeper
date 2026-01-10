@@ -225,7 +225,7 @@ jobs:
           printf "deb http://ddebs.ubuntu.com %s main restricted universe multiverse\n" plucky{,-updates,-proposed} | \
             sudo tee -a /etc/apt/sources.list.d/ddebs.list
           sudo apt update && sudo apt install -y -f xdotool gdb mesa-utils # mesa-libgallium=25.0.7-0ubuntu0.25.04.2 mesa-libgallium-dbgsym
-          sudo apt install -y -f mesa-libgallium-dbgsym libegl-mesa0-dbgsym
+          sudo apt install -y -f mesa-libgallium-dbgsym libegl-mesa0-dbgsym libglx-mesa0-dbgsym
       - name: Start Xvfb
         run: |
           Xvfb :99 -screen 0 1280x720x24 &
