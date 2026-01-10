@@ -12,19 +12,29 @@ import com.jme3.util.clone.Cloner;
 import java.io.IOException;
 
 /**
- * A MorphTrack-like track that, instead of returning weight arrays, updates
- * the combined position VBO's offset to select the active pose frame.
+ * A Track that expects the VBOs to contain data for all frames
+ * and just switches the offsets to select the active pose frame.
  */
 final class PoseTrack extends MorphTrack {
     private int frameCount;
     private float frameDuration;
     private int bytesPerFrame;
 
-    public PoseTrack(Geometry target, int frameCount, float frameDuration, int bytesPerFrame, float[] times) {
-        super(target, times, null, 0);
+    /**
+     * Serialization-only. Do not use.
+     */
+    protected PoseTrack() {}
+
+    public PoseTrack(Geometry target, int frameCount, float frameDuration, int bytesPerFrame) {
+        super(target, null, null, 0);
         this.frameCount = frameCount;
         this.frameDuration = frameDuration;
         this.bytesPerFrame = bytesPerFrame;
+    }
+
+    @Override
+    public double getLength() {
+        return (frameCount-1) * frameDuration;
     }
 
     @Override
@@ -39,10 +49,10 @@ final class PoseTrack extends MorphTrack {
 
         // update the geometry's combined position VBO offset
         Geometry geom = getTarget();
-		Mesh mesh = geom.getMesh();
-		VertexBuffer vb = mesh.getBuffer(VertexBuffer.Type.Position);
-		if (vb != null)
-			vb.setOffset(bytesPerFrame * idx);
+        Mesh mesh = geom.getMesh();
+        VertexBuffer vb = mesh.getBuffer(VertexBuffer.Type.Position);
+        if (vb != null)
+            vb.setOffset(bytesPerFrame * idx);
 
         // Keep returning a sensible weights array to remain compatible
         //if (store != null && store.length > 0) {
@@ -54,6 +64,7 @@ final class PoseTrack extends MorphTrack {
     @Override
     public void write(JmeExporter ex) throws IOException {
         OutputCapsule oc = ex.getCapsule(this);
+        oc.write(getTarget(), "target", null);
         oc.write(frameCount, "frameCount", 0);
         oc.write(frameDuration, "frameDuration", 0f);
         oc.write(bytesPerFrame, "bytesPerFrame", 0);
@@ -62,6 +73,7 @@ final class PoseTrack extends MorphTrack {
     @Override
     public void read(JmeImporter im) throws IOException {
         InputCapsule ic = im.getCapsule(this);
+        setTarget((Geometry)ic.readSavable("target", null));
         frameCount = ic.readInt("frameCount", frameCount);
         frameDuration = ic.readFloat("frameDuration", frameDuration);
         bytesPerFrame = ic.readInt("bytesPerFrame", bytesPerFrame);

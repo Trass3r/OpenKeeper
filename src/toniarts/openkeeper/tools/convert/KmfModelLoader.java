@@ -252,11 +252,7 @@ public final class KmfModelLoader implements AssetLoader {
         // Create one track per submesh
         List<PoseTrack> animTracks = new ArrayList<>(anim.getSprites().size());
 
-        // Create times (same for all tracks)
         final int numFrames = anim.getFrames();
-        float[] times = new float[numFrames];
-        for (int i = 0; i < numFrames; ++i)
-            times[i] = i / 30f;
 
         int subMeshIndex = 0;
         for (var subMesh : anim.getSprites()) {
@@ -412,7 +408,7 @@ public final class KmfModelLoader implements AssetLoader {
             // the animation system queries the track. This avoids needing a
             // separate render-time control.
             int bytesPerFrame = vertexCount * 3 * Float.BYTES;
-            var frameTrack = new PoseTrack(geom, numFrames, 1f/30f, bytesPerFrame, times);
+            var frameTrack = new PoseTrack(geom, numFrames, 1f/30f, bytesPerFrame);
             animTracks.add(frameTrack);
 
             // Attach the geometry to the node
