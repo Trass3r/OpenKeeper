@@ -238,18 +238,14 @@ jobs:
           gdb -batch -ex "set debuginfod enabled on" -ex "set verbose on" -ex "r" -ex "quit" --args glxinfo -B
 
           ./gradlew run --no-daemon --args="-level Conquest" &
-          sleep 10 # asset conversion
+          sleep 15 # asset conversion
           pid=$(pgrep -f 'java.*openkeeper.Main')
-          asprof -d 15 -e wall -t -f startup.html $pid
-          asprof -d 30 -e cpu --simple -t --cstack vmx -f cpu.html $pid
-          asprof -d 30 --all -f recording.jfr $pid
-          #kill $pid
-          #window_id=$(xdotool search --pid $pid | head -n1)
-          #window_arg=${window_id:+--window $window_id}
-          window_arg=
-          xdotool key $window_arg Escape
+          asprof -d 30 -e wall -i 10ms --simple -t --total --cstack vmx --ann -F stats,comptask,vtable -L info -f wall.html $pid
+          asprof -d 30 -e cpu  -i 10ms --simple -t --total --cstack vmx --ann -F stats,comptask,vtable -L info -f cpu.html  $pid
+          asprof -d 30 --all   -i 10ms --cstack vmx -F stats,comptask,vtable -L info -f recording.jfr $pid
+          xdotool key Escape
           sleep 1
-          jfrconv --threads -s runnable --dot -X ".+glfwSwapBuffers|.+emitEvent" --total --simple --highlight "State[.$]|Control|System" --title 'Time spent' recording.jfr
+          jfrconv --threads -s runnable --dot -X ".+glfwSwapBuffers|.+emitEvent" --total --simple --highlight "State[.$]|Control|System" recording.jfr
       - uses: actions/upload-artifact@v4
         with:
           name: async-profiler-outputs
