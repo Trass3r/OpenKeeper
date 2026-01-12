@@ -366,7 +366,7 @@ public final class KmfModelLoader implements AssetLoader {
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, subMesh.getMaterialIndex());
 
-            var morphTrack = new MorphTrack(geom, times, weights, 1);
+            var morphTrack = new PoseTrack(geom, times.length, 1f/30f, 1);
             animTracks.add(morphTrack);
 
             //Attach the geometry to the node
@@ -376,11 +376,10 @@ public final class KmfModelLoader implements AssetLoader {
 
         // Create the animation itself and attach the animation
         var animClip = new AnimClip(DUMMY_ANIM_CLIP_NAME);
-        animClip.setTracks(animTracks.toArray(new MorphTrack[0]));
+        animClip.setTracks(animTracks.toArray(new PoseTrack[0]));
         var composer = new AnimComposer();
         composer.addAnimClip(animClip);
         node.addControl(composer);
-        node.addControl(new PoseFrameControl());
         // we could also do setCurrentAction(DUMMY_ANIM_CLIP_NAME) here but it wouldn't get serialized
 
         return node;
