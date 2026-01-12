@@ -157,28 +157,22 @@ public abstract class SelectionHandler {
     }
 
     public void updateSelectionBox() {
-        if (isVisible()) {
-            float dx = selectionArea.getDeltaX();
-            float dy = selectionArea.getDeltaY();
-            float delta = 0.01f;
+        if (!isVisible()) {
+            wireBoxGeo.setCullHint(CullHint.Always);
+            return;
+        }
+        wireBoxGeo.setCullHint(CullHint.Never);
 
-            Vector2f position = selectionArea.getCenter();
-            wireBoxGeo.setLocalTranslation(position.x, WorldUtils.FLOOR_HEIGHT, position.y);
+        Vector2f position = selectionArea.getCenter();
+        wireBoxGeo.setLocalTranslation(position.x, WorldUtils.TORCH_HEIGHT, position.y);
+        wireBoxGeo.setLocalScale(selectionArea.getScale()/2);
 
-            wireBox.updatePositions(WorldUtils.TILE_WIDTH / 2 * dx + delta,
-                    WorldUtils.FLOOR_HEIGHT + delta,
-                    WorldUtils.TILE_WIDTH / 2 * dy + delta);
 
-            // Selection color indicator
-            ColorIndicator newSelectionColor = getColorIndicator();
-            if (!newSelectionColor.equals(selectionColor)) {
-                selectionColor = newSelectionColor;
-                matWireBox.setColor("Color", selectionColor.getColor());
-            }
-
-            this.wireBoxGeo.setCullHint(CullHint.Never);
-        } else {
-            this.wireBoxGeo.setCullHint(CullHint.Always);
+        // Selection color indicator
+        ColorIndicator newSelectionColor = getColorIndicator();
+        if (!newSelectionColor.equals(selectionColor)) {
+            selectionColor = newSelectionColor;
+            matWireBox.setColor("Color", selectionColor.getColor());
         }
     }
 
@@ -189,7 +183,7 @@ public abstract class SelectionHandler {
         matWireBox.getAdditionalRenderState().setLineWidth(6); // TODO: GL_INVALID_VALUE on intel driver
 
         this.wireBox = new WireBox(WorldUtils.TILE_WIDTH, WorldUtils.TILE_WIDTH, WorldUtils.TILE_WIDTH);
-        this.wireBox.setDynamic();
+        this.wireBox.setStatic();
 
         this.wireBoxGeo = new Geometry("wireBox", wireBox);
         this.wireBoxGeo.setMaterial(matWireBox);
