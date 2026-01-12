@@ -38,11 +38,11 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.VertexBuffer.Format;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.MorphTarget;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
-import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -275,14 +275,15 @@ public final class KmfModelLoader implements AssetLoader {
             final int numVertices = subMesh.getVertices().size();
             var baseVertices = new Vector3f[numVertices];
             var vertices = new Vector3f[numVertices];
-            var uvs      = new Vector2f[numVertices];
+            var uvs = BufferUtils.createShortBuffer(numVertices * 2);
             var normals  = new Vector3f[numVertices];
 
             // first the UVs and normals since they are frame-independent
             int i = 0;
             for (var animVertex : subMesh.getVertices()) {
                 var uv = animVertex.getUv();
-                uvs[i] = new Vector2f(uv.getUv()[0] / 32768f, uv.getUv()[1] / 32768f);
+                uvs.put(i * 2, (short) uv.getUv()[0]);
+                uvs.put(i * 2 + 1, (short) uv.getUv()[1]);
 
                 var v = animVertex.getNormal();
                 normals[i] = new Vector3f(v.x, -v.z, v.y);
@@ -348,7 +349,8 @@ public final class KmfModelLoader implements AssetLoader {
             mesh.setBuffer(lodLevels[0]);
             //mesh.setLodLevels(lodLevels); // needs to include L0!
 
-            mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(uvs));
+            mesh.setBuffer(Type.TexCoord, 2, Format.Short, uvs);
+            mesh.getBuffer(Type.TexCoord).setNormalized(true);
             mesh.setBuffer(Type.Normal, 3, BufferUtils.createFloatBuffer(normals));
             mesh.setStatic();
 
@@ -463,7 +465,8 @@ public final class KmfModelLoader implements AssetLoader {
 
         // Try to generate tangents
         try {
-            MikktspaceTangentGenerator.generate(geom);
+            // won't work unless all buffers are FloatBuffers
+            //MikktspaceTangentGenerator.generate(geom);
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to generate tangents for " + meshName + "! ", e);
         }
