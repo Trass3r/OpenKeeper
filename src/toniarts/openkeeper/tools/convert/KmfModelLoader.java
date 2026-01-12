@@ -18,7 +18,6 @@ package toniarts.openkeeper.tools.convert;
 
 import com.jme3.anim.AnimClip;
 import com.jme3.anim.AnimComposer;
-import com.jme3.anim.MorphControl;
 import com.jme3.anim.MorphTrack;
 import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetLoader;
@@ -40,7 +39,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Format;
 import com.jme3.scene.VertexBuffer.Type;
-import com.jme3.scene.mesh.MorphTarget;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
 import java.io.BufferedOutputStream;
@@ -257,7 +255,6 @@ public final class KmfModelLoader implements AssetLoader {
         final int lastFrame = anim.getFrames() - 1;
         assert lastFrame > 0;
         final int numFrames = lastFrame + 1; // ceiling division + 1
-        final int numMorphTracks = numFrames-1; // first frame doesn't need one
         float[] times = new float[numFrames];
         for (int i = 0; i < numFrames; ++i)
             times[i] = i / 30f;
@@ -291,12 +288,10 @@ public final class KmfModelLoader implements AssetLoader {
                 ++i;
             }
 
-            // set up weights as identity matrix
-            // frames are rows, morph targets are columns
-            // first row is 0
-            var weights = new float[numFrames * numMorphTracks];
-            for (i = 1; i < numFrames; ++i)
-                weights[i * numMorphTracks + i-1] = 1;
+            // abuse weights to encode the frame index
+            var weights = new float[numFrames];
+            for (i = 0; i < numFrames; ++i)
+                weights[i] = i;
 
             // now get the vertices for each frame, make sure we pick the last frame too
             for (int frame = 0; frame < anim.getFrames(); frame += 1)
@@ -336,11 +331,25 @@ public final class KmfModelLoader implements AssetLoader {
                     continue;
                 }
                 // create a relative morph target
-                var morphTarget = new MorphTarget("submesh " + subMeshIndex + " frame " + frame);
+                var morphTarget = new MorphTargetFix("submesh " + subMeshIndex + " frame " + frame);
                 for (i = 0; i < vertices.length; ++i)
                     vertices[i].subtractLocal(baseVertices[i]);
-                morphTarget.setBuffer(Type.Position, BufferUtils.createFloatBuffer(vertices));
+                // create a compact VertexBuffer for the morph target position deltas
+                var vb = new VertexBuffer(Type.MorphTarget0);
+                var verticesShorts = new short[vertices.length * 3];
+                for (i = 0; i < vertices.length; ++i) {
+                    verticesShorts[i * 3] = (short) Math.round(vertices[i].x * 32767f);
+                    verticesShorts[i * 3 + 1] = (short) Math.round(vertices[i].y * 32767f);
+                    verticesShorts[i * 3 + 2] = (short) Math.round(vertices[i].z * 32767f);
+                }
+                vb.setupData(VertexBuffer.Usage.Static, 3, Format.Short, BufferUtils.createShortBuffer(verticesShorts));
+                vb.setNormalized(true);
+                morphTarget.setVertexBuffer(vb);
                 mesh.addMorphTarget(morphTarget);
+
+                var mat = materials.get(subMesh.getMaterialIndex()).get(0);
+                mat.setInt("NumberOfMorphTargets", 1);
+                mat.setInt("NumberOfTargetsBuffers", 1);
             }
 
             // Create LOD levels
@@ -357,7 +366,7 @@ public final class KmfModelLoader implements AssetLoader {
             // Create geometry
             Geometry geom = createGeometry(subMeshIndex, anim.getName(), mesh, materials, subMesh.getMaterialIndex());
 
-            var morphTrack = new MorphTrack(geom, times, weights, numMorphTracks);
+            var morphTrack = new MorphTrack(geom, times, weights, 1);
             animTracks.add(morphTrack);
 
             //Attach the geometry to the node
@@ -371,7 +380,7 @@ public final class KmfModelLoader implements AssetLoader {
         var composer = new AnimComposer();
         composer.addAnimClip(animClip);
         node.addControl(composer);
-        node.addControl(new MorphControl());
+        node.addControl(new PoseFrameControl());
         // we could also do setCurrentAction(DUMMY_ANIM_CLIP_NAME) here but it wouldn't get serialized
 
         return node;

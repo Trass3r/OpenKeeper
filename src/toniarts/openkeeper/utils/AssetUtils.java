@@ -118,6 +118,12 @@ public final class AssetUtils {
                 cache.addToCache(assetKey, model);
             }
             result = model.clone();
+            result.depthFirstTraversal(spatial -> {
+                if (spatial instanceof Geometry geom && geom.getMesh().hasMorphTargets()) {
+                    // need to shallow-clone the mesh to be able to switch VBOs for each geom instance
+                    geom.setMesh(geom.getMesh().clone());
+                }
+            });
         } else {
             result = loadModel(assetManager, assetKey, artResource);
         }
