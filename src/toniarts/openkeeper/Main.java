@@ -198,7 +198,6 @@ public final class Main extends SimpleApplication {
         }
 
         // If the folder is ok, check the conversion
-        /*
         if (folderOk && (AssetsConverter.isConversionNeeded(Main.getSettings()))) {
             logger.log(Level.INFO, "Need to convert the assets!");
             saveSetup = true;
@@ -219,14 +218,14 @@ public final class Main extends SimpleApplication {
         } else if (folderOk) {
             conversionOk = true;
         }
-        */
 
         // If everything is ok, we might need to save the setup
-        if (folderOk && saveSetup) {
+        boolean result = folderOk && conversionOk;
+        if (result && saveSetup) {
             SettingUtils.getInstance().saveSettings();
         }
 
-        return folderOk;
+        return result;
     }
 
     private static void initSettings(Main app) {
