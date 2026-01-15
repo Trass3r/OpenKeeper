@@ -28,6 +28,7 @@ import toniarts.openkeeper.tools.convert.kmf.KmfFile;
  *
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
+@Deprecated
 public final class KmfAssetInfo extends AssetInfo {
 
     private final KmfFile kmfFile;
