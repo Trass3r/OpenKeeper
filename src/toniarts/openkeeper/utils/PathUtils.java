@@ -45,20 +45,17 @@ public final class PathUtils {
     private static final Object FILENAME_LOCK = new Object();
     protected static final String QUOTED_FILE_SEPARATOR = Matcher.quoteReplacement(File.separator);
 
-    public static final String DKII_DATA_FOLDER = getRealDKIIRelativeFolder("Data" + File.separator);
-    public static final String DKII_SFX_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Sound" + File.separator + "Sfx" + File.separator);
-    public static final String DKII_SFX_GLOBAL_FOLDER = getRealDKIIRelativeFolder(DKII_SFX_FOLDER + "Global" + File.separator);
-    public static final String DKII_MOVIES_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Movies" + File.separator);
-    public static final String DKII_TEXT_DEFAULT_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Text" + File.separator
-            + "English" + File.separator);
-    public static final String DKII_EDITOR_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Editor" + File.separator);
-    public static final String DKII_MAPS_FOLDER = getRealDKIIRelativeFolder(DKII_EDITOR_FOLDER + "Maps" + File.separator);
+     public static final String DKII_DATA_FOLDER = getRealDKIIRelativeFolder("Data/");
+    public static final String DKII_SFX_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Sound/"
+            + "Sfx/");
+    public static final String DKII_MOVIES_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Movies/");
+    public static final String DKII_TEXT_DEFAULT_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Text/"
+            + "English/");
+    public static final String DKII_EDITOR_FOLDER = getRealDKIIRelativeFolder(DKII_DATA_FOLDER + "Editor/");
+    public static final String DKII_MAPS_FOLDER = getRealDKIIRelativeFolder(DKII_EDITOR_FOLDER + "Maps/");
+    public static final String DKII_SFX_GLOBAL_FOLDER = getRealDKIIRelativeFolder(DKII_SFX_FOLDER + "Global/");
 
-    public static final String ENGINE_TEXTURES_WAD = DKII_DATA_FOLDER + "EngineTextures.WAD";
-    public static final String FRONTEND_WAD = DKII_DATA_FOLDER + "FrontEnd.WAD";
     public static final String MESHES_WAD = DKII_DATA_FOLDER + "Meshes.WAD";
-    public static final String PATHS_WAD = DKII_DATA_FOLDER + "Paths.WAD";
-    public static final String SPRITE_WAD = DKII_DATA_FOLDER + "Sprite.WAD";
 
     private static final String DKII_FOLDER_KEY = "DungeonKeeperIIFolder";
 
