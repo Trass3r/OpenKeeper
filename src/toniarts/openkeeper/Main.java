@@ -245,6 +245,7 @@ public final class Main extends SimpleApplication {
 
         // Init the user settings (which in JME are app settings)
         app.settings = Settings.getInstance().getAppSettings();
+        app.settings.setAudioRenderer(null);
     }
 
     /**

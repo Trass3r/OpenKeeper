@@ -1,0 +1,255 @@
+# Debugging and Profiling Workflow for OpenKeeper
+#
+# This workflow automates graphics and performance profiling using RenderDoc and async-profiler.
+#
+# - RenderDoc is used to capture a frame after 20s, then postprocesses the .rdc for draw call analysis.
+# - async-profiler is used to capture CPU, memory, and file IO profiles, and generates flamegraphs.
+#
+# See: https://github.com/tonihele/OpenKeeper/wiki/Debugging-and-Profiling
+
+name: Debugging and Profiling
+
+on:
+  workflow_dispatch:
+  push:
+
+permissions:
+  contents: read
+
+env:
+  DK2_DEMO_URL: 'https://archive.org/download/DungeonKeeper2Demo/DungeonKeeper2Demo.exe'
+
+jobs:
+  setup-dk2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache DK2 Demo
+        id: cache-dk2
+        uses: actions/cache@v4
+        with:
+          key: dk2-demo
+          lookup-only: true
+          path: |
+            DK2
+            openkeeper.properties
+            /home/runner/.OpenKeeper/openkeeper.properties
+      - name: Download
+        if: steps.cache-dk2.outputs.cache-hit != 'true'
+        run: |
+          set -eux
+          curl -sS -L -OJ "$DK2_DEMO_URL"
+          sudo apt install -y 7zip unshield
+          7z x DungeonKeeper2Demo.exe
+          unshield x disk1/data1.cab
+          mv Program_Files DK2
+          echo "DungeonKeeperIIFolder(string)=$PWD/DK2/"  > openkeeper.properties
+          mkdir -p ~/.OpenKeeper
+          echo -e "Width(int)=1280\nHeight(int)=720\nMusicEnabled(bool)=false\nVoiceEnabled(bool)=false\nSfxEnabled(bool)=false"  > ~/.OpenKeeper/openkeeper.properties
+      #- uses: mxschmitt/action-tmate@v3
+      #  timeout-minutes: 15
+
+  renderdoc-capture:
+    name: RenderDoc Capture and Analysis
+    needs: setup-dk2
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+      - uses: actions/cache/restore@v4
+        with:
+          key: dk2-demo
+          fail-on-cache-miss: true
+          path: |
+            DK2
+            openkeeper.properties
+            /home/runner/.OpenKeeper/openkeeper.properties
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y xvfb xdotool wget unzip libvulkan1
+      - name: Install RenderDoc
+        run: |
+          wget -nv https://renderdoc.org/stable/1.42/renderdoc_1.42.tar.gz -O renderdoc.tar.gz
+          sudo tar xv --strip-components=1 -C /usr/local -f renderdoc.tar.gz
+          sudo apt install -y libproxy1v5
+          ls /usr/local/**
+      - name: Build
+        run: ./gradlew shadowJar --no-daemon
+      - name: Start Xvfb
+        run: |
+          Xvfb :99 -screen 0 1280x720x24 &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+      - name: Launch and capture
+        run: |
+          set -eux
+          #renderdoccmd capture --wait-for-exit --opt-hook-children ./gradlew run --no-daemon --args="-debug -level Conquest" &
+          renderdoccmd capture -w -d `pwd` --capture-file OpenKeeper java -jar build/libs/OpenKeeper-1.0.jar -debug -level Conquest &
+          sleep 30
+          xdotool key Print
+          sleep 2
+          xdotool key Escape
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renderdoc-capture
+          path: |
+            *.rdc
+            ~/.OpenKeeper/SCRSHOTS/*.png
+          if-no-files-found: error
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13' 
+      - name: Postprocess .rdc for draw call analysis
+        run: |
+          set -eux
+          qrenderdoc --ui-python .github/scripts/renderdoc_drawcalls.py *.rdc &
+          sleep 30
+          killall -v qrenderdoc
+          #export
+          #export PYTHONPATH="$PYTHONPATH:/usr/local/share/renderdoc/pylibs/lib/python3.6/"
+          #python .github/scripts/renderdoc_drawcalls.py *.rdc
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: renderdoc-drawcalls
+          path: drawcalls.csv
+
+  jfr-profiler:
+    name: JFR Profiler
+    runs-on: ubuntu-latest
+    needs: setup-dk2
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+      - uses: actions/cache/restore@v4
+        with:
+          key: dk2-demo
+          fail-on-cache-miss: true
+          path: |
+            DK2
+            openkeeper.properties
+            /home/runner/.OpenKeeper/openkeeper.properties
+      - name: Build
+        run: ./gradlew shadowJar --no-daemon
+      - name: Start Xvfb
+        run: |
+          Xvfb :99 -screen 0 1280x720x24 &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+      - name: Run and profile
+        env:
+          JDK_JAVA_OPTIONS: '-XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=15s,duration=45s,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,jdk.CPUTimeSample#enabled=true,path-to-gc-roots=true'
+        run: |
+          set -eux
+          sudo apt update
+          sudo apt install -y xdotool
+          #sudo apt install -y linux-modules-extra-$(uname -r)
+          sudo modprobe --verbose snd-dummy || true
+          sudo sysctl kernel.perf_event_paranoid=0
+          sudo sysctl kernel.kptr_restrict=0
+          #./gradlew run --no-daemon --args="-level Conquest" &
+          java -jar build/libs/OpenKeeper-1.0.jar -level Conquest &
+          sleep 60
+          pid=$(pgrep -f 'java.*OpenKeeper')
+          window_id=$(xdotool search --pid $pid | head -n1)
+          window_arg=${window_id:+--window $window_id}
+          xdotool key $window_arg Escape
+          #kill $pid
+          sleep 3
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jfr-recording
+          path: '*.jfr'
+          if-no-files-found: error
+      - name: Install jfrconv
+        run: |
+          wget -nv https://github.com/async-profiler/async-profiler/releases/download/v4.2.1/async-profiler-4.2.1-linux-x64.tar.gz -O async-profiler.tar.gz
+          sudo tar xv --strip-components=1 -C /usr/local -f async-profiler.tar.gz
+      - name: Postprocess JFR
+        run: |
+          jfr view cpu-time-statistics recording.jfr >> $GITHUB_STEP_SUMMARY
+          jfr view cpu-time-hot-methods recording.jfr >> $GITHUB_STEP_SUMMARY
+
+          OPTS='--threads -s runnable -X ".+glfwSwapBuffers|.+emitEvent" --total --simple --dot --highlight "State[.$]|Control|System"'
+          jfrconv $OPTS --cpu recording.jfr cpu.html
+          jfrconv $OPTS --cpu-time recording.jfr cpu-time.html
+          jfrconv $OPTS --wall recording.jfr wall.html
+          jfrconv $OPTS -o heatmap recording.jfr heatmap.html
+          jfrconv $OPTS -o pb.gz recording.jfr
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jfrconv
+          path: |
+            *.html
+            *.gz
+
+  async-profiler:
+    name: Async Profiler
+    runs-on: ubuntu-latest
+    needs: setup-dk2
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+      - uses: actions/cache/restore@v4
+        with:
+          key: dk2-demo
+          fail-on-cache-miss: true
+          path: |
+            DK2
+            openkeeper.properties
+            /home/runner/.OpenKeeper/openkeeper.properties
+      - name: Build
+        run: ./gradlew shadowJar --no-daemon
+
+      - name: Setup async-profiler
+        run: |
+          set -eux
+          wget -nv https://github.com/async-profiler/async-profiler/releases/download/v4.2.1/async-profiler-4.2.1-linux-x64.tar.gz -O async-profiler.tar.gz
+          sudo tar xv --strip-components=1 -C /usr/local -f async-profiler.tar.gz
+          sudo sysctl kernel.perf_event_paranoid=0
+          sudo sysctl kernel.kptr_restrict=0
+          sudo rm -f /etc/apt/sources.list.d/azure-cli.sources
+          sudo sed -i "s/$(lsb_release -cs)/plucky/g; s/$(lsb_release -rs)/25.04/g" /etc/apt/sources.list.d/*
+          sudo apt update && sudo apt install -y ubuntu-dbgsym-keyring
+          printf "deb http://ddebs.ubuntu.com %s main restricted universe multiverse\n" plucky{,-updates,-proposed} | \
+            sudo tee -a /etc/apt/sources.list.d/ddebs.list
+          sudo apt update && sudo apt install -y -f xdotool gdb mesa-utils # mesa-libgallium=25.0.7-0ubuntu0.25.04.2 mesa-libgallium-dbgsym
+          sudo apt install -y -f mesa-libgallium-dbgsym libegl-mesa0-dbgsym libglx-mesa0-dbgsym
+      - name: Start Xvfb
+        run: |
+          Xvfb :99 -screen 0 1280x720x24 &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+      - name: Run and profile
+        run: |
+          set -eux
+          asprof --help
+          export DEBUGINFOD_URLS="https://debuginfod.ubuntu.com/"
+          gdb -batch -ex "set debuginfod enabled on" -ex "set verbose on" -ex "r" -ex "quit" --args glxinfo -B
+
+          ./gradlew run --no-daemon --args="-level Conquest" &
+          sleep 15 # asset conversion
+          pid=$(pgrep -f 'java.*openkeeper.Main')
+          asprof -d 30 -e wall -i 10ms --simple -t --total --cstack vmx --ann -F stats,comptask,vtable -L info -f wall.html $pid
+          asprof -d 30 -e cpu  -i 10ms --simple -t --total --cstack vmx --ann -F stats,comptask,vtable -L info -f cpu.html  $pid
+          asprof -d 30 --all   -i 10ms --cstack vmx -F stats,comptask,vtable -L info -f recording.jfr $pid
+          xdotool key Escape
+          sleep 1
+          jfrconv --threads -s runnable --dot -X ".+glfwSwapBuffers|.+emitEvent" --total --simple --highlight "State[.$]|Control|System" recording.jfr
+      - uses: actions/upload-artifact@v4
+        with:
+          name: async-profiler-outputs
+          path: |
+            *.jfr
+            *.html
+          if-no-files-found: error

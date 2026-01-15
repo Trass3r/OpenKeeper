@@ -206,7 +206,7 @@ public final class ConvertModels extends ConversionTask {
         } catch (Exception ex) {
             String msg = "Failed to convert KMF entry " + name + "!";
             logger.log(Level.ERROR, msg, ex);
-            throw new RuntimeException(msg, ex);
+            //throw new RuntimeException(msg, ex);
         }
     }
 

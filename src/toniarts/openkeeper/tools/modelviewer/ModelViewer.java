@@ -726,7 +726,7 @@ public final class ModelViewer extends SimpleApplication {
     private KwdFile getKwdFile() {
         // Read Alcatraz.kwd by default
         if (kwdFile == null) {
-            kwdFile = getKwdFile("Alcatraz.kwd");
+            kwdFile = getKwdFile("Conquest.kwd");
         }
 
         return kwdFile;

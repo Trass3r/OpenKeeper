@@ -257,7 +257,8 @@ public final class SoundState extends AbstractPauseAwareState {
             }
 
             if (this.sc.getGroups().isEmpty()) {
-                throw new RuntimeException("We have no groups in category " + category);
+                logger.log(Level.WARNING, "We have no groups in category " + category);
+                //throw new RuntimeException("We have no groups in category " + category);
             }
 
             int total = 0;
@@ -265,7 +266,8 @@ public final class SoundState extends AbstractPauseAwareState {
                 total += group.getFiles().size();
             }
             if (total == 0) {
-                throw new RuntimeException("We have no files in groups in category " + category);
+                logger.log(Level.WARNING, "We have no files in groups in category " + category);
+                //throw new RuntimeException("We have no files in groups in category " + category);
             }
 
             itGroup = null;
@@ -282,7 +284,7 @@ public final class SoundState extends AbstractPauseAwareState {
                     itFile = itGroup.next().getFiles().iterator();
                 } else {
                     itGroup = null;
-                    return this.getNext();
+                    return this.getNext(); // FIXME: endless loop if no groups
                 }
             }
 
