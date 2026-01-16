@@ -146,7 +146,7 @@ jobs:
         env:
           JDK_JAVA_OPTIONS: '-XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=15s,duration=45s,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,jdk.CPUTimeSample#enabled=true,path-to-gc-roots=true'
         run: |
-          set -eux
+          set -ux
           sudo apt update
           sudo apt install -y xdotool
           #sudo apt install -y linux-modules-extra-$(uname -r)
@@ -156,6 +156,7 @@ jobs:
           #./gradlew run --no-daemon --args="-level Conquest" &
           java -jar build/libs/OpenKeeper-1.0.jar -level Conquest &
           sleep 60
+          find assets
           pid=$(pgrep -f 'java.*OpenKeeper')
           window_id=$(xdotool search --pid $pid | head -n1)
           window_arg=${window_id:+--window $window_id}
