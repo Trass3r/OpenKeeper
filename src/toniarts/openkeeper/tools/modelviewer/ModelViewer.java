@@ -189,6 +189,7 @@ public final class ModelViewer extends SimpleApplication {
         }
 
         ModelViewer app = new ModelViewer();
+        app.settings.setAudioRenderer(null);
         app.start();
     }
 
@@ -763,3 +764,4 @@ public final class ModelViewer extends SimpleApplication {
         return result;
     }
 }
+
