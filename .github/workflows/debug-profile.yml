@@ -142,20 +142,22 @@ jobs:
         run: |
           Xvfb :99 -screen 0 1280x720x24 &
           echo "DISPLAY=:99" >> $GITHUB_ENV
+          sudo apt update
+          sudo apt install -y xdotool
       - name: Run and profile
         env:
           JDK_JAVA_OPTIONS: '-XX:+PreserveFramePointer -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=15s,duration=45s,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,jdk.CPUTimeSample#enabled=true,path-to-gc-roots=true'
         run: |
           set -ux
-          sudo apt update
-          sudo apt install -y xdotool
           #sudo apt install -y linux-modules-extra-$(uname -r)
           sudo modprobe --verbose snd-dummy || true
           sudo sysctl kernel.perf_event_paranoid=0
           sudo sysctl kernel.kptr_restrict=0
           #./gradlew run --no-daemon --args="-level Conquest" &
+          java -jar build/libs/OpenKeeper-1.0.jar -level nonexistent &
+          sleep 30
           java -cp build/libs/OpenKeeper-1.0.jar toniarts.openkeeper.tools.modelviewer.ModelViewer &
-          sleep 60
+          sleep 30
           find assets
           pid=$(pgrep -f 'java.*OpenKeeper')
           window_id=$(xdotool search --pid $pid | head -n1)
