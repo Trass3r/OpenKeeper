@@ -69,6 +69,7 @@ import java.util.List;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.audio.plugins.MP2Loader;
 import toniarts.openkeeper.game.data.ISoundable;
+import toniarts.openkeeper.game.data.Settings;
 import toniarts.openkeeper.game.sound.SoundCategory;
 import toniarts.openkeeper.game.sound.SoundFile;
 import toniarts.openkeeper.game.sound.SoundGroup;
@@ -189,6 +190,7 @@ public final class ModelViewer extends SimpleApplication {
         }
 
         ModelViewer app = new ModelViewer();
+        app.settings = Settings.getInstance().getAppSettings();
         app.settings.setAudioRenderer(null);
         app.start();
     }
@@ -764,4 +766,5 @@ public final class ModelViewer extends SimpleApplication {
         return result;
     }
 }
+
 
