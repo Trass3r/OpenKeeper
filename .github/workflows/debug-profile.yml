@@ -154,10 +154,10 @@ jobs:
           sudo sysctl kernel.perf_event_paranoid=0
           sudo sysctl kernel.kptr_restrict=0
           #./gradlew run --no-daemon --args="-level Conquest" &
-          java -jar build/libs/OpenKeeper-1.0.jar -level nonexistent &
+          java -jar build/libs/OpenKeeper-1.0.jar -level Conquest &
           sleep 30
-          java -cp build/libs/OpenKeeper-1.0.jar toniarts.openkeeper.tools.modelviewer.ModelViewer &
-          sleep 30
+          #java -cp build/libs/OpenKeeper-1.0.jar toniarts.openkeeper.tools.modelviewer.ModelViewer &
+          #sleep 30
           find assets
           pid=$(pgrep -f 'java.*OpenKeeper')
           window_id=$(xdotool search --pid $pid | head -n1)
