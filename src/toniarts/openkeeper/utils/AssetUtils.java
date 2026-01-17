@@ -101,9 +101,10 @@ public final class AssetUtils {
     public static Spatial loadModel(final AssetManager assetManager, String modelName,
             ArtResource artResource, final boolean useCache, final boolean useWeakCache) {
 
-        //String filename = AssetsConverter.MODELS_FOLDER + File.separator + modelName + ".j3o";
-        String filename = modelName + ".kmf";
-        ModelKey assetKey = new ModelKey((filename));
+        String filename = AssetsConverter.MODELS_FOLDER + File.separator + modelName + ".j3o";
+        filename = getCanonicalAssetKey(filename);
+        //String filename = modelName + ".kmf";
+        ModelKey assetKey = new ModelKey(filename);
 
         Spatial result;
         if (useCache) {
@@ -169,9 +170,10 @@ public final class AssetUtils {
      */
     public static Spatial loadAsset(final AssetManager assetManager, String modelName, ArtResource artResource) {
 
-        //String filename = AssetsConverter.MODELS_FOLDER + File.separator + modelName + ".j3o";
-        String filename = modelName + ".kmf";
-        ModelKey assetKey = new ModelKey((filename));
+        String filename = AssetsConverter.MODELS_FOLDER + File.separator + modelName + ".j3o";
+        filename = getCanonicalAssetKey(filename);
+        //String filename = modelName + ".kmf";
+        ModelKey assetKey = new ModelKey(filename);
 
         Spatial result = loadModel(assetManager, assetKey, artResource);
 
@@ -703,3 +705,4 @@ public final class AssetUtils {
     }
 
 }
+
