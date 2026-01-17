@@ -26,11 +26,7 @@ import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.SequencedMap;
+import java.util.*;
 import toniarts.openkeeper.tools.convert.ConversionUtils;
 import toniarts.openkeeper.tools.convert.FileResourceReader;
 import toniarts.openkeeper.tools.convert.IResourceChunkReader;
@@ -51,7 +47,7 @@ public final class WadFile {
     private static final Logger logger = System.getLogger(WadFile.class.getName());
     
     private final Path file;
-    private final SequencedMap<String, WadFileEntry> wadFileEntries;
+    private final Map<String, WadFileEntry> wadFileEntries;
     private static final String WAD_HEADER_IDENTIFIER = "DWFB";
     private static final int WAD_HEADER_VERSION = 2;
 
@@ -114,7 +110,7 @@ public final class WadFile {
             // The file names itself aren't unique, but with the path they are
             rawWad.seek(nameOffset);
             byte[] nameArray = rawWad.read(nameSize);
-            wadFileEntries = LinkedHashMap.newLinkedHashMap(files);
+            wadFileEntries = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             String path = "";
             for (WadFileEntry entry : entries) {
                 int offset = entry.getNameOffset() - nameOffset;
@@ -129,7 +125,7 @@ public final class WadFile {
                     name = path + name;
                 }
 
-                wadFileEntries.put(name.toLowerCase(), entry);
+                wadFileEntries.put(name, entry);
             }
         } catch (IOException e) {
 
@@ -235,7 +231,7 @@ public final class WadFile {
         ByteArrayOutputStream result = null;
 
         // Get the file
-        WadFileEntry fileEntry = wadFileEntries.get(fileName.toLowerCase());
+        WadFileEntry fileEntry = wadFileEntries.get(fileName);
         if (fileEntry == null) {
             throw new RuntimeException("File " + fileName + " not found from the WAD archive!");
         }
@@ -384,3 +380,4 @@ public final class WadFile {
         return dest;
     }
 }
+
