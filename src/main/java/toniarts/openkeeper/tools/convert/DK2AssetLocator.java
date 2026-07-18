@@ -4,7 +4,10 @@ import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetLocator;
 import com.jme3.asset.AssetManager;
+import com.jme3.asset.ModelKey;
+import com.jme3.asset.TextureKey;
 import toniarts.openkeeper.tools.convert.textures.enginetextures.EngineTextureEntry;
+import toniarts.openkeeper.tools.convert.textures.enginetextures.EngineTextureLoader;
 import toniarts.openkeeper.tools.convert.textures.enginetextures.EngineTexturesFile;
 import toniarts.openkeeper.tools.convert.wad.WadFile;
 import toniarts.openkeeper.utils.PathUtils;
@@ -14,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,15 +70,69 @@ public final class DK2AssetLocator implements AssetLocator {
     @Override
     public AssetInfo locate(AssetManager manager, AssetKey key) {
         String name = key.getName();
-        String ext = key.getExtension();
 
-        // Try to locate textures from EngineTextures
-        if (name.startsWith(AssetsConverter.TEXTURES_FOLDER))
+        // Route by folder prefix:
+        // Textures/ -> EngineTextures
+        if (name.startsWith(AssetsConverter.TEXTURES_FOLDER)) {
             return locateTextureFromEngineTextures(manager, key, name);
+        }
 
-        // Try to locate KMF models from Meshes.WAD
-        if (ext.equals("kmf"))
+        // Models/ -> Meshes.WAD (accepts both .j3o and .kmf extensions)
+        if (name.startsWith(AssetsConverter.MODELS_FOLDER)) {
             return locateModelFromWad(manager, key, name);
+        }
+
+        // Sprites/ -> Sprite.WAD
+        if (name.startsWith(AssetsConverter.SPRITES_FOLDER)) {
+            return locateFromWad(manager, key, name, "Sprite", AssetsConverter.SPRITES_FOLDER);
+        }
+
+        // Interface/Paths/ -> Paths.WAD
+        if (name.startsWith(AssetsConverter.PATHS_FOLDER)) {
+            return locateFromWad(manager, key, name, "Paths", AssetsConverter.PATHS_FOLDER);
+        }
+
+        // Frontend/ -> Frontend.WAD
+        if (name.startsWith("Frontend/")) {
+            return locateFromWad(manager, key, name, "Frontend", "Frontend/");
+        }
+
+        return null;
+    }
+
+    /**
+     * Generic WAD file lookup. Strips the folder prefix, looks up the entry
+     * by name (case-insensitive) in the specified WAD, and returns raw bytes
+     * with the original key (which preserves the file extension for JME loader dispatch).
+     */
+    private AssetInfo locateFromWad(AssetManager manager, AssetKey key, String name,
+            String wadName, String folderPrefix) {
+        WadFile wad = wadFiles.get(wadName);
+        if (wad == null) {
+            return null;
+        }
+
+        try {
+            // Strip folder prefix to get the WAD entry name
+            String entryName = name.substring(folderPrefix.length());
+            if (entryName.startsWith("/")) {
+                entryName = entryName.substring(1);
+            }
+
+            // WAD entries are case-insensitive, try as-is first, then lowercase
+            if (wad.getWadFileEntries().contains(entryName)) {
+                byte[] data = wad.getFileData(entryName);
+                return new WadAssetInfo(manager, key, new ByteArrayInputStream(data));
+            }
+            String lowerName = entryName.toLowerCase();
+            if (wad.getWadFileEntries().contains(lowerName)) {
+                byte[] data = wad.getFileData(lowerName);
+                return new WadAssetInfo(manager, key, new ByteArrayInputStream(data));
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to load from " + wadName + " WAD: " + name, e);
+        }
+
         return null;
     }
 
@@ -87,13 +143,21 @@ public final class DK2AssetLocator implements AssetLocator {
         }
 
         try {
-            // Extract model name from path: Models/filename.kmf -> filename.kmf
-            String modelName = name.replace(AssetsConverter.MODELS_FOLDER, "").toLowerCase();
+            // Normalize: Models/filename.ext -> filename.kmf for WAD lookup
+            String modelName = name.substring(AssetsConverter.MODELS_FOLDER.length()).toLowerCase();
+            if (modelName.startsWith("/")) {
+                modelName = modelName.substring(1);
+            }
+            if (modelName.endsWith(".j3o")) {
+                modelName = modelName.substring(0, modelName.length() - 4) + ".kmf";
+            }
 
             // Check if the model exists in the WAD
             if (meshesWad.getWadFileEntries().contains(modelName)) {
                 byte[] modelData = meshesWad.getFileData(modelName);
-                return new WadAssetInfo(manager, key, new ByteArrayInputStream(modelData));
+                // Use a .kmf key so that OpenKeeperAssetManager dispatches to KmfModelLoader
+                AssetKey kmfKey = new ModelKey(AssetsConverter.MODELS_FOLDER + "/" + modelName);
+                return new WadAssetInfo(manager, kmfKey, new ByteArrayInputStream(modelData));
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to load model from WAD: " + name, e);
@@ -108,45 +172,21 @@ public final class DK2AssetLocator implements AssetLocator {
         }
 
         try {
-            // Extract texture name from path: Textures/filename.png -> filename
+            // Extract texture name from path: Textures/filename.ext -> filename
             String textureName = name.substring(AssetsConverter.TEXTURES_FOLDER.length() + 1);
             textureName = textureName.substring(0, textureName.lastIndexOf('.'));
 
-            // Try to get texture from EngineTextures
-            EngineTextureEntry entry = engineTextures.getEntry(textureName);
-            if (entry != null) {
-                // Extract texture data to byte array
-                byte[] textureData = extractTextureData(entry, textureName);
-                if (textureData != null) {
-                    return new WadAssetInfo(manager, key, new ByteArrayInputStream(textureData));
-                }
+            // Get raw compressed texture data (serialized metadata + compressed longs)
+            byte[] rawData = engineTextures.getRawTextureData(textureName);
+            if (rawData != null) {
+                // Use a .dkt key so OpenKeeperAssetManager dispatches to EngineTextureLoader
+                AssetKey dktKey = new TextureKey(AssetsConverter.TEXTURES_FOLDER + "/" + textureName + "." + EngineTextureLoader.FILE_EXTENSION);
+                return new WadAssetInfo(manager, dktKey, new ByteArrayInputStream(rawData));
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to load texture from EngineTextures: " + name, e);
         }
 
-        return null;
-    }
-
-    /**
-     * Extract texture data from EngineTextures as a PNG byte array
-     */
-    private byte[] extractTextureData(EngineTextureEntry entry, String textureName) {
-        try {
-            // Create a temporary file to extract the texture
-            Path tempFile = Files.createTempFile("texture", ".png");
-            try {
-                Path extractedFile = engineTextures.extractFileData(textureName, tempFile.getParent().toString(), true);
-                if (extractedFile != null && Files.exists(extractedFile)) {
-                    return Files.readAllBytes(extractedFile);
-                }
-            } finally {
-                // Clean up temp file
-                Files.deleteIfExists(tempFile);
-            }
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Failed to extract texture data for: " + textureName, e);
-        }
         return null;
     }
 

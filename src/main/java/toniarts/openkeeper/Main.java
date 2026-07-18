@@ -79,7 +79,10 @@ import toniarts.openkeeper.setup.DKFolderSelector;
 import toniarts.openkeeper.setup.IFrameClosingBehavior;
 import toniarts.openkeeper.tools.convert.AssetsConverter;
 import toniarts.openkeeper.tools.convert.DK2AssetLocator;
+import toniarts.openkeeper.tools.convert.FlexibleFileLocator;
 import toniarts.openkeeper.tools.convert.KmfModelLoader;
+import toniarts.openkeeper.tools.convert.OpenKeeperAssetManager;
+import toniarts.openkeeper.tools.convert.textures.enginetextures.EngineTextureLoader;
 import toniarts.openkeeper.tools.modelviewer.SoundsLoader;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.utils.SettingUtils;
@@ -363,10 +366,16 @@ public final class Main extends SimpleApplication {
             }
         }
 
+        // Replace the default DesktopAssetManager with our custom one
+        // that dispatches loaders based on the AssetInfo's key (what was
+        // actually found) rather than the original request key's extension.
+        this.assetManager = new OpenKeeperAssetManager();
+
         // Asset locators - extracted files take priority over original game files
-        assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
+        assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FlexibleFileLocator.class);
         assetManager.registerLocator(getDkIIFolder(), DK2AssetLocator.class);
         assetManager.registerLoader(KmfModelLoader.class, "kmf");
+        assetManager.registerLoader(EngineTextureLoader.class, EngineTextureLoader.FILE_EXTENSION);
 
         // Init nifty while in render thread so it will get initialized before it is updated, otherwise we might hit a rare race-condition
         Nifty nifty = getNifty();

@@ -75,6 +75,8 @@ import toniarts.openkeeper.tools.convert.AssetsConverter;
 import toniarts.openkeeper.tools.convert.DK2AssetLocator;
 import toniarts.openkeeper.tools.convert.KmfAssetInfo;
 import toniarts.openkeeper.tools.convert.KmfModelLoader;
+import toniarts.openkeeper.tools.convert.OpenKeeperAssetManager;
+import toniarts.openkeeper.tools.convert.textures.enginetextures.EngineTextureLoader;
 import toniarts.openkeeper.tools.convert.kmf.KmfFile;
 import toniarts.openkeeper.tools.convert.map.Creature;
 import toniarts.openkeeper.tools.convert.map.Door;
@@ -208,11 +210,17 @@ public final class ModelViewer extends SimpleApplication {
 
         ((GLRenderer) renderer).setDebugEnabled(true); // get debug names for GL objects
 
+        // Replace the default DesktopAssetManager with our custom one that
+        // dispatches loaders based on the AssetInfo's key rather than the
+        // original request key's extension.
+        this.assetManager = new OpenKeeperAssetManager();
+
         // Distribution locator
         assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
         assetManager.registerLoader(MP2Loader.class, "mp2");
         assetManager.registerLocator(dkIIFolder, DK2AssetLocator.class);
         assetManager.registerLoader(KmfModelLoader.class, "kmf");
+        assetManager.registerLoader(EngineTextureLoader.class, EngineTextureLoader.FILE_EXTENSION);
 
         // Effects manager
         this.effectManagerState = new EffectManagerState(getKwdFile(), assetManager);

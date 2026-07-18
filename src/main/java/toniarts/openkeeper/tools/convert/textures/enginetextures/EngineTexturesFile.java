@@ -21,6 +21,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.System.Logger;
@@ -326,5 +327,47 @@ public final class EngineTexturesFile implements Iterable<String> {
      */
     public EngineTextureEntry getEntry(String texture) {
         return engineTextureEntries.get(texture);
+    }
+
+    /**
+     * Get the raw compressed texture data and metadata for a given texture.
+     * The returned byte array is a serialized format intended for
+     * EngineTextureLoader to decompress:
+     *   [4 bytes: resX] [4 bytes: resY] [1 byte: alphaFlag]
+     *   [4 bytes: count] [count * 4 bytes: compressed data as ints]
+     *
+     * @param textureName the texture name (without extension)
+     * @return serialized metadata + compressed data, or null if not found
+     */
+    public byte[] getRawTextureData(String textureName) {
+        EngineTextureEntry entry = engineTextureEntries.get(textureName);
+        if (entry == null) {
+            return null;
+        }
+
+        try (ISeekableResourceReader rawTextures = new FileResourceReader(file)) {
+            rawTextures.seek(entry.getDataStartLocation());
+            IResourceChunkReader reader = rawTextures.readChunk(entry.getSize());
+            int count = entry.getSize() / 4;
+            long[] buf = new long[count];
+            for (int i = 0; i < count; i++) {
+                buf[i] = reader.readUnsignedIntegerAsLong();
+            }
+
+            // Serialize: resX(4) + resY(4) + alphaFlag(1) + count(4) + data(count*4)
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(4 + 4 + 1 + 4 + count * 4);
+            DataOutputStream dos = new DataOutputStream(baos);
+            dos.writeInt(entry.getResX());
+            dos.writeInt(entry.getResY());
+            dos.writeBoolean(entry.isAlphaFlag());
+            dos.writeInt(count);
+            for (long value : buf) {
+                dos.writeInt((int) value); // values are unsigned 32-bit
+            }
+            dos.flush();
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read raw texture data for: " + textureName, e);
+        }
     }
 }
