@@ -26,6 +26,12 @@ jobs:
         add-job-summary: 'on-failure'
     - name: Build with Gradle
       run: ./gradlew build --no-daemon
+    - uses: mikepenz/action-junit-report@v6
+      if: success() || failure()
+      with:
+        report_paths: '**/TEST-*.xml'
+        detailed_summary: true
+        group_suite: true
     - uses: actions/upload-artifact@v7
       with:
         name: distribution

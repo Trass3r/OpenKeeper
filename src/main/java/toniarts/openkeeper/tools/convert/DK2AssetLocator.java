@@ -38,6 +38,16 @@ public final class DK2AssetLocator implements AssetLocator {
         loadArchives();
     }
 
+    /// inject a WAD file for testing purposes
+    void putWadFile(String name, WadFile wad) {
+        wadFiles.put(name, wad);
+    }
+
+    /// inject a EngineTexturesFile for testing purposes
+    void setEngineTexturesFile(EngineTexturesFile engineTextures) {
+        this.engineTextures = engineTextures;
+    }
+
     private void loadArchives() {
         if (dungeonKeeperFolder == null) {
             logger.log(Level.ERROR, "Dungeon Keeper folder not set, cannot initialize WAD files");
