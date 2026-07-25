@@ -52,6 +52,7 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
+      - uses: Trass3r/workflow-telemetry-action@master
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
@@ -83,7 +84,7 @@ jobs:
           echo "DISPLAY=:99" >> $GITHUB_ENV
       - uses: mxschmitt/action-tmate/detached@v3
         with:
-          connect-timeout-seconds: 300
+          connect-timeout-seconds: 60
       - name: Launch and capture
         run: |
           set -eux
@@ -128,6 +129,7 @@ jobs:
     needs: setup-dk2
     timeout-minutes: 15
     steps:
+      - uses: Trass3r/workflow-telemetry-action@master
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
@@ -182,8 +184,10 @@ jobs:
           sudo tar xv --strip-components=1 -C /usr/local -f async-profiler.tar.gz
       - name: Postprocess JFR
         run: |
-          jfr view cpu-time-statistics recording.jfr >> $GITHUB_STEP_SUMMARY
-          jfr view cpu-time-hot-methods recording.jfr >> $GITHUB_STEP_SUMMARY
+          JFR_OUTPUT=$(jfr view cpu-time-statistics recording.jfr)
+          echo -e "\`\`\`c\n${JFR_OUTPUT}\n\`\`\`" >> $GITHUB_STEP_SUMMARY
+          JFR_OUTPUT=$(jfr view cpu-time-hot-methods recording.jfr | sed 's/^\s*//')
+          echo -e "\`\`\`c\n${JFR_OUTPUT}\n\`\`\`" >> $GITHUB_STEP_SUMMARY
 
           OPTS='--threads -s runnable -X ".+glfwSwapBuffers|.+emitEvent" --total --simple --dot --highlight "State[.$]|Control|System"'
           jfrconv $OPTS --cpu recording.jfr cpu.html
@@ -204,6 +208,7 @@ jobs:
     needs: setup-dk2
     timeout-minutes: 15
     steps:
+      - uses: Trass3r/workflow-telemetry-action@master
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
@@ -240,7 +245,7 @@ jobs:
           echo "DISPLAY=:99" >> $GITHUB_ENV
       - uses: mxschmitt/action-tmate/detached@v3
         with:
-          connect-timeout-seconds: 300
+          connect-timeout-seconds: 60
       - name: Run and profile
         run: |
           set -eux
@@ -257,6 +262,10 @@ jobs:
           asprof -d 30 --all   -i 10ms --cstack vmx -F stats,comptask,vtable -L info -f recording.jfr $pid
           xdotool key Escape
           sleep 1
+          JFR_OUTPUT=$(jfr view cpu-time-statistics recording.jfr)
+          echo -e "\`\`\`c\n${JFR_OUTPUT}\n\`\`\`" >> $GITHUB_STEP_SUMMARY
+          JFR_OUTPUT=$(jfr view cpu-time-hot-methods recording.jfr | sed 's/^\s*//')
+          echo -e "\`\`\`c\n${JFR_OUTPUT}\n\`\`\`" >> $GITHUB_STEP_SUMMARY
           jfrconv --threads -s runnable --dot -X ".+glfwSwapBuffers|.+emitEvent" --total --simple --highlight "State[.$]|Control|System" recording.jfr
       - uses: actions/upload-artifact@v7
         with:
