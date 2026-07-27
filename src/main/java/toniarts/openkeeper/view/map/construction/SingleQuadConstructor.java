@@ -26,6 +26,7 @@ import toniarts.openkeeper.game.map.IMapTileInformation;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Terrain;
 import toniarts.openkeeper.utils.WorldUtils;
+import toniarts.openkeeper.view.map.AmbientOcclusionUtils;
 
 /**
  *
@@ -63,14 +64,27 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
 
         // Figure out which peace by seeing the neighbours
         // This is slightly different with the top
-        boolean N = hasSameTile(mapData, x, y - 1, terrain) || (solid && isSolidTile(mapData, x, y - 1));
-        boolean NE = hasSameTile(mapData, x + 1, y - 1, terrain) || (solid && isSolidTile(mapData, x + 1, y - 1));
-        boolean E = hasSameTile(mapData, x + 1, y, terrain) || (solid && isSolidTile(mapData, x + 1, y));
-        boolean SE = hasSameTile(mapData, x + 1, y + 1, terrain) || (solid && isSolidTile(mapData, x + 1, y + 1));
-        boolean S = hasSameTile(mapData, x, y + 1, terrain) || (solid && isSolidTile(mapData, x, y + 1));
-        boolean SW = hasSameTile(mapData, x - 1, y + 1, terrain) || (solid && isSolidTile(mapData, x - 1, y + 1));
-        boolean W = hasSameTile(mapData, x - 1, y, terrain) || (solid && isSolidTile(mapData, x - 1, y));
-        boolean NW = hasSameTile(mapData, x - 1, y - 1, terrain) || (solid && isSolidTile(mapData, x - 1, y - 1));
+        // IMapTileInformation tile = mapData.getTile(x, y);
+        // var tile.getTerrainId() == terrain.getTerrainId();
+
+        // solid check:
+        // kwdFile.getTerrain(tile.getTerrainId()).getFlags().contains(Terrain.TerrainFlag.SOLID);
+        boolean solidN  = isSolidTile(mapData, x    , y - 1);
+        boolean solidNE = isSolidTile(mapData, x + 1, y - 1);
+        boolean solidE  = isSolidTile(mapData, x + 1, y);
+        boolean solidSE = isSolidTile(mapData, x + 1, y + 1);
+        boolean solidS  = isSolidTile(mapData, x    , y + 1);
+        boolean solidSW = isSolidTile(mapData, x - 1, y + 1);
+        boolean solidW  = isSolidTile(mapData, x - 1, y);
+        boolean solidNW = isSolidTile(mapData, x - 1, y - 1);
+        boolean N = hasSameTile(mapData, x, y - 1, terrain) || (solid && solidN);
+        boolean NE = hasSameTile(mapData, x + 1, y - 1, terrain) || (solid && solidNE);
+        boolean E = hasSameTile(mapData, x + 1, y, terrain) || (solid && solidE);
+        boolean SE = hasSameTile(mapData, x + 1, y + 1, terrain) || (solid && solidSE);
+        boolean S = hasSameTile(mapData, x, y + 1, terrain) || (solid && solidS);
+        boolean SW = hasSameTile(mapData, x - 1, y + 1, terrain) || (solid && solidSW);
+        boolean W = hasSameTile(mapData, x - 1, y, terrain) || (solid && solidW);
+        boolean NW = hasSameTile(mapData, x - 1, y - 1, terrain) || (solid && solidNW);
 
         // 2x2
         Node model = new Node();
@@ -140,13 +154,17 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
                 }
 
                 // Load the piece
-                Spatial part = loadAsset(assetManager, modelName + pieceNumber);
+                Spatial part = loadAsset(assetManager, modelName + pieceNumber, false);
 
                 part.rotate(0, yAngle, 0);
                 part.move(movement);
                 model.attachChild(part);
             }
         }
+
+        // Apply ambient occlusion to the fully assembled tile
+        if (!solid)
+            AmbientOcclusionUtils.applyFloorAO(model, solidN, solidNE, solidE, solidSE, solidS, solidSW, solidW, solidNW);
 
         return model;
     }

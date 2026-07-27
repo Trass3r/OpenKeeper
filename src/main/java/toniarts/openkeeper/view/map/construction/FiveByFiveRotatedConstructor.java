@@ -109,6 +109,14 @@ public final class FiveByFiveRotatedConstructor extends RoomConstructor {
                 if (yAngle != 0) {
                     tile.rotate(0, yAngle, 0);
                 }
+
+                // TODO: Apply floor AO to outer ring tiles (pieces 2 and 3).
+                // RoomConstructor doesn't have access to IMapDataInformation/KwdFile,
+                // so we can't check whether outside neighbors are solid walls or open
+                // floor tiles. roomInstance.hasCoordinate() only tells us if a tile
+                // is in the same room — not its terrain type. Needs map data plumbing.
+                // See: https://github.com/tonihele/OpenKeeper/issues/479
+
                 root.attachChild(tile);
             }
 

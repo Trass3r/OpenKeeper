@@ -66,6 +66,10 @@ public class NormalConstructor extends RoomConstructor {
                 // If we are completely covered, use a big tile
                 if (N && NE && E && SE && S && SW && W && NW && useBigFloorTile(x, y)) {
                     part = AssetUtils.loadModel(assetManager, modelName + "9", artResource);
+                    // TODO: Apply floor AO to big tiles (and quads).
+                    // RoomConstructor doesn't have IMapDataInformation/KwdFile access,
+                    // so we can't distinguish solid walls from open floor outside the room.
+                    // See: https://github.com/tonihele/OpenKeeper/issues/479
                 } else {
                     part = QuadConstructor.constructQuad(assetManager, modelName, artResource, N, NE, E, SE, S, SW, W, NW);
                 }

@@ -22,6 +22,7 @@ import com.jme3.scene.Spatial;
 import toniarts.openkeeper.game.map.IMapDataInformation;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Terrain;
+import toniarts.openkeeper.view.map.AmbientOcclusionUtils;
 
 /**
  *
@@ -109,6 +110,9 @@ public final class WaterConstructor extends SingleTileConstructor {
 
         // 2x2
         floor = QuadConstructor.constructQuad(assetManager, model, null, 4, FastMath.PI, N, NE, E, SE, S, SW, W, NW);
+
+        // Apply ambient occlusion
+        AmbientOcclusionUtils.applyFloorAO(floor, N, NE, E, SE, S, SW, W, NW);
 
         return floor;
     }
