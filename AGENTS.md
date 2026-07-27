@@ -83,7 +83,72 @@ DISPLAY=:99 xdotool key Escape
 
 - First run performs asset conversion (extracting models, textures, sounds from `.wad` archives)
 - The `-level Conquest` flag skips the main menu and loads a level directly
-- The demo data takes ~40 seconds to convert
+- The demo data takes ~40 seconds to convert on the **first** launch only; subsequent runs reuse the asset cache and load the level in ~5-15 seconds (see *Asset Conversion* below)
+
+### Capturing a screenshot for analysis (xdotool)
+
+OpenKeeper wires JME's `ScreenshotAppState` to `KEY_SYSRQ` (Print Screen). On capture, the PNG is written to:
+
+```
+$HOME/.OpenKeeper/SCRSHOTS/Main1.png
+```
+
+The screenshot is owned by whichever OS user launched the JVM — **always check `whoami` first when looking for it.** On this container, `root` writes to `/root/.OpenKeeper/...` and `daytona` writes to `/home/daytona/.OpenKeeper/...`. There is no built-in way to make the game pick a different `$HOME`; just use `runuser -u <user> -- ...` or `sudo -u <user>` to control it.
+
+End-to-end recipe (works on the second-and-onwards runs because the asset cache is already warm):
+
+```bash
+# 1. Make sure Xvfb is up
+pkill -f 'Xvfb :99' 2>/dev/null
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
+Xvfb :99 -screen 0 1280x720x24 -ac +extension GLX +render -noreset &
+
+# 2. DK2 ships at mode 700/root in this workspace; let non-root users read it.
+#    Ownership stays root, so the git working tree is untouched.
+chmod -R o+rX DK2
+
+# 3. Launch as the user whose $HOME you want populated.
+#    DISPLAY=:99 + HOME point at daytona so screenshots land in daytona's profile.
+DISPLAY=:99 runuser -u daytona -- bash -c \
+  'DISPLAY=:99 nohup java -jar build/libs/OpenKeeper-1.0.jar -level Conquest > /tmp/ok.log 2>&1 &'
+
+# 4. Wait for the level to load. First run ~60-90 s (asset conversion),
+#    later runs ~5-15 s. "Game Steering" / "World" entries in /tmp/ok.log are
+#    a reliable ready-signal.
+while ! grep -q 'Game Steering' /tmp/ok.log 2>/dev/null; do sleep 2; done
+
+# 5. Trigger Print Screen on the game window
+WID=$(DISPLAY=:99 xdotool search --name 'OpenKeeper' | head -n 1)
+DISPLAY=:99 xdotool key --window "$WID" Print
+sleep 2   # ScreenshotAppState writes asynchronously
+ls -lt "$HOME/.OpenKeeper/SCRSHOTS/"
+```
+
+If the level never loads, check `/tmp/ok.log` for `Dungeon Keeper II folder not found` — that almost always means a permission problem on `DK2` (re-run `chmod -R o+rX DK2`).
+
+If `xdotool key Print` does nothing inside Xvfb, capture the X11 root window directly as a fallback:
+
+```bash
+xwd -display :99 -root -out /tmp/ok.xwd
+convert /tmp/ok.xwd "$HOME/.OpenKeeper/SCRSHOTS/$(date +%s).png"
+```
+
+Quick analysis with ImageMagick + Pillow:
+
+```bash
+identify "$HOME/.OpenKeeper/SCRSHOTS/Main1.png"
+python3 -c "
+from PIL import Image, ImageStat
+im = Image.open('$HOME/.OpenKeeper/SCRSHOTS/Main1.png').convert('RGB')
+s = ImageStat.Stat(im)
+print('avg', s.mean, 'std', s.stddev)
+"
+```
+
+Heuristics for what the numbers tell you:
+- Avg `(~93, ~72, ~56)` and brightness ~73/255 ⇒ dim warm underground dungeon — normal in-game state.
+- Brightness `< 20` ⇒ black screen, menu, or game crash.
+- Mostly uniform dark blue or near black ⇒ still on the loading screen / main menu.
 
 ### Desktop
 ```bash
@@ -92,6 +157,8 @@ java -jar build/libs/OpenKeeper-1.0.jar
 
 ## Asset Conversion
 
+**Conversion runs exactly once per DK2 folder.** The output is cached in `assets/Converted/` and reused on every subsequent launch, so a repeat run only spends the ~5-15 s it takes to load the level. The long 40-90 s wait is a first-run-only cost — when planning automation, gate the screenshot trigger on log output (e.g. `Game Steering`) rather than a fixed `sleep`.
+
 At first run, the game converts DK2's proprietary formats to formats JME can use:
 - `.wad` archives → extracted files
 - `.kmf` (Keeper Model Format) → processed 3D models
@@ -99,9 +166,11 @@ At first run, the game converts DK2's proprietary formats to formats JME can use
 - `.tgq` movies → decoded video frames
 - Sound files → MP2 audio
 
-Converted assets are cached in `assets/Converted/`. To force re-conversion:
+To check whether conversion has already happened, look for any non-empty subdirectory in `assets/Converted/` (e.g. `Interface/`, `Models/`, `Sounds/`).
+
+To force re-conversion:
 1. Delete `assets/Converted/`
-2. Remove asset version lines from `openkeeper.properties`
+2. Remove the asset version lines from `openkeeper.properties`
 
 ## Path Handling
 
