@@ -140,13 +140,17 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
                 }
 
                 // Load the piece
-                Spatial part = loadAsset(assetManager, modelName + pieceNumber);
+                Spatial part = loadAsset(assetManager, modelName + pieceNumber, false);
 
                 part.rotate(0, yAngle, 0);
                 part.move(movement);
                 model.attachChild(part);
             }
         }
+
+        // Apply ambient occlusion to the fully assembled tile
+        toniarts.openkeeper.view.map.AmbientOcclusionUtils.applyFloorAO(model,
+                N, NE, E, SE, S, SW, W, NW);
 
         return model;
     }

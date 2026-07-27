@@ -585,10 +585,21 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 model = terrain.getTopResource();
             }
             spatial = loadModel(model.getName(), model);
+
+            // Apply ambient occlusion only for floor tiles (non-solid).
+            // Top tiles (SOLID) are at wall height and should not get neighbor-based
+            // AO until geometry noise / height variation is introduced (see issue #479).
+            if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
+                AmbientOcclusionUtils.applyFloorAO(spatial, getMapData(),
+                        p.x, p.y, terrain, kwdFile);
+            }
         }
 
         if (terrain.getFlags().contains(Terrain.TerrainFlag.RANDOM_TEXTURE)) {
             setRandomTexture(spatial, tile);
+            // setRandomTexture may replace materials on geometries that already
+            // have vertex color AO applied. Re-enable UseVertexColor on those.
+            AmbientOcclusionUtils.enableVertexColorOnExistingColorBuffer(spatial);
         }
 
         Node topTileNode;
@@ -611,6 +622,10 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             Spatial wall = getWallSpatial(tile, direction);
             if (wall != null) {
                 wall.rotate(0, direction.getAngle(), 0);
+
+                // Apply simple wall AO (bottom-row darkening)
+                AmbientOcclusionUtils.applySimpleWallAO(wall);
+
                 sideTileNode.attachChild(wall);
             }
         }

@@ -110,6 +110,10 @@ public final class WaterConstructor extends SingleTileConstructor {
         // 2x2
         floor = QuadConstructor.constructQuad(assetManager, model, null, 4, FastMath.PI, N, NE, E, SE, S, SW, W, NW);
 
+        // Apply ambient occlusion
+        toniarts.openkeeper.view.map.AmbientOcclusionUtils.applyFloorAO(floor,
+                N, NE, E, SE, S, SW, W, NW);
+
         return floor;
     }
 }

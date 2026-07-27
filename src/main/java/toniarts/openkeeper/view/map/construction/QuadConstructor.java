@@ -152,6 +152,13 @@ public class QuadConstructor extends RoomConstructor {
             }
         }
 
+        // TODO: Apply floor AO to the assembled quad.
+        // RoomConstructor doesn't have access to IMapDataInformation/KwdFile,
+        // so we can't check whether outside neighbors are solid walls or open
+        // floor tiles. roomInstance.hasCoordinate() only tells us if a tile
+        // is in the same room — not its terrain type. Needs map data plumbing.
+        // See: https://github.com/tonihele/OpenKeeper/issues/479
+
         return quad;
     }
 
