@@ -28,6 +28,7 @@ import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.map.TileNeighborhood;
+import toniarts.openkeeper.view.map.GeometryProcessor;
 
 /**
  * FIXME: QuadConstructor
@@ -154,10 +155,8 @@ public class QuadConstructor extends RoomConstructor {
         }
 
         // TODO: Apply floor AO to the assembled quad.
-        // RoomConstructor doesn't have access to IMapDataInformation/KwdFile,
-        // so we can't check whether outside neighbors are solid walls or open
-        // floor tiles. roomInstance.hasCoordinate() only tells us if a tile
-        // is in the same room — not its terrain type. Needs map data plumbing.
+        // AO is now applied by constructFloor() per-tile using
+        // TileNeighborhood.solidMask after translateToTile().
         // See: https://github.com/tonihele/OpenKeeper/issues/479
 
         return quad;
@@ -181,10 +180,16 @@ public class QuadConstructor extends RoomConstructor {
             boolean SW = n.hasSameSW();
             boolean W  = n.hasSameW();
             boolean NW = n.hasSameNW();
-            // 2x2
             Node model = constructQuad(assetManager, modelName, artResource, N, NE, E, SE, S, SW, W, NW);
-            //AssetUtils.scale(model);
             AssetUtils.translateToTile(model, p);
+
+            // Apply noise+AO per-tile. Room floors are non-solid, so only
+            // solid neighbors (solidMask) occlude — same-room tiles don't
+            // darken each other (issue #479).
+            GeometryProcessor.applyFloorNoiseAndAO(model,
+                    n.solidN(), n.solidNE(), n.solidE(), n.solidSE(),
+                    n.solidS(), n.solidSW(), n.solidW(), n.solidNW());
+
             root.attachChild(model);
         }
 

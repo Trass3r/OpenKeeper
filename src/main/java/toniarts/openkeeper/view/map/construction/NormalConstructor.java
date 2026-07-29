@@ -24,6 +24,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.view.map.TileNeighborhood;
+import toniarts.openkeeper.view.map.GeometryProcessor;
 
 /**
  * Constructs "normal" rooms
@@ -71,14 +72,17 @@ public class NormalConstructor extends RoomConstructor {
                 // If we are completely covered, use a big tile
                 if (N && NE && E && SE && S && SW && W && NW && useBigFloorTile(x, y)) {
                     part = AssetUtils.loadModel(assetManager, modelName + "9", artResource);
-                    // TODO: Apply floor AO to big tiles (and quads).
-                    // RoomConstructor doesn't have IMapDataInformation/KwdFile access,
-                    // so we can't distinguish solid walls from open floor outside the room.
-                    // See: https://github.com/tonihele/OpenKeeper/issues/479
                 } else {
                     part = QuadConstructor.constructQuad(assetManager, modelName, artResource, N, NE, E, SE, S, SW, W, NW);
                 }
                 AssetUtils.translateToTile(part, new Point(x, y));
+
+                // Apply noise+AO per-tile. Room floors are non-solid, so only
+                // solid neighbors (solidMask) occlude (issue #479).
+                GeometryProcessor.applyFloorNoiseAndAO(part,
+                        n.solidN(), n.solidNE(), n.solidE(), n.solidSE(),
+                        n.solidS(), n.solidSW(), n.solidW(), n.solidNW());
+
                 root.attachChild(part);
             }
         }
