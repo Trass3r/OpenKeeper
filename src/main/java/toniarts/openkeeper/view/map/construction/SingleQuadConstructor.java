@@ -26,6 +26,7 @@ import toniarts.openkeeper.game.map.IMapTileInformation;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Terrain;
 import toniarts.openkeeper.utils.WorldUtils;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  *
@@ -50,7 +51,8 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
      * @return the loaded model
      */
     @Override
-    public Spatial construct(IMapDataInformation mapData, int x, int y, final Terrain terrain, final AssetManager assetManager, String modelName) {
+    public Spatial construct(IMapDataInformation mapData, int x, int y, final Terrain terrain,
+            final AssetManager assetManager, String modelName, TileNeighborhood neighborhood) {
 
         // If ownable, playerId is first. With fixed Hero Lair
         if (terrain.getFlags().contains(Terrain.TerrainFlag.OWNABLE) && terrain.getTerrainId() != 35) {
@@ -59,18 +61,19 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
         }
 
         // It needs to be parsed together from tiles
-        boolean solid = isSolidTile(mapData, x, y);
+        boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
 
-        // Figure out which peace by seeing the neighbours
-        // This is slightly different with the top
-        boolean N = hasSameTile(mapData, x, y - 1, terrain) || (solid && isSolidTile(mapData, x, y - 1));
-        boolean NE = hasSameTile(mapData, x + 1, y - 1, terrain) || (solid && isSolidTile(mapData, x + 1, y - 1));
-        boolean E = hasSameTile(mapData, x + 1, y, terrain) || (solid && isSolidTile(mapData, x + 1, y));
-        boolean SE = hasSameTile(mapData, x + 1, y + 1, terrain) || (solid && isSolidTile(mapData, x + 1, y + 1));
-        boolean S = hasSameTile(mapData, x, y + 1, terrain) || (solid && isSolidTile(mapData, x, y + 1));
-        boolean SW = hasSameTile(mapData, x - 1, y + 1, terrain) || (solid && isSolidTile(mapData, x - 1, y + 1));
-        boolean W = hasSameTile(mapData, x - 1, y, terrain) || (solid && isSolidTile(mapData, x - 1, y));
-        boolean NW = hasSameTile(mapData, x - 1, y - 1, terrain) || (solid && isSolidTile(mapData, x - 1, y - 1));
+        // Piece selection: same-terrain neighbors, or (if solid) any solid neighbor.
+        // Ambient occlusion booleans are computed by the caller from the same
+        // TileNeighborhood and applied after construction (see handleTop).
+        boolean N = neighborhood.hasSameN() || (solid && neighborhood.solidN());
+        boolean NE = neighborhood.hasSameNE() || (solid && neighborhood.solidNE());
+        boolean E = neighborhood.hasSameE() || (solid && neighborhood.solidE());
+        boolean SE = neighborhood.hasSameSE() || (solid && neighborhood.solidSE());
+        boolean S = neighborhood.hasSameS() || (solid && neighborhood.solidS());
+        boolean SW = neighborhood.hasSameSW() || (solid && neighborhood.solidSW());
+        boolean W = neighborhood.hasSameW() || (solid && neighborhood.solidW());
+        boolean NW = neighborhood.hasSameNW() || (solid && neighborhood.solidNW());
 
         // 2x2
         Node model = new Node();
@@ -148,9 +151,8 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
             }
         }
 
-        // Apply ambient occlusion to the fully assembled tile
-        toniarts.openkeeper.view.map.AmbientOcclusionUtils.applyFloorAO(model,
-                N, NE, E, SE, S, SW, W, NW);
+        // Ambient occlusion is now applied by the caller (handleTop)
+        // using the pre-computed TileNeighborhood grid.
 
         return model;
     }

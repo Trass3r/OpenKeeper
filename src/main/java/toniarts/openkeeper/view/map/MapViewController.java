@@ -44,6 +44,7 @@ import toniarts.openkeeper.view.map.WallSection.WallDirection;
 import toniarts.openkeeper.view.map.construction.RoomConstructor;
 import toniarts.openkeeper.view.map.construction.SingleQuadConstructor;
 import toniarts.openkeeper.view.map.construction.WaterConstructor;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
@@ -78,6 +79,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
     private final List<EntityInstance<Terrain>> waterBatches = new ArrayList<>(); // Lakes and rivers
     private final List<EntityInstance<Terrain>> lavaBatches = new ArrayList<>(); // Lakes and rivers, but hot
     private final Map<Point, RoomInstance> roomCoordinates = new HashMap<>(); // A quick glimpse whether room at specific coordinates is already "found"
+    private TileNeighborhood[][] neighborhoods; // Pre-computed 8-neighbor info for every tile
     private final Map<RoomInstance, Spatial> roomNodes = new HashMap<>(); // Room instances by node
     private final Map<Point, Thing.Room> roomThings = new HashMap<>();
     private final Map<RoomInstance, RoomConstructor> roomActuals = new HashMap<>(); // Rooms by room constructor
@@ -99,6 +101,23 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         generatePages(terrain);
         roomsNode = new Node(ROOM_NODE);
         terrain.attachChild(roomsNode);
+
+        // Pre-compute tile neighborhoods (same-terrain and solid masks)
+        // for piece selection and ambient occlusion. Single grid pass
+        // replaces the scattered hasSameTile/isSolidTile lookups that
+        // were previously duplicated across constructors and AO logic.
+        int width = getMapData().getWidth();
+        int height = getMapData().getHeight();
+        neighborhoods = new TileNeighborhood[width][height];
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                IMapTileInformation t = getMapData().getTile(x, y);
+                if (t != null) {
+                    Terrain trn = kwdFile.getTerrain(t.getTerrainId());
+                    neighborhoods[x][y] = TileNeighborhood.compute(getMapData(), kwdFile, x, y, trn);
+                }
+            }
+        }
 
         // Go through the fixed rooms and construct them
         // We might not need the room list on the client ever, we can draw them without
@@ -184,6 +203,11 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                     }
                 }
             }
+        }
+
+        // Refresh neighborhoods for all affected tiles before reconstruction
+        for (Point point : pointsToUpdate) {
+            updateTileNeighborhood(point);
         }
 
         // Reconstruct all tiles in the area
@@ -572,12 +596,32 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 }
             }
 
-            spatial = new WaterConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, model.getName());
+            TileNeighborhood nWater = neighborhoods[p.x][p.y];
+            spatial = new WaterConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, model.getName(), nWater);
+
+            // Water AO: same-terrain edges are darker (preserves current behavior)
+            AmbientOcclusionUtils.applyFloorAO(spatial,
+                    nWater.hasSameN(), nWater.hasSameNE(), nWater.hasSameE(), nWater.hasSameSE(),
+                    nWater.hasSameS(), nWater.hasSameSW(), nWater.hasSameW(), nWater.hasSameNW());
 
         } else if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_QUAD)) {
             // If this resource is type quad, parse it together. With fixed Hero Lair
             String modelName = (model == null && terrain.getTerrainId() == 35) ? "hero_outpost_floor" : model.getName();
-            spatial = new SingleQuadConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, modelName);
+            TileNeighborhood nQuad = neighborhoods[p.x][p.y];
+            spatial = new SingleQuadConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, modelName, nQuad);
+
+            // Quad AO: for solid tiles, piece neighbors == AO neighbors;
+            // for non-solid, only solid neighbors occlude (issue #479).
+            boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
+            AmbientOcclusionUtils.applyFloorAO(spatial,
+                    solid ? (nQuad.hasSameN() || nQuad.solidN()) : nQuad.solidN(),
+                    solid ? (nQuad.hasSameNE() || nQuad.solidNE()) : nQuad.solidNE(),
+                    solid ? (nQuad.hasSameE() || nQuad.solidE()) : nQuad.solidE(),
+                    solid ? (nQuad.hasSameSE() || nQuad.solidSE()) : nQuad.solidSE(),
+                    solid ? (nQuad.hasSameS() || nQuad.solidS()) : nQuad.solidS(),
+                    solid ? (nQuad.hasSameSW() || nQuad.solidSW()) : nQuad.solidSW(),
+                    solid ? (nQuad.hasSameW() || nQuad.solidW()) : nQuad.solidW(),
+                    solid ? (nQuad.hasSameNW() || nQuad.solidNW()) : nQuad.solidNW());
 
         } else {
 
@@ -590,8 +634,10 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             // Top tiles (SOLID) are at wall height and should not get neighbor-based
             // AO until geometry noise / height variation is introduced (see issue #479).
             if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
-                AmbientOcclusionUtils.applyFloorAO(spatial, getMapData(),
-                        p.x, p.y, terrain, kwdFile);
+                TileNeighborhood n = neighborhoods[p.x][p.y];
+                AmbientOcclusionUtils.applyFloorAO(spatial,
+                        n.solidN(), n.solidNE(), n.solidE(), n.solidSE(),
+                        n.solidS(), n.solidSW(), n.solidW(), n.solidNW());
             }
         }
 
@@ -1028,6 +1074,34 @@ public abstract class MapViewController implements ILoader<KwdFile> {
 
         // Redraw
         updateRoomWalls(roomInstance);
+    }
+
+    /**
+     * Recomputes the {@link TileNeighborhood} for a single tile (and its
+     * 8 immediate neighbors, since their neighborhood also changes when
+     * this tile changes). Should be called before reconstructing tiles
+     * in {@link #updateTiles(Point...)}.
+     */
+    private void updateTileNeighborhood(Point p) {
+        IMapDataInformation<IMapTileInformation> mapData = getMapData();
+        int width = mapData.getWidth();
+        int height = mapData.getHeight();
+
+        // Recompute for the center tile and all 8 neighbors
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                int nx = p.x + dx;
+                int ny = p.y + dy;
+                if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+                    continue;
+                }
+                IMapTileInformation t = mapData.getTile(nx, ny);
+                if (t != null) {
+                    Terrain trn = kwdFile.getTerrain(t.getTerrainId());
+                    neighborhoods[nx][ny] = TileNeighborhood.compute(mapData, kwdFile, nx, ny, trn);
+                }
+            }
+        }
     }
 
     /**

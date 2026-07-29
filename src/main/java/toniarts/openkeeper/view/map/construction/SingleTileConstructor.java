@@ -23,6 +23,7 @@ import toniarts.openkeeper.game.map.IMapTileInformation;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Terrain;
 import toniarts.openkeeper.utils.AssetUtils;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  *
@@ -78,5 +79,5 @@ abstract class SingleTileConstructor {
     }
 
     abstract public Spatial construct(IMapDataInformation mapData, int x, int y, final Terrain terrain,
-            final AssetManager assetManager, String model);
+            final AssetManager assetManager, String model, TileNeighborhood neighborhood);
 }

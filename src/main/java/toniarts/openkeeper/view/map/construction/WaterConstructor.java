@@ -22,6 +22,7 @@ import com.jme3.scene.Spatial;
 import toniarts.openkeeper.game.map.IMapDataInformation;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Terrain;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  *
@@ -45,18 +46,19 @@ public final class WaterConstructor extends SingleTileConstructor {
      * @return a water / lava tile
      */
     @Override
-    public Spatial construct(IMapDataInformation mapData, int x, int y, final Terrain terrain, AssetManager assetManager, String model) {
+    public Spatial construct(IMapDataInformation mapData, int x, int y, final Terrain terrain,
+            AssetManager assetManager, String model, TileNeighborhood neighborhood) {
 
         // The bed
         // Figure out which piece by seeing the neighbours
-        boolean N = hasSameTile(mapData, x, y - 1, terrain);
-        boolean NE = hasSameTile(mapData, x + 1, y - 1, terrain);
-        boolean E = hasSameTile(mapData, x + 1, y, terrain);
-        boolean SE = hasSameTile(mapData, x + 1, y + 1, terrain);
-        boolean S = hasSameTile(mapData, x, y + 1, terrain);
-        boolean SW = hasSameTile(mapData, x - 1, y + 1, terrain);
-        boolean W = hasSameTile(mapData, x - 1, y, terrain);
-        boolean NW = hasSameTile(mapData, x - 1, y - 1, terrain);
+        boolean N = neighborhood.hasSameN();
+        boolean NE = neighborhood.hasSameNE();
+        boolean E = neighborhood.hasSameE();
+        boolean SE = neighborhood.hasSameSE();
+        boolean S = neighborhood.hasSameS();
+        boolean SW = neighborhood.hasSameSW();
+        boolean W = neighborhood.hasSameW();
+        boolean NW = neighborhood.hasSameNW();
 
         Spatial floor;
         int piece = -1;
@@ -110,9 +112,8 @@ public final class WaterConstructor extends SingleTileConstructor {
         // 2x2
         floor = QuadConstructor.constructQuad(assetManager, model, null, 4, FastMath.PI, N, NE, E, SE, S, SW, W, NW);
 
-        // Apply ambient occlusion
-        toniarts.openkeeper.view.map.AmbientOcclusionUtils.applyFloorAO(floor,
-                N, NE, E, SE, S, SW, W, NW);
+        // Ambient occlusion is now applied by the caller (handleTop)
+        // using the pre-computed TileNeighborhood grid.
 
         return floor;
     }
