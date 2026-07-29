@@ -653,15 +653,20 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                     solid ? (n.hasSameW() || n.solidW()) : n.solidW(),
                     solid ? (n.hasSameNW() || n.solidNW()) : n.solidNW());
 
-        } else if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
-            // Single-piece floor tiles: only solid neighbors occlude
-            // (top tiles skip AO until height/noise variation is added — issue #479).
-            GeometryProcessor.applyFloorNoiseAndAO(spatial,
-                    n.solidN(), n.solidNE(), n.solidE(), n.solidSE(),
-                    n.solidS(), n.solidSW(), n.solidW(), n.solidNW());
         } else {
-            // Solid top tiles: noise only, no AO yet.
-            VertexNoiseMaker.applyNoiseToSpatial(spatial);
+            // Single-piece tiles: noise+AO for both floors and tops.
+            // Solid tiles (rock tops) use hasSame||solid for AO;
+            // non-solid floors use solid-only neighbors (issue #479).
+            boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
+            GeometryProcessor.applyFloorNoiseAndAO(spatial,
+                    solid ? (n.hasSameN() || n.solidN()) : n.solidN(),
+                    solid ? (n.hasSameNE() || n.solidNE()) : n.solidNE(),
+                    solid ? (n.hasSameE() || n.solidE()) : n.solidE(),
+                    solid ? (n.hasSameSE() || n.solidSE()) : n.solidSE(),
+                    solid ? (n.hasSameS() || n.solidS()) : n.solidS(),
+                    solid ? (n.hasSameSW() || n.solidSW()) : n.solidSW(),
+                    solid ? (n.hasSameW() || n.solidW()) : n.solidW(),
+                    solid ? (n.hasSameNW() || n.solidNW()) : n.solidNW());
         }
 
         setTileMaterialToGeometries(tile, topTileNode);
