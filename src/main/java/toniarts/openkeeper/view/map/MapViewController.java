@@ -630,16 +630,12 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         topTileNode.attachChild(spatial);
         AssetUtils.translateToTile(topTileNode, p);
 
-        // Noise: world-space-consistent vertex displacement.
-        // Must run after translateToTile for correct world positions,
-        // and before AO so AO sees the displaced vertices.
-        VertexNoiseMaker.applyNoiseToSpatial(spatial);
-
-        // Ambient occlusion: now sees noise-displaced vertex positions.
+        // Unified noise + ambient occlusion in a single vertex-buffer pass.
+        // Must run after translateToTile for correct world positions.
         // AO boolean computation depends on terrain type.
         if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_WATER)) {
             // Water AO: same-terrain edges are darker (preserves current behavior)
-            AmbientOcclusionUtils.applyFloorAO(spatial,
+            GeometryProcessor.applyFloorNoiseAndAO(spatial,
                     n.hasSameN(), n.hasSameNE(), n.hasSameE(), n.hasSameSE(),
                     n.hasSameS(), n.hasSameSW(), n.hasSameW(), n.hasSameNW());
 
@@ -647,7 +643,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             // Quad AO: for solid tiles, piece neighbors == AO neighbors;
             // for non-solid, only solid neighbors occlude (issue #479).
             boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
-            AmbientOcclusionUtils.applyFloorAO(spatial,
+            GeometryProcessor.applyFloorNoiseAndAO(spatial,
                     solid ? (n.hasSameN() || n.solidN()) : n.solidN(),
                     solid ? (n.hasSameNE() || n.solidNE()) : n.solidNE(),
                     solid ? (n.hasSameE() || n.solidE()) : n.solidE(),
@@ -660,9 +656,12 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         } else if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
             // Single-piece floor tiles: only solid neighbors occlude
             // (top tiles skip AO until height/noise variation is added — issue #479).
-            AmbientOcclusionUtils.applyFloorAO(spatial,
+            GeometryProcessor.applyFloorNoiseAndAO(spatial,
                     n.solidN(), n.solidNE(), n.solidE(), n.solidSE(),
                     n.solidS(), n.solidSW(), n.solidW(), n.solidNW());
+        } else {
+            // Solid top tiles: noise only, no AO yet.
+            VertexNoiseMaker.applyNoiseToSpatial(spatial);
         }
 
         setTileMaterialToGeometries(tile, topTileNode);
@@ -684,12 +683,9 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         // are available for noise and AO.
         AssetUtils.translateToTile(sideTileNode, p);
 
-        // Noise: world-space-consistent vertex displacement on walls.
-        VertexNoiseMaker.applyNoiseToSpatial(sideTileNode);
-
-        // Apply simple wall AO (bottom-row darkening) after noise
-        // so AO sees displaced vertex positions.
-        AmbientOcclusionUtils.applySimpleWallAO(sideTileNode);
+        // Unified noise + wall AO in a single vertex-buffer pass.
+        // Must run after translateToTile for correct world positions.
+        GeometryProcessor.applySimpleWallNoiseAndAO(sideTileNode);
 
         setTileMaterialToGeometries(tile, sideTileNode);
     }
