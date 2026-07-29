@@ -581,6 +581,8 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         ArtResource model = terrain.getCompleteResource();
         Point p = tile.getLocation();
         Spatial spatial;
+        TileNeighborhood n = neighborhoods[p.x][p.y];
+
         // For water construction type (lava & water), there are 8 pieces (0-7 suffix) in complete resource
         // And in the top resource there is the actual lava/water
         if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_WATER)) {
@@ -596,32 +598,12 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 }
             }
 
-            TileNeighborhood nWater = neighborhoods[p.x][p.y];
-            spatial = new WaterConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, model.getName(), nWater);
-
-            // Water AO: same-terrain edges are darker (preserves current behavior)
-            AmbientOcclusionUtils.applyFloorAO(spatial,
-                    nWater.hasSameN(), nWater.hasSameNE(), nWater.hasSameE(), nWater.hasSameSE(),
-                    nWater.hasSameS(), nWater.hasSameSW(), nWater.hasSameW(), nWater.hasSameNW());
+            spatial = new WaterConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, model.getName(), n);
 
         } else if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_QUAD)) {
             // If this resource is type quad, parse it together. With fixed Hero Lair
             String modelName = (model == null && terrain.getTerrainId() == 35) ? "hero_outpost_floor" : model.getName();
-            TileNeighborhood nQuad = neighborhoods[p.x][p.y];
-            spatial = new SingleQuadConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, modelName, nQuad);
-
-            // Quad AO: for solid tiles, piece neighbors == AO neighbors;
-            // for non-solid, only solid neighbors occlude (issue #479).
-            boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
-            AmbientOcclusionUtils.applyFloorAO(spatial,
-                    solid ? (nQuad.hasSameN() || nQuad.solidN()) : nQuad.solidN(),
-                    solid ? (nQuad.hasSameNE() || nQuad.solidNE()) : nQuad.solidNE(),
-                    solid ? (nQuad.hasSameE() || nQuad.solidE()) : nQuad.solidE(),
-                    solid ? (nQuad.hasSameSE() || nQuad.solidSE()) : nQuad.solidSE(),
-                    solid ? (nQuad.hasSameS() || nQuad.solidS()) : nQuad.solidS(),
-                    solid ? (nQuad.hasSameSW() || nQuad.solidSW()) : nQuad.solidSW(),
-                    solid ? (nQuad.hasSameW() || nQuad.solidW()) : nQuad.solidW(),
-                    solid ? (nQuad.hasSameNW() || nQuad.solidNW()) : nQuad.solidNW());
+            spatial = new SingleQuadConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, modelName, n);
 
         } else {
 
@@ -629,35 +611,61 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 model = terrain.getTopResource();
             }
             spatial = loadModel(model.getName(), model);
-
-            // Apply ambient occlusion only for floor tiles (non-solid).
-            // Top tiles (SOLID) are at wall height and should not get neighbor-based
-            // AO until geometry noise / height variation is introduced (see issue #479).
-            if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
-                TileNeighborhood n = neighborhoods[p.x][p.y];
-                AmbientOcclusionUtils.applyFloorAO(spatial,
-                        n.solidN(), n.solidNE(), n.solidE(), n.solidSE(),
-                        n.solidS(), n.solidSW(), n.solidW(), n.solidNW());
-            }
         }
 
+        // Random texture must run before AO: setRandomTexture may replace
+        // materials, and AO needs to set UseVertexColor on the final material.
         if (terrain.getFlags().contains(Terrain.TerrainFlag.RANDOM_TEXTURE)) {
             setRandomTexture(spatial, tile);
-            // setRandomTexture may replace materials on geometries that already
-            // have vertex color AO applied. Re-enable UseVertexColor on those.
-            AmbientOcclusionUtils.enableVertexColorOnExistingColorBuffer(spatial);
         }
 
+        // Attach and position — translateToTile must happen before noise+AO
+        // so that getWorldTransform() returns the correct world position.
         Node topTileNode;
         if (terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
             topTileNode = getTileNode(p, (Node) pageNode.getChild(TOP_INDEX));
         } else {
             topTileNode = getTileNode(p, (Node) pageNode.getChild(FLOOR_INDEX));
         }
-
         topTileNode.attachChild(spatial);
-        setTileMaterialToGeometries(tile, topTileNode);
         AssetUtils.translateToTile(topTileNode, p);
+
+        // Noise: world-space-consistent vertex displacement.
+        // Must run after translateToTile for correct world positions,
+        // and before AO so AO sees the displaced vertices.
+        VertexNoiseMaker.applyNoiseToSpatial(spatial);
+
+        // Ambient occlusion: now sees noise-displaced vertex positions.
+        // AO boolean computation depends on terrain type.
+        if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_WATER)) {
+            // Water AO: same-terrain edges are darker (preserves current behavior)
+            AmbientOcclusionUtils.applyFloorAO(spatial,
+                    n.hasSameN(), n.hasSameNE(), n.hasSameE(), n.hasSameSE(),
+                    n.hasSameS(), n.hasSameSW(), n.hasSameW(), n.hasSameNW());
+
+        } else if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_QUAD)) {
+            // Quad AO: for solid tiles, piece neighbors == AO neighbors;
+            // for non-solid, only solid neighbors occlude (issue #479).
+            boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
+            AmbientOcclusionUtils.applyFloorAO(spatial,
+                    solid ? (n.hasSameN() || n.solidN()) : n.solidN(),
+                    solid ? (n.hasSameNE() || n.solidNE()) : n.solidNE(),
+                    solid ? (n.hasSameE() || n.solidE()) : n.solidE(),
+                    solid ? (n.hasSameSE() || n.solidSE()) : n.solidSE(),
+                    solid ? (n.hasSameS() || n.solidS()) : n.solidS(),
+                    solid ? (n.hasSameSW() || n.solidSW()) : n.solidSW(),
+                    solid ? (n.hasSameW() || n.solidW()) : n.solidW(),
+                    solid ? (n.hasSameNW() || n.solidNW()) : n.solidNW());
+
+        } else if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
+            // Single-piece floor tiles: only solid neighbors occlude
+            // (top tiles skip AO until height/noise variation is added — issue #479).
+            AmbientOcclusionUtils.applyFloorAO(spatial,
+                    n.solidN(), n.solidNE(), n.solidE(), n.solidSE(),
+                    n.solidS(), n.solidSW(), n.solidW(), n.solidNW());
+        }
+
+        setTileMaterialToGeometries(tile, topTileNode);
     }
 
     private void handleSide(IMapTileInformation tile, Node pageNode) {
@@ -668,16 +676,22 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             Spatial wall = getWallSpatial(tile, direction);
             if (wall != null) {
                 wall.rotate(0, direction.getAngle(), 0);
-
-                // Apply simple wall AO (bottom-row darkening)
-                AmbientOcclusionUtils.applySimpleWallAO(wall);
-
                 sideTileNode.attachChild(wall);
             }
         }
 
-        setTileMaterialToGeometries(tile, sideTileNode);
+        // Attach complete, now position the tile node so world transforms
+        // are available for noise and AO.
         AssetUtils.translateToTile(sideTileNode, p);
+
+        // Noise: world-space-consistent vertex displacement on walls.
+        VertexNoiseMaker.applyNoiseToSpatial(sideTileNode);
+
+        // Apply simple wall AO (bottom-row darkening) after noise
+        // so AO sees displaced vertex positions.
+        AmbientOcclusionUtils.applySimpleWallAO(sideTileNode);
+
+        setTileMaterialToGeometries(tile, sideTileNode);
     }
 
     public void flashTile(boolean enabled, List<Point> points) {
