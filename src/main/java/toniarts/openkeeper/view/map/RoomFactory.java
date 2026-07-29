@@ -21,6 +21,7 @@ import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.view.map.construction.*;
 import toniarts.openkeeper.view.map.construction.room.*;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
@@ -38,28 +39,29 @@ public final class RoomFactory {
         // Nope
     }
 
-    public static RoomConstructor constructRoom(RoomInstance roomInstance, AssetManager assetManager, KwdFile kwdFile) {
+    public static RoomConstructor constructRoom(RoomInstance roomInstance, AssetManager assetManager,
+            KwdFile kwdFile, TileNeighborhood[][] neighborhoods) {
 
         String roomName = roomInstance.getRoom().getName();
 
         switch (roomInstance.getRoom().getTileConstruction()) {
             case _3_BY_3:
-                return new ThreeByThreeConstructor(assetManager, roomInstance);
+                return new ThreeByThreeConstructor(assetManager, roomInstance, neighborhoods);
 
             case HERO_GATE:
-                return new HeroGateConstructor(assetManager, roomInstance);
+                return new HeroGateConstructor(assetManager, roomInstance, neighborhoods);
 
             case HERO_GATE_FRONT_END:
-                return new HeroGateFrontEndConstructor(assetManager, roomInstance);
+                return new HeroGateFrontEndConstructor(assetManager, roomInstance, neighborhoods);
 
             case HERO_GATE_2_BY_2:
-                return new HeroGateTwoByTwoConstructor(assetManager, roomInstance);
+                return new HeroGateTwoByTwoConstructor(assetManager, roomInstance, neighborhoods);
 
             case HERO_GATE_3_BY_1:
-                return new HeroGateThreeByOneConstructor(assetManager, roomInstance);
+                return new HeroGateThreeByOneConstructor(assetManager, roomInstance, neighborhoods);
 
             case _5_BY_5_ROTATED:
-                return new FiveByFiveRotatedConstructor(assetManager, roomInstance);
+                return new FiveByFiveRotatedConstructor(assetManager, roomInstance, neighborhoods);
 
             case NORMAL:
 //                if (roomName.equalsIgnoreCase("Lair")) {
@@ -84,26 +86,26 @@ public final class RoomFactory {
 //                    return new Hatchery(assetManager, roomInstance, objectLoader, worldState, effectManager);
 //                }
                 if (roomName.equalsIgnoreCase("Work Shop")) {
-                    return new WorkshopConstructor(assetManager, roomInstance);
+                    return new WorkshopConstructor(assetManager, roomInstance, neighborhoods);
                 }
-                return new NormalConstructor(assetManager, roomInstance);
+                return new NormalConstructor(assetManager, roomInstance, neighborhoods);
 
             case QUAD:
                 if (roomName.equalsIgnoreCase("Hero Stone Bridge") || roomName.equalsIgnoreCase("Stone Bridge")) {
-                    return new StoneBridgeConstructor(assetManager, roomInstance);
+                    return new StoneBridgeConstructor(assetManager, roomInstance, neighborhoods);
                 }
-                return new QuadConstructor(assetManager, roomInstance);
+                return new QuadConstructor(assetManager, roomInstance, neighborhoods);
 //
             case DOUBLE_QUAD:
                 if (roomName.equalsIgnoreCase("Prison")) {
-                    return new PrisonConstructor(assetManager, roomInstance);
+                    return new PrisonConstructor(assetManager, roomInstance, neighborhoods);
                 } else if (roomName.equalsIgnoreCase("Combat Pit")) {
-                    return new CombatPitConstructor(assetManager, roomInstance);
+                    return new CombatPitConstructor(assetManager, roomInstance, neighborhoods);
                 }
                 else if (roomName.equalsIgnoreCase("Temple")) {
-                    return new TempleConstructor(assetManager, roomInstance, kwdFile);
+                    return new TempleConstructor(assetManager, roomInstance, kwdFile, neighborhoods);
                 }
-                return new DoubleQuadConstructor(assetManager, roomInstance);
+                return new DoubleQuadConstructor(assetManager, roomInstance, neighborhoods);
             default:
 
                 // TODO

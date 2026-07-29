@@ -24,6 +24,7 @@ import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * Constructs 5 by 5 "rotated" buildings. As far as I know, only Dungeon Heart
@@ -32,8 +33,8 @@ import toniarts.openkeeper.utils.AssetUtils;
  */
 public final class FiveByFiveRotatedConstructor extends RoomConstructor {
 
-    public FiveByFiveRotatedConstructor(AssetManager assetManager, RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public FiveByFiveRotatedConstructor(AssetManager assetManager, RoomInstance roomInstance, TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

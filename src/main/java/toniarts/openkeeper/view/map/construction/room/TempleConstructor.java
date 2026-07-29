@@ -31,6 +31,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.view.map.Water;
 import toniarts.openkeeper.view.map.construction.DoubleQuadConstructor;
 import static toniarts.openkeeper.view.map.construction.DoubleQuadConstructor.constructQuad;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * Manages temple construction. Mainly adds the water body
@@ -41,8 +42,9 @@ public final class TempleConstructor extends DoubleQuadConstructor {
 
     private final KwdFile kwdFile;
 
-    public TempleConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance, KwdFile kwdFile) {
-        super(assetManager, roomInstance);
+    public TempleConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance, KwdFile kwdFile,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
 
         this.kwdFile = kwdFile;
     }

@@ -27,6 +27,7 @@ import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.view.map.WallSection;
 import toniarts.openkeeper.view.map.WallSection.WallDirection;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * FIXME some problem with wall when reinforce near tile
@@ -35,8 +36,8 @@ import toniarts.openkeeper.view.map.WallSection.WallDirection;
  */
 public final class HeroGateThreeByOneConstructor extends RoomConstructor {
 
-    public HeroGateThreeByOneConstructor(AssetManager assetManager, RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public HeroGateThreeByOneConstructor(AssetManager assetManager, RoomInstance roomInstance, TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

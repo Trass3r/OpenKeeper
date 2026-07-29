@@ -24,6 +24,7 @@ import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.view.map.WallSection;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  *
@@ -31,8 +32,9 @@ import toniarts.openkeeper.view.map.WallSection;
  */
 public final class HeroGateConstructor extends RoomConstructor {
 
-    public HeroGateConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public HeroGateConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

@@ -25,6 +25,7 @@ import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.map.construction.DoubleQuadConstructor;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * Manages combat pit door placement, currently it is decoupled from the actual
@@ -35,8 +36,9 @@ import toniarts.openkeeper.view.map.construction.DoubleQuadConstructor;
  */
 public final class CombatPitConstructor extends DoubleQuadConstructor {
 
-    public CombatPitConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public CombatPitConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

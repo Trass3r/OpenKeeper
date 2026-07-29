@@ -31,6 +31,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.FullMoon;
 import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.map.WallSection;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * Loads up a hero gate, front end edition. Main menu. Most of the objects are
@@ -41,8 +42,8 @@ import toniarts.openkeeper.view.map.WallSection;
  */
 public final class HeroGateFrontEndConstructor extends RoomConstructor {
 
-    public HeroGateFrontEndConstructor(AssetManager assetManager, RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public HeroGateFrontEndConstructor(AssetManager assetManager, RoomInstance roomInstance, TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

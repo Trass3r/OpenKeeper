@@ -18,6 +18,7 @@ package toniarts.openkeeper.view.map.construction.room;
 
 import com.jme3.asset.AssetManager;
 import toniarts.openkeeper.view.map.construction.NormalConstructor;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * The workshop
@@ -28,8 +29,9 @@ public final class WorkshopConstructor extends NormalConstructor {
 
     private final boolean[][] bigTiles;
 
-    public WorkshopConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public WorkshopConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
         bigTiles = new boolean[map.length][map[0].length];
     }
 

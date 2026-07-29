@@ -28,6 +28,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.map.MapViewController;
 import toniarts.openkeeper.view.map.construction.QuadConstructor;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  *
@@ -35,8 +36,9 @@ import toniarts.openkeeper.view.map.construction.QuadConstructor;
  */
 public final class StoneBridgeConstructor extends QuadConstructor {
 
-    public StoneBridgeConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public StoneBridgeConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

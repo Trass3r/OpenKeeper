@@ -27,7 +27,7 @@ import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
-import toniarts.openkeeper.view.map.MapViewController;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * FIXME: QuadConstructor
@@ -36,8 +36,9 @@ import toniarts.openkeeper.view.map.MapViewController;
  */
 public class QuadConstructor extends RoomConstructor {
 
-    public QuadConstructor(AssetManager assetManager, RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public QuadConstructor(AssetManager assetManager, RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     public static Node constructQuad(AssetManager assetManager, String modelName, ArtResource artResource,
@@ -170,15 +171,16 @@ public class QuadConstructor extends RoomConstructor {
         //Point start = roomInstance.getCoordinates().get(0);
         // Contruct the tiles
         for (Point p : roomInstance.getCoordinates()) {
+            TileNeighborhood n = neighborhoods[p.x][p.y];
             // Figure out which peace by seeing the neighbours
-            boolean N = roomInstance.hasCoordinate(new Point(p.x, p.y - 1));
-            boolean NE = roomInstance.hasCoordinate(new Point(p.x + 1, p.y - 1));
-            boolean E = roomInstance.hasCoordinate(new Point(p.x + 1, p.y));
-            boolean SE = roomInstance.hasCoordinate(new Point(p.x + 1, p.y + 1));
-            boolean S = roomInstance.hasCoordinate(new Point(p.x, p.y + 1));
-            boolean SW = roomInstance.hasCoordinate(new Point(p.x - 1, p.y + 1));
-            boolean W = roomInstance.hasCoordinate(new Point(p.x - 1, p.y));
-            boolean NW = roomInstance.hasCoordinate(new Point(p.x - 1, p.y - 1));
+            boolean N  = n.hasSameN();
+            boolean NE = n.hasSameNE();
+            boolean E  = n.hasSameE();
+            boolean SE = n.hasSameSE();
+            boolean S  = n.hasSameS();
+            boolean SW = n.hasSameSW();
+            boolean W  = n.hasSameW();
+            boolean NW = n.hasSameNW();
             // 2x2
             Node model = constructQuad(assetManager, modelName, artResource, N, NE, E, SE, S, SW, W, NW);
             //AssetUtils.scale(model);
