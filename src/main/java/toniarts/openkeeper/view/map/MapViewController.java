@@ -44,6 +44,7 @@ import toniarts.openkeeper.view.map.WallSection.WallDirection;
 import toniarts.openkeeper.view.map.construction.RoomConstructor;
 import toniarts.openkeeper.view.map.construction.SingleQuadConstructor;
 import toniarts.openkeeper.view.map.construction.WaterConstructor;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
@@ -78,6 +79,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
     private final List<EntityInstance<Terrain>> waterBatches = new ArrayList<>(); // Lakes and rivers
     private final List<EntityInstance<Terrain>> lavaBatches = new ArrayList<>(); // Lakes and rivers, but hot
     private final Map<Point, RoomInstance> roomCoordinates = new HashMap<>(); // A quick glimpse whether room at specific coordinates is already "found"
+    private TileNeighborhood[][] neighborhoods; // Pre-computed 8-neighbor info for every tile
     private final Map<RoomInstance, Spatial> roomNodes = new HashMap<>(); // Room instances by node
     private final Map<Point, Thing.Room> roomThings = new HashMap<>();
     private final Map<RoomInstance, RoomConstructor> roomActuals = new HashMap<>(); // Rooms by room constructor
@@ -99,6 +101,23 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         generatePages(terrain);
         roomsNode = new Node(ROOM_NODE);
         terrain.attachChild(roomsNode);
+
+        // Pre-compute tile neighborhoods (same-terrain and solid masks)
+        // for piece selection and ambient occlusion. Single grid pass
+        // replaces the scattered hasSameTile/isSolidTile lookups that
+        // were previously duplicated across constructors and AO logic.
+        int width = getMapData().getWidth();
+        int height = getMapData().getHeight();
+        neighborhoods = new TileNeighborhood[width][height];
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                IMapTileInformation t = getMapData().getTile(x, y);
+                if (t != null) {
+                    Terrain trn = kwdFile.getTerrain(t.getTerrainId());
+                    neighborhoods[x][y] = TileNeighborhood.compute(getMapData(), kwdFile, x, y, trn);
+                }
+            }
+        }
 
         // Go through the fixed rooms and construct them
         // We might not need the room list on the client ever, we can draw them without
@@ -184,6 +203,11 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                     }
                 }
             }
+        }
+
+        // Refresh neighborhoods for all affected tiles before reconstruction
+        for (Point point : pointsToUpdate) {
+            updateTileNeighborhood(point);
         }
 
         // Reconstruct all tiles in the area
@@ -559,6 +583,8 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         ArtResource model = terrain.getCompleteResource();
         Point p = tile.getLocation();
         Spatial spatial;
+        TileNeighborhood n = neighborhoods[p.x][p.y];
+
         // For water construction type (lava & water), there are 8 pieces (0-7 suffix) in complete resource
         // And in the top resource there is the actual lava/water
         if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_WATER)) {
@@ -574,12 +600,12 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 }
             }
 
-            spatial = new WaterConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, model.getName());
+            spatial = new WaterConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, model.getName(), n);
 
         } else if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_QUAD)) {
             // If this resource is type quad, parse it together. With fixed Hero Lair
             String modelName = (model == null && terrain.getTerrainId() == 35) ? "hero_outpost_floor" : model.getName();
-            spatial = new SingleQuadConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, modelName);
+            spatial = new SingleQuadConstructor(kwdFile).construct(getMapData(), p.x, p.y, terrain, assetManager, modelName, n);
 
         } else {
 
@@ -587,31 +613,42 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 model = terrain.getTopResource();
             }
             spatial = loadModel(model.getName(), model);
-
-            // Apply ambient occlusion only for floor tiles (non-solid).
-            // Top tiles (SOLID) are at wall height and should not get neighbor-based
-            // AO until geometry noise / height variation is introduced (see issue #479).
-            if (!terrain.getFlags().contains(Terrain.TerrainFlag.SOLID))
-                AmbientOcclusionUtils.applyFloorAO(spatial, getMapData(), p.x, p.y, terrain, kwdFile);
         }
 
+        // Random texture must run before AO: setRandomTexture may replace
+        // materials, and AO needs to set UseVertexColor on the final material.
         if (terrain.getFlags().contains(Terrain.TerrainFlag.RANDOM_TEXTURE)) {
             setRandomTexture(spatial, tile);
-            // setRandomTexture may replace materials on geometries that already
-            // have vertex color AO applied. Re-enable UseVertexColor on those.
-            AmbientOcclusionUtils.enableVertexColorOnExistingColorBuffer(spatial);
         }
 
+        // Attach and position — translateToTile must happen before noise+AO
+        // so that getWorldTransform() returns the correct world position.
         Node topTileNode;
         if (terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
             topTileNode = getTileNode(p, (Node) pageNode.getChild(TOP_INDEX));
         } else {
             topTileNode = getTileNode(p, (Node) pageNode.getChild(FLOOR_INDEX));
         }
-
         topTileNode.attachChild(spatial);
-        setTileMaterialToGeometries(tile, topTileNode);
         AssetUtils.translateToTile(topTileNode, p);
+
+        // Unified noise + ambient occlusion in a single vertex-buffer pass.
+        // Must run after translateToTile for correct world positions.
+        // SurfaceLayer encodes the occlusion rules so we don't unpack
+        // TileNeighborhood into 8 booleans at every call site.
+        if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_WATER)) {
+            // required for the water banks
+            GeometryProcessor.applyFloorNoiseAndAO(spatial, n, GeometryProcessor.SurfaceLayer.WATER);
+
+        } else if (terrain.getFlags().contains(Terrain.TerrainFlag.CONSTRUCTION_TYPE_QUAD)) {
+            boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
+            GeometryProcessor.applyFloorNoiseAndAO(spatial, n, solid ? GeometryProcessor.SurfaceLayer.SOLID_TOP : GeometryProcessor.SurfaceLayer.FLOOR);
+        } else {
+            boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
+            GeometryProcessor.applyFloorNoiseAndAO(spatial, n, solid ? GeometryProcessor.SurfaceLayer.SOLID_TOP : GeometryProcessor.SurfaceLayer.FLOOR);
+        }
+
+        setTileMaterialToGeometries(tile, topTileNode);
     }
 
     private void handleSide(IMapTileInformation tile, Node pageNode) {
@@ -621,17 +658,53 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         for (WallDirection direction : WallDirection.values()) {
             Spatial wall = getWallSpatial(tile, direction);
             if (wall != null) {
+                // Compute corner flags from diagonal SOLID tiles in the room side.
+                // A corner exists when the diagonal tile in the non-solid (room)
+                // area is SOLID, meaning a perpendicular wall meets at that end.
+                boolean isLeftCorner = false;
+                boolean isRightCorner = false;
+                switch (direction) {
+                    case NORTH -> {
+                        // Room is at (x, y-1); left = NW, right = NE
+                        isLeftCorner  = isSolid(p.x - 1, p.y - 1);
+                        isRightCorner = isSolid(p.x + 1, p.y - 1);
+                    }
+                    case EAST -> {
+                        // Room is at (x+1, y); left = NE, right = SE
+                        isLeftCorner  = isSolid(p.x + 1, p.y - 1);
+                        isRightCorner = isSolid(p.x + 1, p.y + 1);
+                    }
+                    case SOUTH -> {
+                        // Room is at (x, y+1); left = SE, right = SW
+                        isLeftCorner  = isSolid(p.x + 1, p.y + 1);
+                        isRightCorner = isSolid(p.x - 1, p.y + 1);
+                    }
+                    case WEST -> {
+                        // Room is at (x-1, y); left = SW, right = NW
+                        isLeftCorner  = isSolid(p.x - 1, p.y + 1);
+                        isRightCorner = isSolid(p.x - 1, p.y - 1);
+                    }
+                }
+
+                // Store corner flags on the wall spatial so
+                // GeometryProcessor can read them after translateToTile.
+                wall.setUserData("wallCornerStart", isLeftCorner);
+                wall.setUserData("wallCornerEnd", isRightCorner);
+
                 wall.rotate(0, direction.getAngle(), 0);
-
-                // Apply simple wall AO (bottom-row darkening)
-                AmbientOcclusionUtils.applySimpleWallAO(wall);
-
                 sideTileNode.attachChild(wall);
             }
         }
 
-        setTileMaterialToGeometries(tile, sideTileNode);
+        // Attach complete, now position the tile node so world transforms
+        // are available for noise and AO.
         AssetUtils.translateToTile(sideTileNode, p);
+
+        // Unified noise + wall AO with per-wall-piece corner flags.
+        // Must run after translateToTile for correct world positions.
+        GeometryProcessor.applyWallNoiseAndAO(sideTileNode);
+
+        setTileMaterialToGeometries(tile, sideTileNode);
     }
 
     public void flashTile(boolean enabled, List<Point> points) {
@@ -797,7 +870,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
      * @param roomInstance the room instance
      */
     private Spatial handleRoom(RoomInstance roomInstance) {
-        RoomConstructor roomConstructor = RoomFactory.constructRoom(roomInstance, assetManager, kwdFile);
+        RoomConstructor roomConstructor = RoomFactory.constructRoom(roomInstance, assetManager, kwdFile, neighborhoods);
         roomActuals.put(roomInstance, roomConstructor);
         updateRoomWalls(roomInstance);
         if (roomConstructor != null) {
@@ -1028,6 +1101,34 @@ public abstract class MapViewController implements ILoader<KwdFile> {
 
         // Redraw
         updateRoomWalls(roomInstance);
+    }
+
+    /**
+     * Recomputes the {@link TileNeighborhood} for a single tile (and its
+     * 8 immediate neighbors, since their neighborhood also changes when
+     * this tile changes). Should be called before reconstructing tiles
+     * in {@link #updateTiles(Point...)}.
+     */
+    private void updateTileNeighborhood(Point p) {
+        IMapDataInformation<IMapTileInformation> mapData = getMapData();
+        int width = mapData.getWidth();
+        int height = mapData.getHeight();
+
+        // Recompute for the center tile and all 8 neighbors
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                int nx = p.x + dx;
+                int ny = p.y + dy;
+                if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+                    continue;
+                }
+                IMapTileInformation t = mapData.getTile(nx, ny);
+                if (t != null) {
+                    Terrain trn = kwdFile.getTerrain(t.getTerrainId());
+                    neighborhoods[nx][ny] = TileNeighborhood.compute(mapData, kwdFile, nx, ny, trn);
+                }
+            }
+        }
     }
 
     /**

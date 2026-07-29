@@ -24,6 +24,8 @@ import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
+import toniarts.openkeeper.view.map.GeometryProcessor;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * Constructs 5 by 5 "rotated" buildings. As far as I know, only Dungeon Heart
@@ -32,8 +34,8 @@ import toniarts.openkeeper.utils.AssetUtils;
  */
 public final class FiveByFiveRotatedConstructor extends RoomConstructor {
 
-    public FiveByFiveRotatedConstructor(AssetManager assetManager, RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public FiveByFiveRotatedConstructor(AssetManager assetManager, RoomInstance roomInstance, TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override
@@ -46,6 +48,18 @@ public final class FiveByFiveRotatedConstructor extends RoomConstructor {
         ArtResource artResource = roomInstance.getRoom().getCompleteResource();
         String resource = (roomInstance.isDestroyed()) ? "Dungeon_Destroyed" : artResource.getName();
         for (Point p : roomInstance.getCoordinates()) {
+
+            int wx = p.x;
+            int wy = p.y;
+            TileNeighborhood n = neighborhoods[wx][wy];
+            boolean N  = n != null && n.hasSameN();
+            boolean NE = n != null && n.hasSameNE();
+            boolean E  = n != null && n.hasSameE();
+            boolean SE = n != null && n.hasSameSE();
+            boolean S  = n != null && n.hasSameS();
+            boolean SW = n != null && n.hasSameSW();
+            boolean W  = n != null && n.hasSameW();
+            boolean NW = n != null && n.hasSameNW();
 
             // There are just 4 different pieces
             int x = p.x - start.x;
@@ -105,19 +119,21 @@ public final class FiveByFiveRotatedConstructor extends RoomConstructor {
 
             if (piece != -1) {
                 tile = loadModel(resource + piece, artResource);
-                moveSpatial(tile, start, p);
+                // Position at world tile coordinates so noise+AO uses
+                // correct world transforms (matches QuadConstructor pattern).
+                AssetUtils.translateToTile(tile, p);
                 if (yAngle != 0) {
                     tile.rotate(0, yAngle, 0);
                 }
 
-                // TODO: Apply floor AO to outer ring tiles (pieces 2 and 3).
-                // RoomConstructor doesn't have access to IMapDataInformation/KwdFile,
-                // so we can't check whether outside neighbors are solid walls or open
-                // floor tiles. roomInstance.hasCoordinate() only tells us if a tile
-                // is in the same room — not its terrain type. Needs map data plumbing.
-                // See: https://github.com/tonihele/OpenKeeper/issues/479
-
                 root.attachChild(tile);
+
+                // Apply noise+AO per tile. Dungeon heart floor is non-solid,
+                // so only solid neighbours occlude (issue #479).
+                if (n != null) {
+                    GeometryProcessor.applyFloorNoiseAndAO(tile, n,
+                            GeometryProcessor.SurfaceLayer.FLOOR);
+                }
             }
 
             // Only observed 5 by 5 is the Dungeon Heart, its object list is empty, so I just hard code these here
@@ -215,9 +231,8 @@ public final class FiveByFiveRotatedConstructor extends RoomConstructor {
 //            }
         }
 
-        // Set the transform and scale to our scale and 0 the transform
-        AssetUtils.translateToTile(root, start);
-        //root.scale(MapViewController.TILE_WIDTH, MapViewController.TILE_HEIGHT, MapViewController.TILE_WIDTH);
+        // Each tile is already positioned at world coordinates via
+        // per-tile translateToTile(tile, p). No root-level translation needed.
 
         return root;
     }

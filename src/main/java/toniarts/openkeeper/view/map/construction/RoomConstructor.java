@@ -18,6 +18,7 @@ import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.map.WallSection;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * A base class for constructing different kind of rooms. FIXME: Basically
@@ -33,11 +34,15 @@ public abstract class RoomConstructor {
     protected final boolean[][] map;
     protected final Point start;
 
+    protected final TileNeighborhood[][] neighborhoods;
+
     private final static int[] WALL_INDEXES = new int[]{7, 8};
 
-    public RoomConstructor(AssetManager assetManager, RoomInstance roomInstance) {
+    public RoomConstructor(AssetManager assetManager, RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
         this.assetManager = assetManager;
         this.roomInstance = roomInstance;
+        this.neighborhoods = neighborhoods;
         this.map = roomInstance.getCoordinatesAsMatrix();
         this.start = roomInstance.getMatrixStartPoint();
     }

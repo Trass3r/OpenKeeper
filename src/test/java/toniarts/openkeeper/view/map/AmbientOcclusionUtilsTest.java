@@ -195,8 +195,8 @@ class AmbientOcclusionUtilsTest {
 
     @Test
     void wallLeftCorner_partialDarkening() {
-        // x=-0.41 → nearLeft, isLeftCorner=true → occlusion=0.5, sampleCount=1 → 1-0.5/1 = 0.5
-        assertEquals(0.5f, AmbientOcclusionUtils.computeWallAO(
+        // x=-0.41 → nearLeft, isLeftCorner=true → occlusion=1, sampleCount=1 → 1-1/1=0 → clamped to MIN_AO=0.25
+        assertEquals(0.25f, AmbientOcclusionUtils.computeWallAO(
                 -0.41f, BOTTOM + 1f, BOTTOM,
                 true, false),
                 0.0001f);
@@ -213,8 +213,8 @@ class AmbientOcclusionUtilsTest {
 
     @Test
     void wallRightCorner_partialDarkening() {
-        // x=0.41 → nearRight, isRightCorner=true → occlusion=0.5, sampleCount=1 → 1-0.5/1 = 0.5
-        assertEquals(0.5f, AmbientOcclusionUtils.computeWallAO(
+        // x=0.41 → nearRight, isRightCorner=true → occlusion=1, sampleCount=1 → 1-1/1=0 → clamped to MIN_AO=0.25
+        assertEquals(0.25f, AmbientOcclusionUtils.computeWallAO(
                 0.41f, BOTTOM + 1f, BOTTOM,
                 false, true),
                 0.0001f);
@@ -222,8 +222,8 @@ class AmbientOcclusionUtilsTest {
 
     @Test
     void wallBottomAndLeft_withLeftCorner_clampedToMinAo() {
-        // nearBottom + nearLeft, isLeftCorner: occlusion=1+0.5=1.5, sampleCount=2
-        // 1-1.5/2 = 1-0.75 = 0.25 → MIN_AO
+        // nearBottom + nearLeft, isLeftCorner: occlusion=1+1=2, sampleCount=2
+        // 1-2/2 = 1-1 = 0 → clamped to MIN_AO=0.25
         assertEquals(0.25f, AmbientOcclusionUtils.computeWallAO(
                 -0.41f, BOTTOM, BOTTOM,
                 true, false),
@@ -249,7 +249,7 @@ class AmbientOcclusionUtilsTest {
 
     @Test
     void wallBottomLeft_withBothCorners_clampedToMinAo() {
-        // nearBottom + nearLeft (nearRight is false since x=-0.41), isLeftCorner → occlusion=1+0.5=1.5, sampleCount=2 → 0.25
+        // nearBottom + nearLeft (nearRight is false since x=-0.41), isLeftCorner → occlusion=1+1=2, sampleCount=2 → 0→0.25
         assertEquals(0.25f, AmbientOcclusionUtils.computeWallAO(
                 -0.41f, BOTTOM, BOTTOM,
                 true, true),

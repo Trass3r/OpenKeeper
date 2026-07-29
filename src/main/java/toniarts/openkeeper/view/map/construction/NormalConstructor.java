@@ -23,6 +23,8 @@ import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
+import toniarts.openkeeper.view.map.TileNeighborhood;
+import toniarts.openkeeper.view.map.GeometryProcessor;
 
 /**
  * Constructs "normal" rooms
@@ -31,8 +33,9 @@ import toniarts.openkeeper.tools.convert.map.ArtResource;
  */
 public class NormalConstructor extends RoomConstructor {
 
-    public NormalConstructor(AssetManager assetManager, RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public NormalConstructor(AssetManager assetManager, RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override
@@ -53,27 +56,32 @@ public class NormalConstructor extends RoomConstructor {
                 // There are 4 different floor pieces
                 Spatial part;
 
-                // Figure out which piece by seeing the neighbours
-                boolean N = hasSameTile(map, x, y - 1);
-                boolean NE = hasSameTile(map, x + 1, y - 1);
-                boolean E = hasSameTile(map, x + 1, y);
-                boolean SE = hasSameTile(map, x + 1, y + 1);
-                boolean S = hasSameTile(map, x, y + 1);
-                boolean SW = hasSameTile(map, x - 1, y + 1);
-                boolean W = hasSameTile(map, x - 1, y);
-                boolean NW = hasSameTile(map, x - 1, y - 1);
+                // Figure out which piece by seeing the neighbours from TileNeighborhood
+                int wx = start.x + x;
+                int wy = start.y + y;
+                TileNeighborhood n = neighborhoods[wx][wy];
+                boolean N  = n.hasSameN();
+                boolean NE = n.hasSameNE();
+                boolean E  = n.hasSameE();
+                boolean SE = n.hasSameSE();
+                boolean S  = n.hasSameS();
+                boolean SW = n.hasSameSW();
+                boolean W  = n.hasSameW();
+                boolean NW = n.hasSameNW();
 
                 // If we are completely covered, use a big tile
                 if (N && NE && E && SE && S && SW && W && NW && useBigFloorTile(x, y)) {
                     part = AssetUtils.loadModel(assetManager, modelName + "9", artResource);
-                    // TODO: Apply floor AO to big tiles (and quads).
-                    // RoomConstructor doesn't have IMapDataInformation/KwdFile access,
-                    // so we can't distinguish solid walls from open floor outside the room.
-                    // See: https://github.com/tonihele/OpenKeeper/issues/479
                 } else {
                     part = QuadConstructor.constructQuad(assetManager, modelName, artResource, N, NE, E, SE, S, SW, W, NW);
                 }
                 AssetUtils.translateToTile(part, new Point(x, y));
+
+                // Apply noise+AO per-tile. Room floors are non-solid, so only
+                // solid neighbors (solidMask) occlude (issue #479).
+                GeometryProcessor.applyFloorNoiseAndAO(part, n,
+                        GeometryProcessor.SurfaceLayer.FLOOR);
+
                 root.attachChild(part);
             }
         }

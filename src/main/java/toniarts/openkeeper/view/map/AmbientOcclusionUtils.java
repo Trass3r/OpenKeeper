@@ -38,8 +38,13 @@ import toniarts.openkeeper.utils.WorldUtils;
  * tile center: corner vertices sample 3 neighbors, edge vertices sample 1,
  * center vertices are always fully lit.
  *
+ * @deprecated Replaced by {@link GeometryProcessor} which combines noise
+ *             displacement and AO in a single vertex-buffer pass.
+ *             Kept for wall AO until GeometryProcessor gains per-wall-piece
+ *             corner-flag support.
  * @see <a href="https://github.com/tonihele/OpenKeeper/issues/479">Issue #479</a>
  */
+@Deprecated
 public final class AmbientOcclusionUtils {
 
     /** How much each occupied neighbor darkens an adjacent vertex (0=no darkening, 1=full black) */

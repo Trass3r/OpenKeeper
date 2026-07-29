@@ -27,7 +27,8 @@ import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
-import toniarts.openkeeper.view.map.MapViewController;
+import toniarts.openkeeper.view.map.TileNeighborhood;
+import toniarts.openkeeper.view.map.GeometryProcessor;
 
 /**
  * FIXME: QuadConstructor
@@ -36,8 +37,9 @@ import toniarts.openkeeper.view.map.MapViewController;
  */
 public class QuadConstructor extends RoomConstructor {
 
-    public QuadConstructor(AssetManager assetManager, RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public QuadConstructor(AssetManager assetManager, RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     public static Node constructQuad(AssetManager assetManager, String modelName, ArtResource artResource,
@@ -153,10 +155,8 @@ public class QuadConstructor extends RoomConstructor {
         }
 
         // TODO: Apply floor AO to the assembled quad.
-        // RoomConstructor doesn't have access to IMapDataInformation/KwdFile,
-        // so we can't check whether outside neighbors are solid walls or open
-        // floor tiles. roomInstance.hasCoordinate() only tells us if a tile
-        // is in the same room — not its terrain type. Needs map data plumbing.
+        // AO is now applied by constructFloor() per-tile using
+        // TileNeighborhood.solidMask after translateToTile().
         // See: https://github.com/tonihele/OpenKeeper/issues/479
 
         return quad;
@@ -170,19 +170,25 @@ public class QuadConstructor extends RoomConstructor {
         //Point start = roomInstance.getCoordinates().get(0);
         // Contruct the tiles
         for (Point p : roomInstance.getCoordinates()) {
+            TileNeighborhood n = neighborhoods[p.x][p.y];
             // Figure out which peace by seeing the neighbours
-            boolean N = roomInstance.hasCoordinate(new Point(p.x, p.y - 1));
-            boolean NE = roomInstance.hasCoordinate(new Point(p.x + 1, p.y - 1));
-            boolean E = roomInstance.hasCoordinate(new Point(p.x + 1, p.y));
-            boolean SE = roomInstance.hasCoordinate(new Point(p.x + 1, p.y + 1));
-            boolean S = roomInstance.hasCoordinate(new Point(p.x, p.y + 1));
-            boolean SW = roomInstance.hasCoordinate(new Point(p.x - 1, p.y + 1));
-            boolean W = roomInstance.hasCoordinate(new Point(p.x - 1, p.y));
-            boolean NW = roomInstance.hasCoordinate(new Point(p.x - 1, p.y - 1));
-            // 2x2
+            boolean N  = n.hasSameN();
+            boolean NE = n.hasSameNE();
+            boolean E  = n.hasSameE();
+            boolean SE = n.hasSameSE();
+            boolean S  = n.hasSameS();
+            boolean SW = n.hasSameSW();
+            boolean W  = n.hasSameW();
+            boolean NW = n.hasSameNW();
             Node model = constructQuad(assetManager, modelName, artResource, N, NE, E, SE, S, SW, W, NW);
-            //AssetUtils.scale(model);
             AssetUtils.translateToTile(model, p);
+
+            // Apply noise+AO per-tile. Room floors are non-solid, so only
+            // solid neighbors (solidMask) occlude — same-room tiles don't
+            // darken each other (issue #479).
+            GeometryProcessor.applyFloorNoiseAndAO(model, n,
+                    GeometryProcessor.SurfaceLayer.FLOOR);
+
             root.attachChild(model);
         }
 

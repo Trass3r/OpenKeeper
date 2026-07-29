@@ -27,6 +27,7 @@ import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.map.MapViewController;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  *
@@ -34,8 +35,8 @@ import toniarts.openkeeper.view.map.MapViewController;
  */
 public class DoubleQuadConstructor extends RoomConstructor {
 
-    public DoubleQuadConstructor(AssetManager assetManager, RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public DoubleQuadConstructor(AssetManager assetManager, RoomInstance roomInstance, TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

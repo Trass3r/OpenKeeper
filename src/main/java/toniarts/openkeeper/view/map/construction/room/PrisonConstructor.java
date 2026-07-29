@@ -26,6 +26,7 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.WorldUtils;
 import toniarts.openkeeper.view.map.MapViewController;
 import toniarts.openkeeper.view.map.construction.DoubleQuadConstructor;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * Manages prison door placement, currently it is decoupled from the actual
@@ -35,8 +36,9 @@ import toniarts.openkeeper.view.map.construction.DoubleQuadConstructor;
  */
 public final class PrisonConstructor extends DoubleQuadConstructor {
 
-    public PrisonConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public PrisonConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

@@ -23,6 +23,7 @@ import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  * Portal is the only one I think
@@ -31,8 +32,9 @@ import toniarts.openkeeper.tools.convert.map.ArtResource;
  */
 public final class ThreeByThreeConstructor extends RoomConstructor {
 
-    public ThreeByThreeConstructor(AssetManager assetManager, RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public ThreeByThreeConstructor(AssetManager assetManager, RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

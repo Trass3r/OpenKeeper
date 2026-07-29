@@ -22,6 +22,7 @@ import com.jme3.scene.Spatial;
 import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.utils.AssetUtils;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  *
@@ -29,8 +30,9 @@ import toniarts.openkeeper.utils.AssetUtils;
  */
 public final class HeroGateTwoByTwoConstructor extends RoomConstructor {
 
-    public HeroGateTwoByTwoConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance) {
-        super(assetManager, roomInstance);
+    public HeroGateTwoByTwoConstructor(AssetManager assetManager, toniarts.openkeeper.common.RoomInstance roomInstance,
+            TileNeighborhood[][] neighborhoods) {
+        super(assetManager, roomInstance, neighborhoods);
     }
 
     @Override

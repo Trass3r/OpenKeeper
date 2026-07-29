@@ -26,7 +26,7 @@ import toniarts.openkeeper.game.map.IMapTileInformation;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.tools.convert.map.Terrain;
 import toniarts.openkeeper.utils.WorldUtils;
-import toniarts.openkeeper.view.map.AmbientOcclusionUtils;
+import toniarts.openkeeper.view.map.TileNeighborhood;
 
 /**
  *
@@ -51,7 +51,8 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
      * @return the loaded model
      */
     @Override
-    public Spatial construct(IMapDataInformation mapData, int x, int y, final Terrain terrain, final AssetManager assetManager, String modelName) {
+    public Spatial construct(IMapDataInformation mapData, int x, int y, final Terrain terrain,
+            final AssetManager assetManager, String modelName, TileNeighborhood n) {
 
         // If ownable, playerId is first. With fixed Hero Lair
         if (terrain.getFlags().contains(Terrain.TerrainFlag.OWNABLE) && terrain.getTerrainId() != 35) {
@@ -60,31 +61,19 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
         }
 
         // It needs to be parsed together from tiles
-        boolean solid = isSolidTile(mapData, x, y);
+        boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
 
-        // Figure out which peace by seeing the neighbours
-        // This is slightly different with the top
-        // IMapTileInformation tile = mapData.getTile(x, y);
-        // var tile.getTerrainId() == terrain.getTerrainId();
-
-        // solid check:
-        // kwdFile.getTerrain(tile.getTerrainId()).getFlags().contains(Terrain.TerrainFlag.SOLID);
-        boolean solidN  = isSolidTile(mapData, x    , y - 1);
-        boolean solidNE = isSolidTile(mapData, x + 1, y - 1);
-        boolean solidE  = isSolidTile(mapData, x + 1, y);
-        boolean solidSE = isSolidTile(mapData, x + 1, y + 1);
-        boolean solidS  = isSolidTile(mapData, x    , y + 1);
-        boolean solidSW = isSolidTile(mapData, x - 1, y + 1);
-        boolean solidW  = isSolidTile(mapData, x - 1, y);
-        boolean solidNW = isSolidTile(mapData, x - 1, y - 1);
-        boolean N = hasSameTile(mapData, x, y - 1, terrain) || (solid && solidN);
-        boolean NE = hasSameTile(mapData, x + 1, y - 1, terrain) || (solid && solidNE);
-        boolean E = hasSameTile(mapData, x + 1, y, terrain) || (solid && solidE);
-        boolean SE = hasSameTile(mapData, x + 1, y + 1, terrain) || (solid && solidSE);
-        boolean S = hasSameTile(mapData, x, y + 1, terrain) || (solid && solidS);
-        boolean SW = hasSameTile(mapData, x - 1, y + 1, terrain) || (solid && solidSW);
-        boolean W = hasSameTile(mapData, x - 1, y, terrain) || (solid && solidW);
-        boolean NW = hasSameTile(mapData, x - 1, y - 1, terrain) || (solid && solidNW);
+        // Piece selection: same-terrain neighbors, or (if solid) any solid neighbor.
+        // Ambient occlusion booleans are computed by the caller from the same
+        // TileNeighborhood and applied after construction (see handleTop).
+        boolean N = n.hasSameN() || (solid && n.solidN());
+        boolean NE = n.hasSameNE() || (solid && n.solidNE());
+        boolean E = n.hasSameE() || (solid && n.solidE());
+        boolean SE = n.hasSameSE() || (solid && n.solidSE());
+        boolean S = n.hasSameS() || (solid && n.solidS());
+        boolean SW = n.hasSameSW() || (solid && n.solidSW());
+        boolean W = n.hasSameW() || (solid && n.solidW());
+        boolean NW = n.hasSameNW() || (solid && n.solidNW());
 
         // 2x2
         Node model = new Node();
@@ -162,9 +151,8 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
             }
         }
 
-        // Apply ambient occlusion to the fully assembled tile
-        if (!solid)
-            AmbientOcclusionUtils.applyFloorAO(model, solidN, solidNE, solidE, solidSE, solidS, solidSW, solidW, solidNW);
+        // Ambient occlusion is now applied by the caller (handleTop)
+        // using the pre-computed TileNeighborhood grid.
 
         return model;
     }
