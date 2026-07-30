@@ -554,11 +554,7 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
 
             @Override
             public void onMouseMotionEvent(MouseMotionEvent evt) {
-                mousePosition.set(evt.getX(), evt.getY());
-                keeperHandState.setPosition(evt.getX(), evt.getY());
-
-                timeFromLastUpdate = 0;
-                updateStateFlags();
+                updatePointerPosition(evt.getX(), evt.getY());
                 //updateCursor();
             }
 
@@ -633,45 +629,7 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
                         updateCursor();
                     }
                 } else if (evt.getButtonIndex() == MouseInput.BUTTON_RIGHT && evt.isReleased()) {
-
-                    Point p = selectionHandler.getPointedTileIndex();
-                    if (interactionState.getType() == Type.NONE) {
-
-                        // Drop
-                        IEntityViewControl entityViewControl = keeperHandState.getItem();
-                        if (entityViewControl != null) {
-                            IMapTileInformation mapTile = gameClientState.getMapClientService().getMapData().getTile(p);
-                            if (entityViewControl.getDroppableStatus(mapTile, gameClientState.getMapClientService().getTerrain(mapTile), player.getPlayerId()) != IEntityViewControl.DroppableStatus.NOT_DROPPABLE) {
-                                gameClientState.getGameClientService().drop(entityViewControl.getEntityId(), p, selectionHandler.getActualPointedPosition(), interactiveControl != null ? interactiveControl.getEntityId() : null);
-                            }
-                            //MapTile tile = gameClientState.getMapClientService().getMapData().getTile(p);
-//                            IEntityControl.DroppableStatus status = keeperHand.peek().getDroppableStatus(tile, player.getPlayerId());
-//                            if (status != IEntityControl.DroppableStatus.NOT_DROPPABLE) {
-//
-//                                // Drop & update cursor
-//                                keeperHand.pop().drop(tile, selectionHandler.getActualPointedPosition(), interactiveControl);
-//                                updateCursor();
-//                            }
-                        } else if (interactiveControl != null && interactiveControl.isInteractable(player.getPlayerId())) {
-//                            getWorldHandler().playSoundAtTile(p, GlobalCategory.HAND, GlobalType.HAND_SLAP);
-                            gameClientState.getGameClientService().interact(interactiveControl.getEntityId());
-                            interactiveControl.interact(player.getPlayerId());
-                        } else if (Main.isDebug()) {
-                            // taggable -> "dig"
-//                            if (getWorldHandler().isTaggable(p.x, p.y)) {
-//                                getWorldHandler().digTile(p.x, p.y);
-//                            } // ownable -> "claim"
-//                            else if (getWorldHandler().isClaimable(p.x, p.y, player.getPlayerId())) {
-//                                getWorldHandler().claimTile(p.x, p.y, player.getPlayerId());
-//                            }
-                        }
-                    }
-
-                    // Reset the state
-                    setInteractionState(Type.NONE, 0);
-                    updateCursor();
-
-                    selectionHandler.setActive(false);
+                    performSecondaryAction();
 
                 } else if (evt.getButtonIndex() == MouseInput.BUTTON_MIDDLE && evt.isReleased()) {
 //                    if (Main.isDebug()) {
@@ -737,9 +695,98 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
 
             @Override
             public void onTouchEvent(TouchEvent evt) {
+                switch (evt.getType()) {
+                    case HOVER_START:
+                    case HOVER_MOVE:
+                        // Android styluses, including Samsung S Pen, report
+                        // proximity movement without touching the display.
+                        updatePointerPosition(evt.getX(), evt.getY());
+                        evt.setConsumed();
+                        break;
+                    default:
+                        break;
+                }
             }
 
         };
+    }
+
+    /**
+     * Receives a normalized S Pen barrel-button event from the Android host.
+     * The Android UI thread enqueues this method on the jME update thread.
+     *
+     * @param normalizedX horizontal position from 0 (left) to 1 (right)
+     * @param normalizedY vertical position from 0 (bottom) to 1 (top)
+     * @param pressed true while the barrel button is held
+     */
+    public void handleStylusSecondary(float normalizedX, float normalizedY, boolean pressed) {
+        if (!isInitialized() || !isEnabled() || keeperHandState == null || selectionHandler == null) {
+            return;
+        }
+
+        float x = Math.max(0f, Math.min(1f, normalizedX)) * app.getCamera().getWidth();
+        float y = Math.max(0f, Math.min(1f, normalizedY)) * app.getCamera().getHeight();
+        updatePointerPosition(x, y);
+
+        // Match desktop right-click semantics: the action is committed when
+        // the button is released, which also permits hover + barrel clicks.
+        if (!pressed && !isOnGui && isOnMap) {
+            performSecondaryAction();
+        }
+    }
+
+    private void updatePointerPosition(float x, float y) {
+        mousePosition.set(x, y);
+        if (keeperHandState != null) {
+            keeperHandState.setPosition(x, y);
+        }
+        if (selectionHandler != null) {
+            selectionHandler.update(mousePosition);
+        }
+        timeFromLastUpdate = 0;
+        if (isInitialized()) {
+            updateStateFlags();
+        }
+    }
+
+    private void performSecondaryAction() {
+        Point p = selectionHandler.getPointedTileIndex();
+        if (interactionState.getType() == Type.NONE) {
+
+            // Drop
+            IEntityViewControl entityViewControl = keeperHandState.getItem();
+            if (entityViewControl != null) {
+                IMapTileInformation mapTile = gameClientState.getMapClientService().getMapData().getTile(p);
+                if (entityViewControl.getDroppableStatus(mapTile, gameClientState.getMapClientService().getTerrain(mapTile), player.getPlayerId()) != IEntityViewControl.DroppableStatus.NOT_DROPPABLE) {
+                    gameClientState.getGameClientService().drop(entityViewControl.getEntityId(), p, selectionHandler.getActualPointedPosition(), interactiveControl != null ? interactiveControl.getEntityId() : null);
+                }
+                //MapTile tile = gameClientState.getMapClientService().getMapData().getTile(p);
+//                IEntityControl.DroppableStatus status = keeperHand.peek().getDroppableStatus(tile, player.getPlayerId());
+//                if (status != IEntityControl.DroppableStatus.NOT_DROPPABLE) {
+//
+//                    // Drop & update cursor
+//                    keeperHand.pop().drop(tile, selectionHandler.getActualPointedPosition(), interactiveControl);
+//                    updateCursor();
+//                }
+            } else if (interactiveControl != null && interactiveControl.isInteractable(player.getPlayerId())) {
+//                getWorldHandler().playSoundAtTile(p, GlobalCategory.HAND, GlobalType.HAND_SLAP);
+                gameClientState.getGameClientService().interact(interactiveControl.getEntityId());
+                interactiveControl.interact(player.getPlayerId());
+            } else if (Main.isDebug()) {
+                // taggable -> "dig"
+//                if (getWorldHandler().isTaggable(p.x, p.y)) {
+//                    getWorldHandler().digTile(p.x, p.y);
+//                } // ownable -> "claim"
+//                else if (getWorldHandler().isClaimable(p.x, p.y, player.getPlayerId())) {
+//                    getWorldHandler().claimTile(p.x, p.y, player.getPlayerId());
+//                }
+            }
+        }
+
+        // Reset the state
+        setInteractionState(Type.NONE, 0);
+        updateCursor();
+        selectionHandler.setActive(false);
     }
 
     /**

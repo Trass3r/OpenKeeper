@@ -64,20 +64,37 @@ public final class MainMenuInteraction implements RawInputListener {
 
     @Override
     public void onTouchEvent(TouchEvent evt) {
-
-        // NOT TESTED AT ALL, just for shit & giggles, may work which would be super cool
-        if (!evt.isScaleSpanInProgress()) {
-            if (currentControl != null) {
+        switch (evt.getType()) {
+            case HOVER_START:
+            case HOVER_MOVE:
+                // Stylus proximity should highlight a campaign marker without
+                // activating it. Tip contact is already mapped to a normal
+                // left mouse click by jMonkeyEngine.
                 evt.setConsumed();
-
-                // Select level
-                mainMenuState.selectCampaignLevel(currentControl);
-            } else if (currentControl == null) {
-                evt.setConsumed();
-
-                // Treat this like "on hover"
                 setCampaignMapActive((int) evt.getX(), (int) evt.getY());
-            }
+                break;
+            case HOVER_END:
+                evt.setConsumed();
+                clearCampaignMapActive();
+                break;
+            case DOWN:
+            case MOVE:
+                // Touch input does not always emit a preceding mouse-motion
+                // event. Establish the pointed marker first; the simulated
+                // left mouse button event that follows performs activation.
+                if (!evt.isScaleSpanInProgress()) {
+                    setCampaignMapActive((int) evt.getX(), (int) evt.getY());
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void clearCampaignMapActive() {
+        if (currentControl != null) {
+            currentControl.setActive(false);
+            currentControl = null;
         }
     }
 

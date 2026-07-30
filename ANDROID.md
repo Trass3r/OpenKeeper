@@ -62,6 +62,23 @@ Uninstalling the app may remove this directory, so keep the PC installation.
 - Pinch: zoom the camera
 - Android Back: OpenKeeper's exit/back handling
 
+### Samsung S Pen and other Android styluses
+
+- Hover: move the Keeper cursor and preview campaign markers, tiles, and objects
+- Pen tip: primary click, drag selection, and tile tagging
+- Barrel button + tip: secondary/right-click action
+- Barrel button while hovering: secondary action without touching the display
+- Finger-only gestures are suppressed while the pen is in range for basic palm
+  rejection
+
+The Android host accepts both pure stylus and combined stylus/touchscreen input
+sources. Debug builds log the tool type, pressure, tilt, orientation, distance,
+and button state for device-specific tuning:
+
+```powershell
+adb logcat -s OpenKeeperSpen:D '*:S'
+```
+
 The Android host uses immersive landscape mode and a 1920x886 internal render
 surface so the original fixed-pixel Nifty UI remains usable on high-density
 phones.
@@ -69,7 +86,8 @@ phones.
 ## Current platform notes
 
 - Campaign menus, mission briefing, in-engine camera sequences, live HUD,
-  touch selection, audio initialization, and Android pause/resume are enabled.
+  touch and S Pen selection, audio initialization, and Android pause/resume are
+  enabled.
 - Original pre-rendered TGQ movies are skipped because their decoder currently
   depends on desktop AWT image classes. Gameplay cinematics still run.
 - Converted and original DK2 assets are intentionally excluded from Git and
