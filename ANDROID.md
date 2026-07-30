@@ -88,6 +88,9 @@ phones.
 - Campaign menus, mission briefing, in-engine camera sequences, live HUD,
   touch and S Pen selection, audio initialization, and Android pause/resume are
   enabled.
+- Graphics Options is available. Android-owned resolution, fullscreen,
+  antialiasing, VSync, and renderer controls are shown read-only; anisotropic
+  filtering and SSAO remain configurable.
 - Original pre-rendered TGQ movies are skipped because their decoder currently
   depends on desktop AWT image classes. Gameplay cinematics still run.
 - Converted and original DK2 assets are intentionally excluded from Git and

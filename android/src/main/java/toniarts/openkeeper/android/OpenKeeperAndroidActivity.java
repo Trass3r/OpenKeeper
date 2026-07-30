@@ -64,6 +64,15 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         File privateFiles = getFilesDir();
         File externalFiles = getExternalFilesDir(null);
         System.setProperty("user.home", privateFiles.getAbsolutePath());
+        System.setProperty("openkeeper.display.width",
+                Integer.toString(RENDER_WIDTH));
+        System.setProperty("openkeeper.display.height",
+                Integer.toString(RENDER_HEIGHT));
+        System.setProperty("openkeeper.display.bitDepth",
+                Integer.toString(eglBitsPerPixel));
+        System.setProperty("openkeeper.display.refreshRate",
+                Integer.toString(frameRate));
+        System.setProperty("openkeeper.display.renderer", "OpenGL ES");
         File storage = externalFiles != null ? externalFiles : privateFiles;
         Main.configureEmbedded(
                 new File(storage, "DK2").getAbsolutePath(),

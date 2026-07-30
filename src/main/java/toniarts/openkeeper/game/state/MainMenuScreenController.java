@@ -260,7 +260,7 @@ public final class MainMenuScreenController implements IMainMenuScreenController
     @Override
     public void applyGraphicsSettings() {
         // Get the controls settings
-        boolean needToRestart = true;
+        boolean embedded = Boolean.getBoolean("openkeeper.embedded");
         Settings settings = Main.getUserSettings();
         DropDown res = screen.findNiftyControl("resolution", DropDown.class);
         DropDown bitDepth = screen.findNiftyControl("bitDepth", DropDown.class);
@@ -275,18 +275,27 @@ public final class MainMenuScreenController implements IMainMenuScreenController
 
         // TODO: See if we need a restart, but keep in mind that the settings are saved in the restart
         // Set the settings
-        settings.getAppSettings().setResolution(mdm.getWidth(), mdm.getHeight());
-        settings.getAppSettings().setDepthBits((Integer) bitDepth.getSelection());
-        settings.getAppSettings().setFrequency((Integer) refresh.getSelection());
-        settings.getAppSettings().setFullscreen(fullscreen.isChecked());
+        if (!embedded) {
+            settings.getAppSettings().setResolution(mdm.getWidth(), mdm.getHeight());
+            settings.getAppSettings().setDepthBits((Integer) bitDepth.getSelection());
+            settings.getAppSettings().setFrequency((Integer) refresh.getSelection());
+            settings.getAppSettings().setFullscreen(fullscreen.isChecked());
+            settings.getAppSettings().setRenderer((String) ogl.getSelection());
+        }
         settings.getAppSettings().setVSync(vsync.isChecked());
-        settings.getAppSettings().setRenderer((String) ogl.getSelection());
         settings.getAppSettings().setSamples((Integer) aa.getSelection());
         settings.setSetting(Settings.Setting.ANISOTROPY, af.getSelection());
         settings.setSetting(Settings.Setting.SSAO, ssao.isChecked());
 
         // This fails and crashes on invalid settings
-        if (needToRestart) {
+        if (embedded) {
+            try {
+                settings.save();
+            } catch (IOException ex) {
+                logger.log(Logger.Level.ERROR, ex);
+            }
+            nifty.gotoScreen(SCREEN_OPTIONS_MAIN_ID);
+        } else {
             state.restart();
             nifty.resolutionChanged();
         }
@@ -728,9 +737,25 @@ public final class MainMenuScreenController implements IMainMenuScreenController
 
         // Application settings
         AppSettings settings = Main.getUserSettings().getAppSettings();
+        boolean embedded = Boolean.getBoolean("openkeeper.embedded");
 
-        DisplayMode mdm = new DisplayMode(settings);
-        List<DisplayMode> resolutions = DisplayModeUtils.getInstance().getDisplayModes();
+        DisplayMode mdm;
+        if (embedded) {
+            AppSettings displaySettings = new AppSettings(false);
+            displaySettings.setResolution(
+                    Integer.getInteger("openkeeper.display.width", settings.getWidth()),
+                    Integer.getInteger("openkeeper.display.height", settings.getHeight()));
+            displaySettings.setBitsPerPixel(
+                    Integer.getInteger("openkeeper.display.bitDepth", settings.getBitsPerPixel()));
+            displaySettings.setFrequency(
+                    Integer.getInteger("openkeeper.display.refreshRate", settings.getFrequency()));
+            mdm = new DisplayMode(displaySettings);
+        } else {
+            mdm = new DisplayMode(settings);
+        }
+        List<DisplayMode> resolutions = embedded
+                ? List.of(mdm)
+                : DisplayModeUtils.getInstance().getDisplayModes();
         int resolutionSelectedIndex = Collections.binarySearch(resolutions, mdm);
 
         // Get values to the settings screen
@@ -760,8 +785,9 @@ public final class MainMenuScreenController implements IMainMenuScreenController
 
         // Fullscreen
         CheckBox fullscreen = screen.findNiftyControl("fullscreen", CheckBox.class);
-        fullscreen.setChecked(settings.isFullscreen());
-        fullscreen.setEnabled(DisplayModeUtils.getInstance().isFullScreenSupported());
+        fullscreen.setChecked(embedded || settings.isFullscreen());
+        fullscreen.setEnabled(!embedded
+                && DisplayModeUtils.getInstance().isFullScreenSupported());
 
         // VSync
         CheckBox vsync = screen.findNiftyControl("verticalSync", CheckBox.class);
@@ -788,12 +814,34 @@ public final class MainMenuScreenController implements IMainMenuScreenController
 
         // OpenGL
         DropDown ogl = screen.findNiftyControl("openGl", DropDown.class);
-        ogl.addAllItems(Settings.OPENGL);
-        ogl.selectItem(settings.getRenderer());
+        String renderer = embedded
+                ? System.getProperty("openkeeper.display.renderer", "OpenGL ES")
+                : settings.getRenderer();
+        if (!embedded) {
+            ogl.addAllItems(Settings.OPENGL);
+        }
+        if (renderer != null
+                && (embedded || !Settings.OPENGL.contains(renderer))) {
+            ogl.addItem(renderer);
+        }
+        ogl.selectItem(renderer);
 
         // SSAO
         CheckBox ssao = screen.findNiftyControl("ssao", CheckBox.class);
         ssao.setChecked(Main.getUserSettings().getBoolean(Settings.Setting.SSAO));
+
+        if (embedded) {
+            // Android owns the surface, renderer, and swap behavior. Expose
+            // their current values for context, but do not let desktop-only
+            // controls restart the jME context with unsupported settings.
+            res.disable();
+            fullscreen.disable();
+            bitDepths.disable();
+            refresh.disable();
+            vsync.disable();
+            aa.disable();
+            ogl.disable();
+        }
     }
 
     private void setControlSettingsToGUI() {
