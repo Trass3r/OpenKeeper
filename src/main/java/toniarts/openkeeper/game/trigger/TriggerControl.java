@@ -17,8 +17,8 @@
 package toniarts.openkeeper.game.trigger;
 
 import toniarts.openkeeper.utils.Point;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.EnumSet;
 import toniarts.openkeeper.game.control.Control;
 import toniarts.openkeeper.game.controller.ICreaturesController;
@@ -45,7 +45,7 @@ import toniarts.openkeeper.utils.WorldUtils;
  */
 public class TriggerControl extends Control {
 
-    private static final Logger logger = System.getLogger(TriggerControl.class.getName());
+    private static final Logger logger = Logger.getLogger(TriggerControl.class.getName());
 
     private static final short LEVEL_SCORE_FLAG_ID = 128;
     private static final short TIME_LIMIT_TIMER_ID = 16;
@@ -84,26 +84,19 @@ public class TriggerControl extends Control {
         for (int i = trigger.getLastTriggerIndex() + 1; i < trigger.getQuantity(); i++) {
             TriggerData value = trigger.getChild(i);
 
-            switch (value) {
-                case null ->
-                    logger.log(Level.WARNING, "Trigger is null!");
-                case TriggerGenericData triggerGenericData -> {
-
-                    if (next == null && isActive(triggerGenericData)) {
-                        trigger.setLastTrigger((TriggerGenericData) value);
-                        next = (TriggerGenericData) value;
-                    }
+            if (value == null) {
+                logger.log(Level.WARNING, "Trigger is null!");
+            } else if (value instanceof TriggerGenericData triggerGenericData) {
+                if (next == null && isActive(triggerGenericData)) {
+                    trigger.setLastTrigger(triggerGenericData);
+                    next = triggerGenericData;
                 }
-                case TriggerActionData triggerActionData -> {
-
-                    //System.out.println(String.format("%s: %d %s", this.getClass().getSimpleName(), trigger.getId(), trigger.getType()));
-                    doAction(triggerActionData);
-                    if (!trigger.isRepeateable()) {
-                        trigger.detachChild(value);
-                        i--;
-                    }
-                }
-                default -> {
+            } else if (value instanceof TriggerActionData triggerActionData) {
+                //System.out.println(String.format("%s: %d %s", this.getClass().getSimpleName(), trigger.getId(), trigger.getType()));
+                doAction(triggerActionData);
+                if (!trigger.isRepeateable()) {
+                    trigger.detachChild(value);
+                    i--;
                 }
             }
         }

@@ -24,8 +24,8 @@ import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
 import com.simsilica.es.filter.FieldFilter;
 import toniarts.openkeeper.utils.Point;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,8 +87,8 @@ import toniarts.openkeeper.utils.WorldUtils;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class CreaturesController implements ICreaturesController {
-    
-    private static final Logger logger = System.getLogger(CreaturesController.class.getName());
+
+    private static final Logger logger = Logger.getLogger(CreaturesController.class.getName());
 
     private final KwdFile kwdFile;
     private final EntityData entityData;

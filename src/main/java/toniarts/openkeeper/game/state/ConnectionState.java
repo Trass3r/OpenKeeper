@@ -26,8 +26,8 @@ import com.jme3.network.ErrorListener;
 import com.jme3.network.service.ClientService;
 import com.simsilica.ethereal.EtherealClient;
 import com.simsilica.ethereal.TimeSource;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import toniarts.openkeeper.Main;
@@ -50,8 +50,8 @@ import toniarts.openkeeper.utils.Utils;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public class ConnectionState extends AbstractAppState {
-    
-    private static final Logger logger = System.getLogger(ConnectionState.class.getName());
+
+    private static final Logger logger = Logger.getLogger(ConnectionState.class.getName());
 
     private Main app;
     private String serverInfo;

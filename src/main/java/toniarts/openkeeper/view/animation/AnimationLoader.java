@@ -21,8 +21,8 @@ import com.jme3.anim.tween.Tweens;
 import com.jme3.asset.AssetManager;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import toniarts.openkeeper.tools.convert.KmfModelLoader;
 import toniarts.openkeeper.tools.convert.kmf.Anim;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
@@ -35,7 +35,7 @@ import toniarts.openkeeper.utils.AssetUtils;
  */
 public final class AnimationLoader {
 
-    private static final Logger logger = System.getLogger(AnimationLoader.class.getName());
+    private static final Logger logger = Logger.getLogger(AnimationLoader.class.getName());
 
     private static final String START_ANIM_NODE_NAME = "Start";
     private static final String END_ANIM_NODE_NAME = "End";

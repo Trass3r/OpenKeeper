@@ -1,0 +1,40 @@
+plugins {
+    id 'java-library'
+}
+
+sourceSets {
+    main {
+        java.srcDir '../src/main/java'
+    }
+}
+
+dependencies {
+    api "org.jmonkeyengine:jme3-core:$rootProject.jmonkeyengine_version"
+    api "org.jmonkeyengine:jme3-plugins:$rootProject.jmonkeyengine_version"
+    api "org.jmonkeyengine:jme3-effects:$rootProject.jmonkeyengine_version"
+    api "org.jmonkeyengine:jme3-networking:$rootProject.jmonkeyengine_version"
+    api "org.jmonkeyengine:jme3-niftygui:$rootProject.jmonkeyengine_version"
+
+    implementation 'com.badlogicgames.gdx:gdx-ai:1.8.2'
+    implementation 'javax.vecmath:vecmath:1.5.2'
+    implementation 'com.simsilica:zay-es:1.6.0'
+    implementation 'com.simsilica:zay-es-net:1.6.0'
+    implementation 'com.simsilica:sio2:1.8.0'
+    implementation 'com.simsilica:sim-ethereal:1.8.0'
+
+    // These are compile-time only for legacy desktop launch/setup classes.
+    // The Android application supplies jme3-android instead.
+    compileOnly "org.jmonkeyengine:jme3-desktop:$rootProject.jmonkeyengine_version"
+    compileOnly "org.jmonkeyengine:jme3-lwjgl3:$rootProject.jmonkeyengine_version"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.compilerArgs += ['-proc:none', '-Xlint:deprecation']
+}

@@ -24,8 +24,8 @@ import com.jme3.network.service.rmi.RmiRegistry;
 import com.simsilica.es.server.EntityDataHostedService;
 import com.simsilica.ethereal.EtherealHost;
 import com.simsilica.ethereal.NetworkStateListener;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.*;
 import java.util.concurrent.*;
 import toniarts.openkeeper.game.data.Keeper;
@@ -46,7 +46,7 @@ import toniarts.openkeeper.tools.convert.map.AI;
  */
 public final class LobbyHostedService extends AbstractHostedConnectionService implements LobbyService {
 
-    private static final Logger logger = System.getLogger(LobbyHostedService.class.getName());
+    private static final Logger logger = Logger.getLogger(LobbyHostedService.class.getName());
 
     private static final String ATTRIBUTE_SESSION = "lobby.session";
     public static final String ATTRIBUTE_KEEPER_ID = "lobby.keeperID";

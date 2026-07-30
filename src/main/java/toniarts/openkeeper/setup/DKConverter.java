@@ -18,8 +18,8 @@ package toniarts.openkeeper.setup;
 
 import com.jme3.asset.AssetManager;
 import java.awt.event.WindowEvent;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,8 +37,8 @@ import toniarts.openkeeper.tools.convert.AssetsConverter;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public abstract class DKConverter extends javax.swing.JFrame implements IFrameClosingBehavior {
-    
-    private static final Logger logger = System.getLogger(DKConverter.class.getName());
+
+    private static final Logger logger = Logger.getLogger(DKConverter.class.getName());
 
     private static volatile boolean convertDone = false;
     private final String dungeonKeeperFolder;
@@ -49,7 +49,7 @@ public abstract class DKConverter extends javax.swing.JFrame implements IFrameCl
 
     /**
      * Creates new form DKConverter
-     * 
+     *
      * @param dungeonKeeperFolder the Dungeon Keeper II folder
      * @param assetManager jME asset manager
      */
@@ -59,7 +59,7 @@ public abstract class DKConverter extends javax.swing.JFrame implements IFrameCl
 
         this.dungeonKeeperFolder = dungeonKeeperFolder;
         this.assetManager = assetManager;
-        setIconImages(Arrays.asList(Main.getApplicationIcons()));
+        setIconImages(Arrays.asList(toniarts.openkeeper.desktop.DesktopApplicationIcons.load()));
 
         initConversion();
     }
@@ -158,7 +158,7 @@ public abstract class DKConverter extends javax.swing.JFrame implements IFrameCl
             logger.log(Level.ERROR, ex);
         }
         //</editor-fold>
-        
+
         //</editor-fold>
 
         /* Create and display the form */

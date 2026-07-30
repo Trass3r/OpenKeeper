@@ -33,8 +33,8 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.Color;
 import toniarts.openkeeper.utils.WorldUtils;
 
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -51,8 +51,8 @@ import java.util.Map.Entry;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public class VisualEffect {
-    
-    private static final Logger logger = System.getLogger(VisualEffect.class.getName());
+
+    private static final Logger logger = Logger.getLogger(VisualEffect.class.getName());
 
     private final Effect effect;
     private final Map<EffectElement, Spatial> effectElements;
@@ -78,7 +78,7 @@ public class VisualEffect {
         // Create the lists
         if (effect.getFlags().contains(Effect.EffectFlag.GENERATE_EFFECT_ELEMENTS)) {
             effects = new ArrayList<>();
-            effectElements = HashMap.newHashMap(effect.getGenerateIds().size());
+            effectElements = new HashMap<>(effect.getGenerateIds().size());
         } else {
             effects = new ArrayList<>(effect.getGenerateIds().size());
             effectElements = Collections.emptyMap();
@@ -369,10 +369,7 @@ public class VisualEffect {
         }
 
         PointLight realLight = new PointLight();
-        realLight.setColor(new ColorRGBA(effectLight.getColor().getRed() / 255f,
-                effectLight.getColor().getGreen() / 255f,
-                effectLight.getColor().getBlue() / 255f,
-                effectLight.getColor().getAlpha() / 255f));
+        realLight.setColor(effectLight.getColor());
         realLight.setRadius(effectLight.getRadius());
         realLight.setPosition(new Vector3f(effectLight.getmKPos().x, effectLight.getmKPos().y, effectLight.getmKPos().z));
         return realLight;

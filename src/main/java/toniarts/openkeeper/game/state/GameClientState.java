@@ -23,8 +23,8 @@ import com.jme3.cinematic.events.CinematicEventListener;
 import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityId;
 import toniarts.openkeeper.utils.Point;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -60,8 +60,8 @@ import toniarts.openkeeper.view.text.TextParserService;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class GameClientState extends AbstractPauseAwareState {
-    
-    private static final Logger logger = System.getLogger(GameClientState.class.getName());
+
+    private static final Logger logger = Logger.getLogger(GameClientState.class.getName());
 
     private final Main app;
 
@@ -359,7 +359,7 @@ public final class GameClientState extends AbstractPauseAwareState {
                             try {
                                 mapDataLoadingObject.wait();
                             } catch (InterruptedException ex) {
-                                System.getLogger(GameClientState.class.getName()).log(Level.ERROR, "Map data loading interrupted!", ex);
+                                Logger.getLogger(GameClientState.class.getName()).log(Level.ERROR, "Map data loading interrupted!", ex);
                             }
                         }
                     }

@@ -35,7 +35,6 @@ import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
 import com.simsilica.es.WatchedEntity;
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,8 +42,8 @@ import java.util.HashSet;
 import java.util.Set;
 import toniarts.openkeeper.game.component.Health;
 import toniarts.openkeeper.game.component.Owner;
+import toniarts.openkeeper.game.data.PlayerColors;
 import toniarts.openkeeper.utils.AssetUtils;
-import toniarts.openkeeper.utils.MapThumbnailGenerator;
 
 /**
  * A base class for showing unit (creature, object...) flower. TODO: Maybe
@@ -343,17 +342,13 @@ public abstract class UnitFlowerControl<T> extends BillboardControl implements I
     }
 
     protected static ColorRGBA getPlayerColor(short ownerId) {
-        return getColor(MapThumbnailGenerator.getPlayerColor(ownerId));
+        return PlayerColors.get(ownerId);
     }
 
     protected final void setFlowerColor(ColorRGBA c) {
         if (material != null) {
             material.setColor("Color", c);
         }
-    }
-
-    private static ColorRGBA getColor(Color c) {
-        return new ColorRGBA(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, c.getAlpha() / 255f);
     }
 
     @Override

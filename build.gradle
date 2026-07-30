@@ -6,6 +6,7 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'idea'
+    id 'com.android.application' version '9.2.1' apply false
 }
 
 ext {
@@ -16,6 +17,7 @@ ext {
 allprojects {
     repositories {
         mavenLocal()
+        google()
         mavenCentral()
         maven { url = "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url = "https://oss.sonatype.org/content/repositories/releases/" }
@@ -129,4 +131,19 @@ compileJava {
 
 wrapper {
     gradleVersion = '9.6.1'
+}
+
+tasks.register('convertAssetsForAndroid', JavaExec) {
+    group = 'openkeeper'
+    description = 'Converts a locally-owned Dungeon Keeper II installation for the Android port.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'toniarts.openkeeper.tools.convert.AssetConverterCli'
+
+    def dk2Folder = providers.gradleProperty('dk2Folder')
+    doFirst {
+        if (!dk2Folder.isPresent()) {
+            throw new GradleException('Pass the original game path with -Pdk2Folder="<path>".')
+        }
+        args dk2Folder.get()
+    }
 }

@@ -80,7 +80,7 @@ public final class MainMenuInteraction implements RawInputListener {
             }
         }
     }
-    
+
     /**
          * Sets the map at certain point as active (i.e. selected), IF there is
          * one
@@ -98,6 +98,14 @@ public final class MainMenuInteraction implements RawInputListener {
                     new Vector2f(x, y), 0f);
             Vector3f dir = mainMenuState.app.getCamera().getWorldCoordinates(
                     new Vector2f(x, y), 1f).subtractLocal(click3d);
+
+            // Ray requires a finite unit direction. Desktop JVMs commonly run
+            // with assertions disabled, while Android catches the unnormalised
+            // direction here and aborts the render thread.
+            if (!Vector3f.isValidVector(dir) || dir.lengthSquared() == 0f) {
+                return;
+            }
+            dir.normalizeLocal();
 
             // Aim the ray from the clicked spot forwards
             Ray ray = new Ray(click3d, dir);

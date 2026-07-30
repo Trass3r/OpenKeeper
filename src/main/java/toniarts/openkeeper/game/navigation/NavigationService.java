@@ -29,8 +29,8 @@ import toniarts.openkeeper.game.navigation.pathfinding.MapPathFinder;
 import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.utils.Utils;
 
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -41,8 +41,8 @@ import java.util.Set;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class NavigationService implements INavigationService {
-    
-    private static final Logger logger = System.getLogger(NavigationService.class.getName());
+
+    private static final Logger logger = Logger.getLogger(NavigationService.class.getName());
 
     private final IMapController mapController;
     private final IEntityPositionLookup entityPositionLookup;
@@ -78,7 +78,7 @@ public final class NavigationService implements INavigationService {
     }
 
     private Point findRandomAccessibleTile(Point start, int radius, INavigable navigable, Set<Point> allowedTiles) {
-        Set<Point> tiles = HashSet.newHashSet(radius * radius - 1);
+        Set<Point> tiles = new HashSet<>(radius * radius - 1);
 
         // Start growing the circle, always testing the tile
         getAccessibleNeighbours(mapController.getMapData().getTile(start.x, start.y), radius, navigable, tiles, allowedTiles);

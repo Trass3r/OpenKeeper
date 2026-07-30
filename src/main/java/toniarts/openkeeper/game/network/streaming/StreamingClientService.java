@@ -23,8 +23,8 @@ import com.jme3.network.serializing.Serializer;
 import com.jme3.network.service.AbstractClientService;
 import com.jme3.network.service.ClientServiceManager;
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
@@ -40,8 +40,8 @@ import toniarts.openkeeper.game.network.message.StreamedMessage;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class StreamingClientService extends AbstractClientService {
-    
-    private static final Logger logger = System.getLogger(StreamingClientService.class.getName());
+
+    private static final Logger logger = Logger.getLogger(StreamingClientService.class.getName());
 
     private final Map<Integer, Map<Integer, ByteBuffer>> messageReceiveMap = new ConcurrentHashMap<>();
     private final MessageListener<Client> messageListener = new StreamedMessageServiceListenerImpl();

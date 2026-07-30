@@ -16,7 +16,7 @@
  */
 package toniarts.openkeeper.tools.convert.map;
 
-import java.awt.Color;
+import com.jme3.math.ColorRGBA;
 import java.util.EnumSet;
 import javax.vecmath.Vector3f;
 import toniarts.openkeeper.tools.convert.IFlagEnum;
@@ -60,7 +60,7 @@ public final class Light {
     private Vector3f mKPos;
     private float radius;
     private EnumSet<LightFlag> flags;
-    private Color color;
+    private ColorRGBA color;
 
     public Vector3f getmKPos() {
         return mKPos;
@@ -86,11 +86,11 @@ public final class Light {
         this.flags = flags;
     }
 
-    public Color getColor() {
+    public ColorRGBA getColor() {
         return color;
     }
 
     protected void setColor(int r, int g, int b, int a) {
-        this.color = new Color(r, g, b, a);
+        this.color = new ColorRGBA(r / 255f, g / 255f, b / 255f, a / 255f);
     }
 }

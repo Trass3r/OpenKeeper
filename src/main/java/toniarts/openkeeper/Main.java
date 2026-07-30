@@ -33,21 +33,18 @@ import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.ssao.SSAOFilter;
 import com.jme3.renderer.RenderManager;
-import com.jme3.renderer.opengl.GLRenderer;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.render.batch.BatchRenderConfiguration;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -63,9 +60,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.ResourceBundle;
-import javax.imageio.ImageIO;
 import javax.swing.JFrame;
-import org.lwjgl.opengl.*;
+import toniarts.openkeeper.desktop.DesktopRendererDebug;
 import toniarts.openkeeper.audio.plugins.MP2Loader;
 import toniarts.openkeeper.cinematics.CameraSweepDataLoader;
 import toniarts.openkeeper.game.data.Settings;
@@ -90,8 +86,8 @@ import toniarts.openkeeper.video.MovieState;
  */
 public final class Main extends SimpleApplication {
 
-    private static final Logger logger = System.getLogger(Main.class.getName());
-    
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
+
     private static boolean folderOk = false;
     private static boolean conversionOk = false;
     public static final String VERSION = "*ALPHA*";
@@ -105,8 +101,24 @@ public final class Main extends SimpleApplication {
     private NiftyJmeDisplay niftyDisplay;
     private byte[] gameUiXml;
 
-    private Main() {
+    public Main() {
         super(new StatsAppState(), new DebugKeysAppState());
+    }
+
+    /**
+     * Configures the application when a platform host, such as Android,
+     * constructs it instead of the desktop launcher.
+     *
+     * @param dungeonKeeperFolder original Dungeon Keeper II installation root
+     * @param convertedAssetsFolder converted OpenKeeper asset directory
+     */
+    public static void configureEmbedded(String dungeonKeeperFolder, String convertedAssetsFolder) {
+        System.setProperty("openkeeper.embedded", Boolean.TRUE.toString());
+        System.setProperty("openkeeper.assets.dir", PathUtils.fixFilePath(convertedAssetsFolder));
+        PathUtils.setDKIIFolder(PathUtils.fixFilePath(dungeonKeeperFolder));
+        params = new HashMap<>();
+        params.put("nomovies", null);
+        debug = false;
     }
 
     public static void main(String[] args) throws InvocationTargetException, InterruptedException {
@@ -140,7 +152,7 @@ public final class Main extends SimpleApplication {
      * @param args the arguments list
      */
     private static void parseArguments(String[] args) {
-        params = HashMap.newHashMap(args.length);
+        params = new HashMap<>(args.length);
 
         // Go through the params
         int i = 0;
@@ -281,7 +293,7 @@ public final class Main extends SimpleApplication {
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            System.getLogger(DKFolderSelector.class.getName()).log(Level.ERROR, (String) null, ex);
+            Logger.getLogger(DKFolderSelector.class.getName()).log(Level.ERROR, (String) null, ex);
         }
     }
 
@@ -339,11 +351,7 @@ public final class Main extends SimpleApplication {
     public void simpleInitApp() {
 
         if (debug) {
-            ((GLRenderer)renderer).setDebugEnabled(true); // get debug names for GL objects
-            if (GL.getCapabilities().OpenGL43) {
-                GLUtil.setupDebugMessageCallback();
-                GL43C.glDebugMessageControl(GL43.GL_DEBUG_SOURCE_APPLICATION, GL43.GL_DONT_CARE, GL43.GL_DONT_CARE, (int[]) null, false);
-            }
+            DesktopRendererDebug.enable(renderer);
         }
 
         // Distribution locator
@@ -396,18 +404,22 @@ public final class Main extends SimpleApplication {
                     setupNiftySound(nifty);
 
                     // Load the XMLs, since we also validate them, Nifty will read them twice
-                    byte[] mainMenuUiXml = PathUtils.readInputStream(Main.this.getClass().getResourceAsStream("/Interface/MainMenu.xml"));
-                    gameUiXml = PathUtils.readInputStream(Main.this.getClass().getResourceAsStream("/Interface/GameHUD.xml"));
+                    byte[] mainMenuUiXml = readAssetBytes("Interface/MainMenu.xml");
+                    gameUiXml = readAssetBytes("Interface/GameHUD.xml");
                     List<Map.Entry<String, byte[]>> guiXmls = new ArrayList<>(2);
                     guiXmls.add(Map.entry("Interface/MainMenu.xml", mainMenuUiXml));
                     guiXmls.add(Map.entry("Interface/GameHUD.xml", gameUiXml));
 
-                    // Validate the XML, great for debuging purposes
-                    for (Map.Entry<String, byte[]> xml : guiXmls) {
-                        try {
-                            nifty.validateXml(new ByteArrayInputStream(xml.getValue()));
-                        } catch (Exception e) {
-                            throw new RuntimeException("GUI file " + xml.getKey() + " failed to validate!", e);
+                    // Android does not ship a W3C XML SchemaFactory. Validation
+                    // is a desktop development aid; Nifty still parses the same
+                    // XML when it is added below.
+                    if (!Boolean.getBoolean("openkeeper.embedded")) {
+                        for (Map.Entry<String, byte[]> xml : guiXmls) {
+                            try {
+                                nifty.validateXml(new ByteArrayInputStream(xml.getValue()));
+                            } catch (Exception e) {
+                                throw new RuntimeException("GUI file " + xml.getKey() + " failed to validate!", e);
+                            }
                         }
                     }
 
@@ -481,6 +493,15 @@ public final class Main extends SimpleApplication {
         return gameUiXml;
     }
 
+    private byte[] readAssetBytes(String assetName) throws IOException {
+        AssetKey<Object> key = new AssetKey<>(assetName);
+        var assetInfo = assetManager.locateAsset(key);
+        if (assetInfo == null) {
+            throw new IOException("Asset not found: " + assetName);
+        }
+        return PathUtils.readInputStream(assetInfo.openStream());
+    }
+
     /**
      * Adds an asset listener to the asset manager that automatically sets
      * anisotropy level to any textures loaded
@@ -504,37 +525,6 @@ public final class Main extends SimpleApplication {
             }
         };
         assetManager.addAssetEventListener(asl);
-    }
-
-    /**
-     * Get the application icons
-     *
-     * @return array of application icons
-     */
-    public static BufferedImage[] getApplicationIcons() {
-        ImageIO.setUseCache(false);
-        try {
-            return new BufferedImage[]{
-                readIcon("/Icons/openkeeper256.png"),
-                readIcon("/Icons/openkeeper256.png"),
-                readIcon("/Icons/openkeeper128.png"),
-                readIcon("/Icons/openkeeper64.png"),
-                readIcon("/Icons/openkeeper48.png"),
-                readIcon("/Icons/openkeeper32.png"),
-                readIcon("/Icons/openkeeper24.png"),
-                readIcon("/Icons/openkeeper16.png")
-            };
-        } catch (IOException ex) {
-            logger.log(Level.ERROR, "Failed to load the application icons!", ex);
-        }
-        return null;
-    }
-
-    private static BufferedImage readIcon(String path) throws IOException {
-        try (InputStream is = Main.class.getResourceAsStream(path);
-                BufferedInputStream bis = new BufferedInputStream(is)) {
-            return ImageIO.read(bis);
-        }
     }
 
     /**

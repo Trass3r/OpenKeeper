@@ -45,7 +45,7 @@ public final class PossessedSystem extends GameTimeCounter {
     public PossessedSystem(Collection<IPlayerController> playerControllers, EntityData entityData, IGameController gameController) {
         this.gameController = gameController;
         this.entityData = entityData;
-        manaControls = HashMap.newHashMap(playerControllers.size());
+        manaControls = new HashMap<>(playerControllers.size());
         for (IPlayerController playerController : playerControllers) {
             PlayerManaControl manaControl = playerController.getManaControl();
             if (manaControl != null) {

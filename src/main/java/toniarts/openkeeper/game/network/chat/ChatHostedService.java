@@ -40,8 +40,8 @@ import com.jme3.network.service.AbstractHostedConnectionService;
 import com.jme3.network.service.HostedServiceManager;
 import com.jme3.network.service.rmi.RmiHostedService;
 import com.jme3.network.service.rmi.RmiRegistry;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.*;
 import java.util.concurrent.*;
 import toniarts.openkeeper.game.network.NetworkConstants;
@@ -56,7 +56,7 @@ import static toniarts.openkeeper.game.network.lobby.LobbyHostedService.ATTRIBUT
  */
 public final class ChatHostedService extends AbstractHostedConnectionService {
 
-    private static final Logger logger = System.getLogger(ChatHostedService.class.getName());
+    private static final Logger logger = Logger.getLogger(ChatHostedService.class.getName());
 
     private static final String ATTRIBUTE_SESSION = "chat.session";
 

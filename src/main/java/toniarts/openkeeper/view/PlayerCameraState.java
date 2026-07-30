@@ -23,10 +23,17 @@ import com.jme3.cinematic.events.CinematicEventListener;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
+import com.jme3.input.RawInputListener;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.input.event.JoyAxisEvent;
+import com.jme3.input.event.JoyButtonEvent;
+import com.jme3.input.event.KeyInputEvent;
+import com.jme3.input.event.MouseButtonEvent;
+import com.jme3.input.event.MouseMotionEvent;
+import com.jme3.input.event.TouchEvent;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
@@ -75,11 +82,92 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
     private static final float ZOOM_SPEED = 10f;
     private static final float MOVE_SPEED = 10f;
     private static final float ROTATION_SPEED = 4f;
+    private static final float TOUCH_MOVE_SPEED = 0.018f;
+    private static final float TOUCH_ZOOM_SPEED = 24f;
     private static final String CAMERA_MOUSE_ZOOM_IN = "CAMERA_MOUSE_ZOOM_IN";
     private static final String CAMERA_MOUSE_ZOOM_OUT = "CAMERA_MOUSE_ZOOM_OUT";
     private static final String SPECIAL_KEY_CONTROL = "SPECIAL_KEY_CONTROL";
     private static final String SPECIAL_KEY_ALT = "SPECIAL_KEY_ALT";
     private static final String SPECIAL_KEY_SHIFT = "SPECIAL_KEY_SHIFT";
+    private final Set<Integer> activeTouchPointers = new HashSet<>();
+    private int primaryTouchPointer = -1;
+    private final RawInputListener touchInputListener = new RawInputListener() {
+        @Override
+        public void beginInput() {
+        }
+
+        @Override
+        public void endInput() {
+        }
+
+        @Override
+        public void onJoyAxisEvent(JoyAxisEvent evt) {
+        }
+
+        @Override
+        public void onJoyButtonEvent(JoyButtonEvent evt) {
+        }
+
+        @Override
+        public void onMouseMotionEvent(MouseMotionEvent evt) {
+        }
+
+        @Override
+        public void onMouseButtonEvent(MouseButtonEvent evt) {
+        }
+
+        @Override
+        public void onKeyEvent(KeyInputEvent evt) {
+        }
+
+        @Override
+        public void onTouchEvent(TouchEvent evt) {
+            if (!isEnabled() || camera == null || stateManager.getState(Cinematic.class) != null) {
+                return;
+            }
+
+            switch (evt.getType()) {
+                case DOWN:
+                    activeTouchPointers.add(evt.getPointerId());
+                    if (primaryTouchPointer == -1) {
+                        primaryTouchPointer = evt.getPointerId();
+                    }
+                    break;
+                case UP:
+                    activeTouchPointers.remove(evt.getPointerId());
+                    if (evt.getPointerId() == primaryTouchPointer) {
+                        primaryTouchPointer = activeTouchPointers.stream()
+                                .findFirst()
+                                .orElse(-1);
+                    }
+                    break;
+                case MOVE:
+                    // Preserve one-finger dragging for room/tile selection.
+                    // A two-finger drag directly moves the dungeon beneath
+                    // the gesture and is handled once via the primary pointer.
+                    if (activeTouchPointers.size() >= 2
+                            && evt.getPointerId() == primaryTouchPointer) {
+                        camera.move(-evt.getDeltaX() * TOUCH_MOVE_SPEED,
+                                evt.getDeltaY() * TOUCH_MOVE_SPEED);
+                        evt.setConsumed();
+                    }
+                    break;
+                case SCALE_MOVE:
+                    float scaleDelta = evt.getScaleFactor() - 1f;
+                    if (Float.isFinite(scaleDelta) && scaleDelta != 0f) {
+                        camera.zoom(scaleDelta * TOUCH_ZOOM_SPEED);
+                        evt.setConsumed();
+                    }
+                    break;
+                case SCALE_END:
+                    activeTouchPointers.clear();
+                    primaryTouchPointer = -1;
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
     // User set keys
     private static final String[] MAPPINGS = new String[]{
         Settings.Setting.CAMERA_DOWN.name(),
@@ -320,6 +408,7 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
         inputManager.addMapping(CAMERA_MOUSE_ZOOM_OUT, new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
 
         inputManager.addListener(this, MAPPINGS);
+        inputManager.addRawInputListener(touchInputListener);
     }
 
     private void unregisterInput() {
@@ -328,6 +417,9 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
         }
 
         inputManager.removeListener(this);
+        inputManager.removeRawInputListener(touchInputListener);
+        activeTouchPointers.clear();
+        primaryTouchPointer = -1;
     }
 
     @Override

@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.tools.convert.conversion;
 
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -44,7 +44,7 @@ import toniarts.openkeeper.tools.convert.conversion.graph.TaskNode;
  */
 public final class ConversionTaskManager {
 
-    private static final Logger logger = System.getLogger(ConversionTaskManager.class.getName());
+    private static final Logger logger = Logger.getLogger(ConversionTaskManager.class.getName());
     private static final int MAX_THREADS = Runtime.getRuntime().availableProcessors();
 
     private final ExecutorService executorService;

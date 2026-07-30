@@ -26,8 +26,8 @@ import com.simsilica.es.Entity;
 import com.simsilica.es.EntityContainer;
 import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.HashMap;
 import java.util.Map;
 import toniarts.openkeeper.game.component.CreatureViewState;
@@ -62,8 +62,8 @@ import toniarts.openkeeper.view.text.TextParser;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public class PlayerEntityViewState extends AbstractAppState {
-    
-    private static final Logger logger = System.getLogger(PlayerEntityViewState.class.getName());
+
+    private static final Logger logger = Logger.getLogger(PlayerEntityViewState.class.getName());
 
     private AppStateManager stateManager;
     private final KwdFile kwdFile;

@@ -19,8 +19,8 @@ package toniarts.openkeeper.tools.convert;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
@@ -32,14 +32,14 @@ import java.nio.file.StandardOpenOption;
  * Resource reader is a convenience wrapper around any Dungeon Keeper 2 resource
  * file. Provides easy to use functions to read the binary files to java. The
  * resources are Little Endian.<br>
- * 
+ *
  * This is buffered forward reading resource reader with no seek nor position.
- * 
+ *
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class BufferedResourceReader implements IResourceReader {
-    
-    private static final Logger logger = System.getLogger(BufferedResourceReader.class.getName());
+
+    private static final Logger logger = Logger.getLogger(BufferedResourceReader.class.getName());
 
     private final BufferedInputStream input;
 
@@ -54,7 +54,7 @@ public final class BufferedResourceReader implements IResourceReader {
     public BufferedResourceReader(InputStream inputStream) throws IOException {
         input = new BufferedInputStream(inputStream);
     }
-    
+
     @Override
     public IResourceChunkReader readChunk(int size) throws IOException {
         byte[] bytes = new byte[size];
@@ -62,7 +62,7 @@ public final class BufferedResourceReader implements IResourceReader {
         if(read == -1) {
             return null;
         }
-        
+
         ByteBuffer buffer = ByteBuffer.wrap(bytes, 0, read);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -74,7 +74,7 @@ public final class BufferedResourceReader implements IResourceReader {
         byte[] bytes = input.readAllBytes();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
-       
+
         return new ResourceChunkReader(buffer);
     }
 

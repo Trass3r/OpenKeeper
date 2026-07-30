@@ -105,6 +105,21 @@ public final class Cursor extends JmeCursor {
         int result = 0;
 
         switch (format) {
+            case RGB8:
+                result = 0xFF000000
+                        | ((data.get() & 0xFF) << 16)
+                        | ((data.get() & 0xFF) << 8)
+                        | (data.get() & 0xFF);
+                break;
+
+            case RGBA8:
+                int red = data.get() & 0xFF;
+                int green = data.get() & 0xFF;
+                int blue = data.get() & 0xFF;
+                int alpha = data.get() & 0xFF;
+                result = (alpha << 24) | (red << 16) | (green << 8) | blue;
+                break;
+
             case BGR8:
                 result = 0xFF000000 | (data.get() & 0xFF) | ((data.get() & 0xFF) << 8) | ((data.get() & 0xFF) << 16);
                 if (result == 0xFF00FF00) { // green only

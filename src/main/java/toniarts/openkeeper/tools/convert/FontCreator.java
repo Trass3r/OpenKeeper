@@ -125,7 +125,7 @@ public final class FontCreator {
         int y = 0;
         int page = 0;
 
-        Set<Integer> insertedChars = HashSet.newHashSet(fontFile.getCount());
+        Set<Integer> insertedChars = new HashSet<>(fontFile.getCount());
         for (Bf4Entry entry : fontFile) {
             if (insertedChars.contains((int) entry.getCharacter())) {
                 continue;

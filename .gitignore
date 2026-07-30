@@ -1,5 +1,7 @@
 /nbproject/private/
 /build/
+/android/build/
+/runtime/build/
 .idea/
 *.iml
 /assets/Converted/

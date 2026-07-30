@@ -48,7 +48,7 @@ public final class PlayerSpellbookSystem implements IGameLogicUpdatable {
 
     public PlayerSpellbookSystem(EntityData entityData, KwdFile kwdFile, Collection<IPlayerController> playerControllers) {
         this.kwdFile = kwdFile;
-        playerControllersByPlayerId = HashMap.newHashMap(playerControllers.size());
+        playerControllersByPlayerId = new HashMap<>(playerControllers.size());
         for (IPlayerController playerController : playerControllers) {
             if (playerController.getResearchControl() != null) {
                 playerControllersByPlayerId.put(playerController.getKeeper().getId(), playerController);

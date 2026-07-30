@@ -17,13 +17,14 @@
 package toniarts.openkeeper.game.sound;
 
 import java.io.File;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import toniarts.openkeeper.tools.convert.sound.BankMapFile;
 import toniarts.openkeeper.tools.convert.sound.SdtFile;
+import toniarts.openkeeper.tools.convert.sound.SdtFileEntry;
 import toniarts.openkeeper.tools.convert.sound.sfx.SfxEEEntry;
 import toniarts.openkeeper.tools.convert.sound.sfx.SfxGroupEntry;
 import toniarts.openkeeper.tools.convert.sound.sfx.SfxSoundEntry;
@@ -34,8 +35,8 @@ import toniarts.openkeeper.utils.PathUtils;
  * @author archdemon
  */
 public final class SoundGroup {
-    
-    private static final Logger logger = System.getLogger(SoundGroup.class.getName());
+
+    private static final Logger logger = Logger.getLogger(SoundGroup.class.getName());
 
     private final SoundCategory category;
     private final SfxGroupEntry entry;
@@ -72,10 +73,20 @@ public final class SoundGroup {
                 int archiveId = eEEEntry.getArchiveId() - 1;
                 int soundId = eEEEntry.getIndex() - 1;
 
+                if (archiveId < 0 || archiveId >= bank.getEntries().length) {
+                    continue;
+                }
                 String archiveFilename = PathUtils.convertFileSeparators(bank.getEntries()[archiveId].getName());
                 SdtFile sdt = SoundCategory.getSdtFile(archiveFilename);
                 if (sdt == null) {
                     throw new RuntimeException("Sdt file " + archiveFilename + " does not exist");
+                }
+                if (soundId < 0 || soundId >= sdt.getEntries().length) {
+                    continue;
+                }
+                SdtFileEntry soundEntry = sdt.getEntries()[soundId];
+                if (soundEntry == null || soundEntry.getName() == null || soundEntry.getName().isBlank()) {
+                    continue;
                 }
 
                 String relative = Paths.get(PathUtils.getDKIIFolder(), PathUtils.DKII_SFX_FOLDER)
@@ -83,7 +94,7 @@ public final class SoundGroup {
 
                 try {
                     String soundFilename = relative.substring(0, relative.length() - 4) + File.separator
-                            + SdtFile.fixFileExtension(sdt.getEntries()[soundId]);
+                            + SdtFile.fixFileExtension(soundEntry);
 
                     SoundFile sf = new SoundFile(this, soundId, soundFilename);
                     files.add(sf);

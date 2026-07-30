@@ -1,4 +1,7 @@
-#import "Common/ShaderLib/GLSLCompat.glsllib"
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 uniform float g_Time;
 

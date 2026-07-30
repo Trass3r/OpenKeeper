@@ -28,7 +28,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.simsilica.es.EntityId;
-import java.lang.System.Logger;
+import toniarts.openkeeper.utils.Logger;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.game.FunnyCameraContol;
 import toniarts.openkeeper.game.data.Settings;
@@ -41,8 +41,8 @@ import toniarts.openkeeper.tools.convert.map.Creature;
  */
 public final class PossessionCameraState extends AbstractPauseAwareState implements ActionListener, AnalogListener {
 
-    private static final Logger logger = System.getLogger(PossessionCameraState.class.getName());
-    
+    private static final Logger logger = Logger.getLogger(PossessionCameraState.class.getName());
+
     private Main app;
     private InputManager inputManager;
 

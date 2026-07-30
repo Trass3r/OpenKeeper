@@ -38,8 +38,8 @@ package toniarts.openkeeper.game.network.chat;
 import com.jme3.network.service.AbstractClientService;
 import com.jme3.network.service.ClientServiceManager;
 import com.jme3.network.service.rmi.RmiClientService;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import toniarts.openkeeper.game.network.NetworkConstants;
@@ -52,7 +52,7 @@ import toniarts.openkeeper.game.network.NetworkConstants;
 public final class ChatClientService extends AbstractClientService
         implements ChatSession {
 
-    private static final Logger logger = System.getLogger(ChatClientService.class.getName());
+    private static final Logger logger = Logger.getLogger(ChatClientService.class.getName());
 
     private RmiClientService rmiService;
     private ChatSession delegate;

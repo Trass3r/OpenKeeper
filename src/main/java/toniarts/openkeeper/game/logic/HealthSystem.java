@@ -94,7 +94,7 @@ public final class HealthSystem extends GameTimeCounter {
         this.mapController = mapController;
         entityIds = new SafeArrayList<>(EntityId.class);
 
-        playerControllersById = HashMap.newHashMap(playerControllers.size());
+        playerControllersById = new HashMap<>(playerControllers.size());
         for (IPlayerController player : playerControllers) {
             playerControllersById.put(player.getKeeper().getId(), player);
         }

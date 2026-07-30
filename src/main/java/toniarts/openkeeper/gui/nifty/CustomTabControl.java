@@ -25,8 +25,8 @@ import de.lessvoid.nifty.controls.tabs.TabGroupMember;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.input.NiftyInputEvent;
 import de.lessvoid.nifty.screen.Screen;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 
 /**
  *
@@ -34,7 +34,7 @@ import java.lang.System.Logger.Level;
  */
 public final class CustomTabControl extends AbstractController implements Tab, TabGroupMember {
 
-    private static final Logger logger = System.getLogger(CustomTabControl.class.getName());
+    private static final Logger logger = Logger.getLogger(CustomTabControl.class.getName());
     /**
      * The tab group that is the parent of this tab. This might be {@code null}
      * for the time this tab is not a part of tab group.

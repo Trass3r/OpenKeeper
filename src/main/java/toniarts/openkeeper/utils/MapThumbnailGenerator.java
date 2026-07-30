@@ -32,8 +32,8 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,8 +55,8 @@ import toniarts.openkeeper.tools.convert.map.Tile;
  */
 public final class MapThumbnailGenerator {
 
-    private static final Logger logger = System.getLogger(MapThumbnailGenerator.class.getName());
-    
+    private static final Logger logger = Logger.getLogger(MapThumbnailGenerator.class.getName());
+
     private static final String PALETTE_IMAGE = "Textures".concat(File.separator).concat("Thumbnails").concat(File.separator).concat("MapColours.png");
     private static ColorModel cm;
     private static Map<Short, Color> playerColors;
@@ -259,7 +259,7 @@ public final class MapThumbnailGenerator {
     private static Map<Short, Color> getPlayerColors() {
         if (playerColors == null) {
             short[] playerIds = Utils.getPlayerIds();
-            Map<Short, Color> pColors = HashMap.newHashMap(playerIds.length);
+            Map<Short, Color> pColors = new HashMap<>(playerIds.length);
             for (short playerId : playerIds) {
                 pColors.put(playerId, createPlayerColor(playerId));
             }

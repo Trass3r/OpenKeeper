@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.tools.convert.conversion.task;
 
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import toniarts.openkeeper.game.data.HiScores;
@@ -34,7 +34,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class ConvertHiScores extends ConversionTask {
 
-    private static final Logger logger = System.getLogger(ConvertHiScores.class.getName());
+    private static final Logger logger = Logger.getLogger(ConvertHiScores.class.getName());
 
     public ConvertHiScores(String dungeonKeeperFolder, boolean overwriteData) {
         super(dungeonKeeperFolder, null, overwriteData);

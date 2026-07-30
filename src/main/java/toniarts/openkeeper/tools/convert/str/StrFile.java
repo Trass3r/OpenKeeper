@@ -17,16 +17,16 @@
 package toniarts.openkeeper.tools.convert.str;
 
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.SequencedMap;
 import java.util.Set;
 import toniarts.openkeeper.tools.convert.ConversionUtils;
 import toniarts.openkeeper.tools.convert.FileResourceReader;
@@ -42,8 +42,8 @@ import toniarts.openkeeper.tools.convert.ISeekableResourceReader;
  */
 public final class StrFile {
 
-    private static final Logger logger = System.getLogger(StrFile.class.getName());
-    
+    private static final Logger logger = Logger.getLogger(StrFile.class.getName());
+
     private static final String STR_HEADER_IDENTIFIER = "BFST";
     private static final int STR_HEADER_SIZE = 12;
     // Codepage chunk types
@@ -53,7 +53,7 @@ public final class StrFile {
     //
     private final MbToUniFile codePage;
     private final int fileId;
-    private final SequencedMap<Integer, String> entries;
+    private final Map<Integer, String> entries;
 
     /**
      * Constructs a new STR file reader<br>
@@ -102,7 +102,7 @@ public final class StrFile {
             Collections.sort(offsetsCopy);
 
             // Decode the entries
-            entries = LinkedHashMap.newLinkedHashMap(offsetsCount);
+            entries = new LinkedHashMap<>(offsetsCount);
             for (int i = 0; i < offsetsCount; i++) {
 
                 // Seek to the data and read it
@@ -270,7 +270,7 @@ public final class StrFile {
      *
      * @return the entries
      */
-    public SequencedMap<Integer, String> getEntries() {
+    public Map<Integer, String> getEntries() {
         return entries;
     }
 

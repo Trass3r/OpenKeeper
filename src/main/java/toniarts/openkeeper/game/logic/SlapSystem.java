@@ -60,7 +60,7 @@ public final class SlapSystem extends GameTimeCounter {
             Map<Variable.MiscVariable.MiscType, Variable.MiscVariable> gameSettings) {
         this.kwdFile = kwdFile;
         this.entityData = entityData;
-        statControls = HashMap.newHashMap(playerControllers.size());
+        statControls = new HashMap<>(playerControllers.size());
         for (IPlayerController playerController : playerControllers) {
             statControls.put(playerController.getKeeper().getId(), playerController.getStatsControl());
         }

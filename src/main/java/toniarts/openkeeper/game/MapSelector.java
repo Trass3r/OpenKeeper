@@ -18,8 +18,8 @@ package toniarts.openkeeper.game;
 
 import com.jme3.math.FastMath;
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,7 +40,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class MapSelector {
 
-    private static final Logger logger = System.getLogger(MapSelector.class.getName());
+    private static final Logger logger = Logger.getLogger(MapSelector.class.getName());
 
     private final List<GameMapContainer> skirmishMaps = new ArrayList<>();
     private final List<GameMapContainer> multiplayerMaps = new ArrayList<>();

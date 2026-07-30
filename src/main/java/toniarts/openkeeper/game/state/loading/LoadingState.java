@@ -28,8 +28,8 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.Locale;
 import toniarts.openkeeper.Main;
 
@@ -39,8 +39,8 @@ import toniarts.openkeeper.Main;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public abstract class LoadingState extends AbstractAppState {
-    
-    private static final Logger logger = System.getLogger(LoadingState.class.getName());
+
+    private static final Logger logger = Logger.getLogger(LoadingState.class.getName());
 
     protected static final float BAR_WIDTH = 25.375f / 100;
     protected static final float BAR_HEIGHT = 2.5f / 100;

@@ -44,8 +44,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -82,7 +82,7 @@ public final class KmfModelLoader implements AssetLoader {
 
     // there's 1 kmf per animation so we only use 1 dummy JME animation clip
     public static final String DUMMY_ANIM_CLIP_NAME = "dummyAnimClipName";
-    private static final Logger logger = System.getLogger(KmfModelLoader.class.getName());
+    private static final Logger logger = Logger.getLogger(KmfModelLoader.class.getName());
 
     /* Some textures are broken */
     private final static Map<String, String> textureFixes = Map.of("Goblinbak", "GoblinBack", "Goblin2", "GoblinFront");
@@ -266,11 +266,11 @@ public final class KmfModelLoader implements AssetLoader {
             // Animation
             // Poses for each key frame (aproximate that every 1/3 is a key frame, pessimistic)
             // Note that a key frame may not have all the vertices
-            Map<Integer, Map<FrameInfo, Pose>> poses = HashMap.newHashMap(anim.getFrames() / 3);
+            Map<Integer, Map<FrameInfo, Pose>> poses = new HashMap<>(anim.getFrames() / 3);
 
             // Pose indices and indice offsets for each pose
-            Map<Integer, Map<FrameInfo, List<Integer>>> frameIndices = HashMap.newHashMap(anim.getFrames() / 3);
-            Map<Integer, Map<FrameInfo, List<Vector3f>>> frameOffsets = HashMap.newHashMap(anim.getFrames() / 3);
+            Map<Integer, Map<FrameInfo, List<Integer>>> frameIndices = new HashMap<>(anim.getFrames() / 3);
+            Map<Integer, Map<FrameInfo, List<Vector3f>>> frameOffsets = new HashMap<>(anim.getFrames() / 3);
 
             // For each frame, we need the previous key frame (pose) and the next, and the weights, for the pose frames
             List<List<FrameInfo>> frameInfosList = new ArrayList<>(anim.getFrames());
@@ -542,11 +542,11 @@ public final class KmfModelLoader implements AssetLoader {
             for (Material material : materialsList) {
                 textureNames.add(material.getTextureParam("DiffuseMap").getTextureValue().getKey().getName());
             }
-            
+
             // The textures seem to be in random order (sometimes), I don't know if the real idea is to figure the purpose out from the file names..
             // But a quick fix is to sort them... So they go in somewhat logical order
             Collections.sort(textureNames, TEXTURE_SORTER);
-            
+
             geom.setUserData(MATERIAL_ALTERNATIVE_TEXTURES, textureNames);
         }
 
@@ -607,7 +607,7 @@ public final class KmfModelLoader implements AssetLoader {
         //
         // Create the materials
         //
-        Map<Integer, List<Material>> materials = HashMap.newHashMap(kmfFile.getMaterials().size());
+        Map<Integer, List<Material>> materials = new HashMap<>(kmfFile.getMaterials().size());
         int i = 0;
         for (toniarts.openkeeper.tools.convert.kmf.Material mat : kmfFile.getMaterials()) {
             Material material = null;
@@ -725,16 +725,16 @@ public final class KmfModelLoader implements AssetLoader {
 
     private void addAlternativeTextures(toniarts.openkeeper.tools.convert.kmf.Material mat, AssetInfo assetInfo, Material material, List<Material> materialList) {
         for (int k = 1; k < mat.getTextures().size(); k++) {
-            
+
             // Get the texture
             String alternativeTexture = mat.getTextures().get(k);
             if (textureFixes.containsKey(alternativeTexture)) {
-                
+
                 //Fix the texture entry
                 alternativeTexture = textureFixes.get(alternativeTexture);
             }
             Texture alternativeTex = loadTexture(alternativeTexture, assetInfo);
-            
+
             // Clone the original material, set texture and add to list
             Material alternativeMaterial = material.clone();
             alternativeMaterial.setTexture("DiffuseMap", alternativeTex);
@@ -758,7 +758,7 @@ public final class KmfModelLoader implements AssetLoader {
     }
 
     private static final class TextureSorter implements Comparator<String> {
-        
+
         private static final Pattern PATTERN = Pattern.compile("\\D+(?<number>\\d+)\\.png");
 
         @Override

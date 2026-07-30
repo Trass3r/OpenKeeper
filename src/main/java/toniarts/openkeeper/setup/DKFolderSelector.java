@@ -17,8 +17,8 @@
 package toniarts.openkeeper.setup;
 
 import java.awt.event.WindowEvent;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.Arrays;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
@@ -30,8 +30,8 @@ import toniarts.openkeeper.utils.PathUtils;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public abstract class DKFolderSelector extends javax.swing.JFrame {
-    
-    private static final Logger logger = System.getLogger(DKFolderSelector.class.getName());
+
+    private static final Logger logger = Logger.getLogger(DKFolderSelector.class.getName());
 
     final JFileChooser fc = new JFileChooser();
 
@@ -42,7 +42,7 @@ public abstract class DKFolderSelector extends javax.swing.JFrame {
         initComponents();
 
         statusIcon.setVisible(false);
-        setIconImages(Arrays.asList(Main.getApplicationIcons()));
+        setIconImages(Arrays.asList(toniarts.openkeeper.desktop.DesktopApplicationIcons.load()));
     }
 
     /**
@@ -182,7 +182,7 @@ public abstract class DKFolderSelector extends javax.swing.JFrame {
             logger.log(Level.ERROR, ex);
         }
         //</editor-fold>
-        
+
         //</editor-fold>
 
         /* Create and display the dialog */

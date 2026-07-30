@@ -17,8 +17,8 @@
 package toniarts.openkeeper.tools.convert;
 
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SeekableByteChannel;
@@ -36,8 +36,8 @@ import java.nio.file.StandardOpenOption;
  * @author archdemon
  */
 public final class FileResourceReader implements ISeekableResourceReader {
-    
-    private static final Logger logger = System.getLogger(FileResourceReader.class.getName());
+
+    private static final Logger logger = Logger.getLogger(FileResourceReader.class.getName());
 
     private final SeekableByteChannel file;
 

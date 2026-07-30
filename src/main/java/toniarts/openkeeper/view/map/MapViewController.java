@@ -45,8 +45,8 @@ import toniarts.openkeeper.view.map.construction.RoomConstructor;
 import toniarts.openkeeper.view.map.construction.SingleQuadConstructor;
 import toniarts.openkeeper.view.map.construction.WaterConstructor;
 
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.*;
 
 /**
@@ -55,8 +55,8 @@ import java.util.*;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public abstract class MapViewController implements ILoader<KwdFile> {
-    
-    private static final Logger logger = System.getLogger(MapViewController.class.getName());
+
+    private static final Logger logger = Logger.getLogger(MapViewController.class.getName());
 
     public final static ColorRGBA COLOR_FLASH = new ColorRGBA(0.8f, 0, 0, 1);
     private final static ColorRGBA COLOR_TAG = new ColorRGBA(0.6f, 0.6f, 1, 1);
@@ -393,11 +393,13 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             @Override
             public void visit(Spatial spatial) {
                 List<String> textures = spatial.getUserData(KmfModelLoader.MATERIAL_ALTERNATIVE_TEXTURES);
-                if (textures != null) {
+                if (textures != null && !textures.isEmpty()) {
 
                     // The principle is bit wrong, the random texture is tied to the tile, and not material etc.
                     // But it is probably just the tops of few tiles, so...
-                    int tex = tile.getRandomTextureIndex();
+                    // The map's random texture seed is not guaranteed to be
+                    // within a material's actual alternative count.
+                    int tex = Math.floorMod(tile.getRandomTextureIndex(), textures.size());
                     if (tex != 0) { // 0 is the default anyway
                         Geometry g = (Geometry) spatial;
                         Material m = g.getMaterial();

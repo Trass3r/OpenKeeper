@@ -81,7 +81,7 @@ public final class ChickenSpawnSystem extends GameTimeCounter {
         maximumFreerangeChickenCount = (int) gameSettings.get(Variable.MiscVariable.MiscType.MAX_FREE_RANGE_CHICKENS_PER_PLAYER).getValue();
 
         // Populate entrance list
-        playerControllersById = HashMap.newHashMap(playerControllers.size());
+        playerControllersById = new HashMap<>(playerControllers.size());
         for (IPlayerController player : playerControllers) {
             playerControllersById.put(player.getKeeper().getId(), player);
 
@@ -111,10 +111,10 @@ public final class ChickenSpawnSystem extends GameTimeCounter {
         // Listen for freerange chickens
         // For know we know this for the food and decay tag, not very elegant perhaps
         freerangeChickens = entityData.getEntities(Food.class, Decay.class, Owner.class);
-        freeRangeChickenOwners = HashMap.newHashMap(playerControllersById.size() * maximumFreerangeChickenCount);
-        freeRangeChickensByPlayer = HashMap.newHashMap(playerControllers.size());
+        freeRangeChickenOwners = new HashMap<>(playerControllersById.size() * maximumFreerangeChickenCount);
+        freeRangeChickensByPlayer = new HashMap<>(playerControllers.size());
         for (IPlayerController player : playerControllers) {
-            freeRangeChickensByPlayer.put(player.getKeeper().getId(), HashSet.newHashSet(maximumFreerangeChickenCount));
+            freeRangeChickensByPlayer.put(player.getKeeper().getId(), new HashSet<>(maximumFreerangeChickenCount));
         }
         processAddedChickenEntities(freerangeChickens);
     }

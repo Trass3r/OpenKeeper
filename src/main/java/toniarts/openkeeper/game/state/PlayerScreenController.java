@@ -16,14 +16,8 @@
  */
 package toniarts.openkeeper.game.state;
 
-import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
-import com.jme3.asset.DesktopAssetManager;
-import com.jme3.asset.TextureKey;
 import com.jme3.math.Vector3f;
-import com.jme3.texture.Texture;
-import com.jme3.texture.Texture2D;
-import com.jme3.texture.plugins.AWTLoader;
 import com.simsilica.es.*;
 import com.simsilica.es.filter.FieldFilter;
 import de.lessvoid.nifty.Nifty;
@@ -40,11 +34,7 @@ import de.lessvoid.nifty.controls.TabSelectedEvent;
 import de.lessvoid.nifty.controls.label.builder.LabelBuilder;
 import de.lessvoid.nifty.effects.EffectEventId;
 import de.lessvoid.nifty.elements.Element;
-import de.lessvoid.nifty.elements.render.ImageRenderer;
 import de.lessvoid.nifty.elements.render.PanelRenderer;
-import de.lessvoid.nifty.render.NiftyImage;
-import de.lessvoid.nifty.render.image.ImageModeFactory;
-import de.lessvoid.nifty.render.image.ImageModeHelper;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.spi.sound.SoundHandle;
 import de.lessvoid.nifty.tools.Color;
@@ -75,12 +65,9 @@ import toniarts.openkeeper.view.text.RoomIconTextParser;
 import toniarts.openkeeper.view.text.SpellIconTextParser;
 import toniarts.openkeeper.view.text.TrapIconTextParser;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.*;
 import java.util.List;
 
@@ -94,12 +81,15 @@ public final class PlayerScreenController implements IPlayerScreenController {
 
         MAIN, QUIT, CONFIRMATION;
     }
-    
-    private static final Logger logger = System.getLogger(PlayerScreenController.class.getName());
+
+    private static final Logger logger = Logger.getLogger(PlayerScreenController.class.getName());
 
     public static final float SCREEN_UPDATE_INTERVAL = 0.250f;
-    private static final java.awt.Color RESEARCH_COLOR = new java.awt.Color(0.569f, 0.106f, 0.31f, 0.6f);
-    
+    /**
+     * ARGB equivalent of the original desktop Color(0.569, 0.106, 0.31, 0.6).
+     */
+    private static final int RESEARCH_COLOR = 0x99911B4F;
+
     public float lastUpdate = 0;
 
     private PlayerState state;
@@ -595,35 +585,6 @@ public final class PlayerScreenController implements IPlayerScreenController {
     private void initHudItems(AssetManager assetManager, EntityData entityData) {
         Screen hud = nifty.getScreen(SCREEN_HUD_ID);
 
-        // Stretch the background image (height-wise) on the background image panel
-        try {
-            BufferedImage img = AssetUtils.readImageFromAsset(assetManager.locateAsset(new AssetKey("Textures/GUI/Windows/Panel-BG.png")));
-
-            // Scale the backgroung image to the panel height, keeping the aspect ratio
-            Element panel = nifty.getCurrentScreen().findElementById("bottomBackgroundPanel");
-            BufferedImage newImage = new BufferedImage(panel.getHeight() * img.getWidth() / img.getHeight(), panel.getHeight(), img.getType());
-            Graphics2D g = newImage.createGraphics();
-            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-            g.drawImage(img, 0, 0, newImage.getWidth(), newImage.getHeight(), 0, 0, img.getWidth(), img.getHeight(), null);
-            g.dispose();
-
-            // Convert the new image to a texture, and add a dummy cached entry to the asset manager
-            AWTLoader loader = new AWTLoader();
-            Texture tex = new Texture2D(loader.load(newImage, false));
-            ((DesktopAssetManager) assetManager).addToCache(new TextureKey("HUDBackground", false), tex);
-
-            // Add the scaled one
-            NiftyImage niftyImage = nifty.createImage("HUDBackground", true);
-            String resizeString = "repeat:0,0," + newImage.getWidth() + "," + newImage.getHeight();
-            String areaProviderProperty = ImageModeHelper.getAreaProviderProperty(resizeString);
-            String renderStrategyProperty = ImageModeHelper.getRenderStrategyProperty(resizeString);
-            niftyImage.setImageMode(ImageModeFactory.getSharedInstance().createImageMode(areaProviderProperty, renderStrategyProperty));
-            ImageRenderer renderer = panel.getRenderer(ImageRenderer.class);
-            renderer.setImage(niftyImage);
-        } catch (IOException ex) {
-            logger.log(Level.ERROR, "Failed to open the background image!", ex);
-        }
-
 //        PlayerManaControl manaControl = state.getPlayer().getManaControl();
 //        if (manaControl != null) {
         //manaControl.addListener(hud.findNiftyControl("mana", Label.class), PlayerManaControl.Type.CURRENT);
@@ -784,7 +745,7 @@ public final class PlayerScreenController implements IPlayerScreenController {
         if (!researchableEntity.isDiscovered()) {
             ResearchEffectControl researchControl = new ControlBuilder(ResearchEffectControl.CONTROL_NAME) {
                 {
-                    parameter("color", Integer.toString(RESEARCH_COLOR.getRGB()));
+                    parameter("color", Integer.toString(RESEARCH_COLOR));
                     parameter("image", "");
                 }
             }.build(element).getControl(ResearchEffectControl.class);
@@ -804,7 +765,7 @@ public final class PlayerScreenController implements IPlayerScreenController {
             if (!spell.isUpgraded()) {
                 ResearchEffectControl researchControl = new ControlBuilder(ResearchEffectControl.CONTROL_NAME) {
                     {
-                        parameter("color", spell.isDiscovered() ? "" : Integer.toString(RESEARCH_COLOR.getRGB()));
+                        parameter("color", spell.isDiscovered() ? "" : Integer.toString(RESEARCH_COLOR));
                         parameter("image", spell.isDiscovered() ? AssetUtils.getCanonicalAssetKey(AssetsConverter.TEXTURES_FOLDER + File.separator + "GUI/Icons/Gold_Frame.png") : "");
                     }
                 }.build(element).getControl(ResearchEffectControl.class);

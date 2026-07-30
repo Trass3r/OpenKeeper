@@ -445,6 +445,14 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
         Vector3f dir = app.getCamera().getWorldCoordinates(
                 new Vector2f(mousePosition.x, mousePosition.y), 1f).subtractLocal(click3d);
 
+        // Ray requires a finite unit direction. This is asserted on Android,
+        // so normalise the picking vector before constructing the ray.
+        if (!Vector3f.isValidVector(dir) || dir.lengthSquared() == 0f) {
+            setInteractiveControl(null);
+            return;
+        }
+        dir.normalizeLocal();
+
         // Aim the ray from the mouse spot forwards
         Ray ray = new Ray(click3d, dir);
 

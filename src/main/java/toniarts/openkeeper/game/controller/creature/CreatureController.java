@@ -86,8 +86,8 @@ import toniarts.openkeeper.tools.convert.map.Variable;
 import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.utils.WorldUtils;
 
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -104,7 +104,7 @@ import java.util.function.Consumer;
  */
 public final class CreatureController extends EntityController implements ICreatureController {
 
-    private static final Logger logger = System.getLogger(CreatureController.class.getName());
+    private static final Logger logger = Logger.getLogger(CreatureController.class.getName());
 
     private final INavigationService navigationService;
     private final ITaskManager taskManager;

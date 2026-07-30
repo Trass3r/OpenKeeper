@@ -21,8 +21,8 @@ import com.jme3.util.SafeArrayList;
 import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,12 +62,12 @@ import toniarts.openkeeper.tools.convert.map.Variable;
  */
 public final class GameController implements IGameLogicUpdatable, IGameController {
 
-    private static final Logger logger = System.getLogger(GameController.class.getName());
+    private static final Logger logger = Logger.getLogger(GameController.class.getName());
 
     private final LevelInfo levelInfo;
     private final toniarts.openkeeper.game.data.Level levelObject;
 
-    private final Map<Short, IPlayerController> playerControllers = HashMap.newHashMap(6);
+    private final Map<Short, IPlayerController> playerControllers = new HashMap<>(6);
     private final Map<Variable.MiscVariable.MiscType, Variable.MiscVariable> gameSettings;
     private final EntityData entityData;
     private final PlayerService playerService;

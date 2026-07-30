@@ -20,8 +20,8 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,7 +45,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class ConvertMapThumbnails extends ConversionTask {
 
-    private static final Logger logger = System.getLogger(ConvertMapThumbnails.class.getName());
+    private static final Logger logger = Logger.getLogger(ConvertMapThumbnails.class.getName());
 
     public ConvertMapThumbnails(String dungeonKeeperFolder, String destination, boolean overwriteData) {
         super(dungeonKeeperFolder, destination, overwriteData);

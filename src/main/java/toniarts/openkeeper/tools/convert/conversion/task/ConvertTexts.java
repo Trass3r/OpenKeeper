@@ -18,8 +18,8 @@ package toniarts.openkeeper.tools.convert.conversion.task;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -46,7 +46,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class ConvertTexts extends ConversionTask {
 
-    private static final Logger logger = System.getLogger(ConvertTexts.class.getName());
+    private static final Logger logger = Logger.getLogger(ConvertTexts.class.getName());
 
     public ConvertTexts(String dungeonKeeperFolder, String destination, boolean overwriteData) {
         super(dungeonKeeperFolder, destination, overwriteData);

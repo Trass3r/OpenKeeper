@@ -46,7 +46,7 @@ public abstract class SingleBarLoadingState extends LoadingState implements IPla
         "LoadingScreen512x384.png", "LoadingScreen640x480.png",
         "LoadingScreen800x600.png"};
     private static final List<Integer> availableWidths = new ArrayList<>(availableScreens.length);
-    private static final Map<Integer, String> screens = HashMap.newHashMap(availableScreens.length);
+    private static final Map<Integer, String> screens = new HashMap<>(availableScreens.length);
     private static final Color BAR_COLOR = new Color(237, 100, 42);
     private Geometry progressBar;
 

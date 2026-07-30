@@ -17,7 +17,7 @@
 package toniarts.openkeeper.game.data;
 
 import java.io.IOException;
-import java.lang.System.Logger;
+import toniarts.openkeeper.utils.Logger;
 import java.nio.file.Paths;
 import javax.annotation.Nullable;
 import toniarts.openkeeper.Main;
@@ -27,7 +27,7 @@ import toniarts.openkeeper.utils.PathUtils;
 public final class Level extends GeneralLevel {
 
     private KwdFile kwdFile;
-    private static final Logger logger = System.getLogger(Level.class.getName());
+    private static final Logger logger = Logger.getLogger(Level.class.getName());
 
     public enum LevelType {
 

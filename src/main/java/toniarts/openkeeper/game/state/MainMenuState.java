@@ -33,8 +33,8 @@ import com.simsilica.es.EntityId;
 import com.simsilica.es.base.DefaultEntityData;
 import java.io.File;
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.Paths;
 import java.util.Collections;
 import toniarts.openkeeper.Main;
@@ -80,7 +80,7 @@ import toniarts.openkeeper.view.map.construction.FrontEndLevelControl;
  */
 public final class MainMenuState extends AbstractAppState {
 
-    private static final Logger logger = System.getLogger(MainMenuState.class.getName());
+    private static final Logger logger = Logger.getLogger(MainMenuState.class.getName());
 
     protected Main app;
     protected Node rootNode;

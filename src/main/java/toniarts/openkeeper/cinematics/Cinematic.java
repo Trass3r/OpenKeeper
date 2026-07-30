@@ -56,6 +56,7 @@ public final class Cinematic extends com.jme3.cinematic.Cinematic {
     private final Vector3f start;
     private final Listener audioListener;
     private CameraNode camNode;
+    private MotionEvent cameraMotionControl;
 
     /**
      * Creates a new cinematic ready for consumption
@@ -125,12 +126,18 @@ public final class Cinematic extends com.jme3.cinematic.Cinematic {
                 if (!executed) {
                     executed = true;
 
-                    // We never reach the final point
-                    CameraSweepDataEntry entry = cameraSweepData.getEntries().get(cameraSweepData.getEntries().size() - 1);
-                    applyCameraSweepEntry(cam, start, entry, audioListener);
+                    // We never reach the final point. Some DK2 trigger paths
+                    // legitimately resolve to an empty sweep, so do not ask
+                    // jME's MotionPath to interpolate a zero-duration path.
+                    if (!cameraSweepData.getEntries().isEmpty()) {
+                        CameraSweepDataEntry entry = cameraSweepData.getEntries().get(cameraSweepData.getEntries().size() - 1);
+                        applyCameraSweepEntry(cam, start, entry, audioListener);
+                    }
 
                     // Detach
-                    scene.detachChild(camNode);
+                    if (camNode != null) {
+                        scene.detachChild(camNode);
+                    }
 
                     // Remove us, this will cause stack over flow loop without the executed flag
                     // Dirty but, working in a way
@@ -143,6 +150,18 @@ public final class Cinematic extends com.jme3.cinematic.Cinematic {
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
 
+        // MotionEvent divides by its duration while rewinding on stop. Empty
+        // and single-frame DK2 sweeps therefore produce NaN transforms under
+        // Android's enabled jME assertions. Treat them as instantaneous.
+        if (cameraSweepData.getEntries().size() < 2) {
+            if (!cameraSweepData.getEntries().isEmpty()) {
+                applyCameraSweepEntry(cam, start, cameraSweepData.getEntries().get(0), audioListener);
+            }
+            setInitialDuration(0f);
+            super.initialize(stateManager, app);
+            return;
+        }
+
         // Initialize
         initializeCinematic(getScene(), cam, start);
 
@@ -150,6 +169,19 @@ public final class Cinematic extends com.jme3.cinematic.Cinematic {
         activateCamera(0, CAMERA_NAME);
 
         super.initialize(stateManager, app);
+    }
+
+    /**
+     * jME's Cinematic.onStop() rewinds every MotionEvent with setTime(0).
+     * Zero-length segments in valid DK2 sweeps make that rewind interpolate
+     * 0/0 and write a NaN transform. Stopping the event directly is enough;
+     * our ordered listener below applies the exact final camera entry.
+     */
+    @Override
+    public void onStop() {
+        if (cameraMotionControl != null) {
+            cameraMotionControl.forceStop();
+        }
     }
 
 
@@ -173,7 +205,7 @@ public final class Cinematic extends com.jme3.cinematic.Cinematic {
             path.enableDebugShape(assetManager, scene);
         }
 
-        final MotionEvent cameraMotionControl = new MotionEvent(camNode, path) {
+        cameraMotionControl = new MotionEvent(camNode, path) {
             @Override
             public void update(float tpf) {
                 super.update(tpf);

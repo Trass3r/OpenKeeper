@@ -21,8 +21,8 @@ import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,8 +45,8 @@ public final class SprFile {
         protected String tag; // PSFB
         protected int framesCount;
     }
-    
-    private static final Logger logger = System.getLogger(SprFile.class.getName());
+
+    private static final Logger logger = Logger.getLogger(SprFile.class.getName());
 
     public static final int[] PALETTE = getHalftonePalette();
 

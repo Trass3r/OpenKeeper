@@ -17,8 +17,8 @@
 package toniarts.openkeeper.tools.convert;
 
 import com.jme3.math.Vector3f;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
@@ -33,7 +33,7 @@ import java.util.List;
  */
 public final class ConversionUtils {
 
-    private static final Logger logger = System.getLogger(ConversionUtils.class.getName());
+    private static final Logger logger = Logger.getLogger(ConversionUtils.class.getName());
 
     public static final float FLOAT = 4096f; // or DIVIDER_FLOAT Fixed Point Single Precision Divider
     public static final float DOUBLE = 65536f; // or DIVIDER_DOUBLE Fixed Point Double Precision Divider

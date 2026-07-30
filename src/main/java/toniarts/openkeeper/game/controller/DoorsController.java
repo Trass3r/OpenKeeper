@@ -20,8 +20,8 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.Map;
 import toniarts.openkeeper.game.component.DoorComponent;
 import toniarts.openkeeper.game.component.DoorViewState;
@@ -51,8 +51,8 @@ import toniarts.openkeeper.view.map.MapViewController;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class DoorsController implements IDoorsController {
-    
-    private static final Logger logger = System.getLogger(DoorsController.class.getName());
+
+    private static final Logger logger = Logger.getLogger(DoorsController.class.getName());
 
     private KwdFile kwdFile;
     private EntityData entityData;

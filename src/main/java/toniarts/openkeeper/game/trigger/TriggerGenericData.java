@@ -17,8 +17,8 @@
 package toniarts.openkeeper.game.trigger;
 
 import com.jme3.util.SafeArrayList;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import toniarts.openkeeper.tools.convert.map.TriggerGeneric;
 
 /**
@@ -26,8 +26,8 @@ import toniarts.openkeeper.tools.convert.map.TriggerGeneric;
  * @author ArchDemon
  */
 public final class TriggerGenericData extends TriggerData {
-    
-    private static final Logger logger = System.getLogger(TriggerGenericData.class.getName());
+
+    private static final Logger logger = Logger.getLogger(TriggerGenericData.class.getName());
 
     private TriggerGeneric.ComparisonType comparison; // Target comparison type
     private TriggerGeneric.TargetType target;

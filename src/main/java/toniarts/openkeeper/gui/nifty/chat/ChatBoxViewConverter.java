@@ -20,9 +20,9 @@ import de.lessvoid.nifty.controls.ListBox.ListBoxViewConverter;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.tools.Color;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
-import toniarts.openkeeper.utils.MapThumbnailGenerator;
+import toniarts.openkeeper.game.data.PlayerColors;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 
 /**
  * Handles the displaying of the items in the ChatBox.
@@ -32,8 +32,8 @@ import toniarts.openkeeper.utils.MapThumbnailGenerator;
  */
 public final class ChatBoxViewConverter implements ListBoxViewConverter<ChatEntry> {
 
-    private static final Logger logger = System.getLogger(ChatBoxViewConverter.class.getName());
-    
+    private static final Logger logger = Logger.getLogger(ChatBoxViewConverter.class.getName());
+
     private static final String CHAT_LINE_TEXT = "#chat-line-text";
 
     /**
@@ -57,8 +57,8 @@ public final class ChatBoxViewConverter implements ListBoxViewConverter<ChatEntr
 
         // If keeper ID is set, color the line
         if (item.keeperId() != 0) {
-            java.awt.Color c = MapThumbnailGenerator.getPlayerColor(item.keeperId());
-            textRenderer.setColor(new Color(c.getRed() / 255.0f, c.getGreen() / 255.0f, c.getBlue() / 255.0f, 1f));
+            var c = PlayerColors.get(item.keeperId());
+            textRenderer.setColor(new Color(c.r, c.g, c.b, c.a));
         } else {
             textRenderer.setColor(new Color("#bbbcbb"));
         }

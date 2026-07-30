@@ -46,7 +46,7 @@ public final class PlayerCreatureSystem implements IGameLogicUpdatable {
 
     public PlayerCreatureSystem(EntityData entityData, KwdFile kwdFile, Collection<IPlayerController> playerControllers) {
         this.kwdFile = kwdFile;
-        creatureControls = HashMap.newHashMap(playerControllers.size());
+        creatureControls = new HashMap<>(playerControllers.size());
         for (IPlayerController playerController : playerControllers) {
             creatureControls.put(playerController.getKeeper().getId(), playerController.getCreatureControl());
         }

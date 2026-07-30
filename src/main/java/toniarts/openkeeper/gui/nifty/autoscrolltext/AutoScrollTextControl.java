@@ -28,8 +28,8 @@ import de.lessvoid.nifty.input.NiftyInputEvent;
 import de.lessvoid.nifty.layout.align.HorizontalAlign;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.tools.Color;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.Objects;
 import toniarts.openkeeper.gui.nifty.effect.HorizontalAutoScroll;
 
@@ -39,8 +39,8 @@ import toniarts.openkeeper.gui.nifty.effect.HorizontalAutoScroll;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class AutoScrollTextControl extends AbstractController implements Label {
-    
-    private static final Logger logger = System.getLogger(AutoScrollTextControl.class.getName());
+
+    private static final Logger logger = Logger.getLogger(AutoScrollTextControl.class.getName());
 
     private static final String TEXT_FIELD = "#text";
 
@@ -65,7 +65,7 @@ public final class AutoScrollTextControl extends AbstractController implements L
         nifty = niftyParam;
 
         textControl = newElement.findNiftyControl(TEXT_FIELD, Label.class);
-        autoScroll = textControl.getElement().getEffects(EffectEventId.onCustom, HorizontalAutoScroll.class).getFirst();
+        autoScroll = textControl.getElement().getEffects(EffectEventId.onCustom, HorizontalAutoScroll.class).get(0);
     }
 
 

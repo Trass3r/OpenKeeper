@@ -25,8 +25,8 @@ import com.jme3.network.service.rpc.RpcClientService;
 import com.simsilica.es.client.EntityDataClientService;
 import com.simsilica.ethereal.EtherealClient;
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.List;
 import toniarts.openkeeper.game.network.chat.ChatClientService;
 import toniarts.openkeeper.game.network.chat.ChatSession;
@@ -44,8 +44,8 @@ import toniarts.openkeeper.game.network.streaming.StreamingClientService;
  * @author ArchDemon
  */
 public final class NetworkClient implements ChatSession {
-    
-    private static final Logger logger = System.getLogger(NetworkClient.class.getName());
+
+    private static final Logger logger = Logger.getLogger(NetworkClient.class.getName());
 
     private final Client client;
 

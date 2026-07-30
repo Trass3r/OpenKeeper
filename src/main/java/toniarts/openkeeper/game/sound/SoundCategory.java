@@ -18,8 +18,8 @@ package toniarts.openkeeper.game.sound;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,8 +39,8 @@ import toniarts.openkeeper.utils.PathUtils;
  * @author archdemon
  */
 public final class SoundCategory {
-    
-    private static final Logger logger = System.getLogger(SoundCategory.class.getName());
+
+    private static final Logger logger = Logger.getLogger(SoundCategory.class.getName());
 
     public static final String SPEECH_MENTOR = "SPEECH_MENTOR";
     public static final String SPEECH_MULTIPLAYER = "SPEECH_MULTIPLAYER";

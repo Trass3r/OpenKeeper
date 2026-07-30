@@ -38,8 +38,8 @@ package toniarts.openkeeper.game.network.session;
 import com.jme3.network.service.AbstractClientService;
 import com.jme3.network.service.ClientServiceManager;
 import com.jme3.network.service.rmi.RmiClientService;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import toniarts.openkeeper.game.network.NetworkConstants;
@@ -55,7 +55,7 @@ import toniarts.openkeeper.game.network.NetworkConstants;
 public final class AccountClientService extends AbstractClientService
         implements AccountSession {
 
-    private static final Logger logger = System.getLogger(AccountClientService.class.getName());
+    private static final Logger logger = Logger.getLogger(AccountClientService.class.getName());
 
     private RmiClientService rmiService;
     private AccountSession delegate;

@@ -19,8 +19,8 @@ package toniarts.openkeeper.gui.nifty.table.player;
 import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.tools.Color;
+import toniarts.openkeeper.game.data.PlayerColors;
 import toniarts.openkeeper.gui.nifty.table.*;
-import toniarts.openkeeper.utils.MapThumbnailGenerator;
 
 /**
  * Gives the player the coloring it deserves
@@ -33,8 +33,8 @@ public final class PlayerTableRowViewConverter extends TableRowViewConverter<Pla
     protected void displayString(Element element, PlayerTableRow item, String itemData) {
         TextRenderer renderer = element.getRenderer(TextRenderer.class);
         renderer.setText(itemData);
-        java.awt.Color c = MapThumbnailGenerator.getPlayerColor(item.getClientInfo().getKeeper().getId());
-        renderer.setColor(new Color(c.getRed() / 255.0f, c.getGreen() / 255.0f, c.getBlue() / 255.0f, 1f));
+        var c = PlayerColors.get(item.getClientInfo().getKeeper().getId());
+        renderer.setColor(new Color(c.r, c.g, c.b, c.a));
     }
 
 }

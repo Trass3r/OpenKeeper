@@ -17,8 +17,8 @@
 package toniarts.openkeeper.tools.convert;
 
 import java.io.IOException;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,8 +34,8 @@ import java.util.List;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class ResourceChunkReader implements IResourceChunkReader {
-    
-    private static final Logger logger = System.getLogger(ResourceChunkReader.class.getName());
+
+    private static final Logger logger = Logger.getLogger(ResourceChunkReader.class.getName());
 
     private final ByteBuffer buffer;
 

@@ -24,7 +24,6 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,8 +32,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import toniarts.openkeeper.Main;
+import toniarts.openkeeper.game.data.PlayerColors;
 import toniarts.openkeeper.tools.convert.map.Player;
-import toniarts.openkeeper.utils.MapThumbnailGenerator;
 
 /**
  * Loading state with a multiple (4) loading bars
@@ -46,7 +45,7 @@ public abstract class MultiplayerLoadingState extends LoadingState implements IP
     private static final String[] availableScreens = {"M-LoadingScreen1024x768.png",            "M-LoadingScreen1280x1024.png", "M-LoadingScreen1600x1200.png", "M-LoadingScreen400x300.png",
         "M-LoadingScreen512x384.png", "M-LoadingScreen640x480.png", "M-LoadingScreen800x600.png"};
     private static final List<Integer> availableWidths = new ArrayList<>(availableScreens.length);
-    private static final Map<Integer, String> screens = HashMap.newHashMap(availableScreens.length);
+    private static final Map<Integer, String> screens = new HashMap<>(availableScreens.length);
     private static final float BAR_OFFSET = 17.580f / 100;
     private static final float BAR_MARGIN = 5.825f / 100;
     private final List<Geometry> progressBars = new ArrayList<>(4);
@@ -80,8 +79,7 @@ public abstract class MultiplayerLoadingState extends LoadingState implements IP
                     imageHeight - ((Main.getUserSettings().getAppSettings().getHeight() - imageHeight) / 2 + imageHeight * (BAR_Y - BAR_OFFSET + margin)) - imageHeight * BAR_HEIGHT, 0);
             Material mat = new Material(assetManager,
                     "Common/MatDefs/Misc/Unshaded.j3md");
-            Color c = MapThumbnailGenerator.getPlayerColor(i);
-            mat.setColor("Color", new ColorRGBA(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f, c.getAlpha() / 255f));
+            mat.setColor("Color", PlayerColors.get(i));
             progressBar.setMaterial(mat);
 
             progressBars.add(progressBar);

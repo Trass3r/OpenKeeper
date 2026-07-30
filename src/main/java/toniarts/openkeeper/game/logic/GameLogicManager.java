@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.game.logic;
 
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 
 /**
  * Runs the game logic tasks, well, doesn't literally run them but wraps them up
@@ -26,7 +26,7 @@ import java.lang.System.Logger.Level;
  */
 public final class GameLogicManager implements IGameLogicUpdatable {
 
-    private static final Logger logger = System.getLogger(GameLogicManager.class.getName());
+    private static final Logger logger = Logger.getLogger(GameLogicManager.class.getName());
 
     protected final IGameLogicUpdatable[] updatables;
 

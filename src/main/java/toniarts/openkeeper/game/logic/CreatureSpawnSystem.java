@@ -79,7 +79,7 @@ public final class CreatureSpawnSystem extends GameTimeCounter {
         kwdFile = levelInfo.getLevelData();
 
         // Populate entrance list
-        playerControllersById = HashMap.newHashMap(playerControllers.size());
+        playerControllersById = new HashMap<>(playerControllers.size());
         for (IPlayerController player : playerControllers) {
             playerControllersById.put(player.getKeeper().getId(), player);
 

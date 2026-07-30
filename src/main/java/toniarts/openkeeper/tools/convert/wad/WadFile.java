@@ -21,8 +21,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.SequencedMap;
+import java.util.Map;
 import toniarts.openkeeper.tools.convert.ConversionUtils;
 import toniarts.openkeeper.tools.convert.FileResourceReader;
 import toniarts.openkeeper.tools.convert.IResourceChunkReader;
@@ -48,10 +48,10 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class WadFile {
 
-    private static final Logger logger = System.getLogger(WadFile.class.getName());
-    
+    private static final Logger logger = Logger.getLogger(WadFile.class.getName());
+
     private final Path file;
-    private final SequencedMap<String, WadFileEntry> wadFileEntries;
+    private final Map<String, WadFileEntry> wadFileEntries;
     private static final String WAD_HEADER_IDENTIFIER = "DWFB";
     private static final int WAD_HEADER_VERSION = 2;
 
@@ -114,7 +114,7 @@ public final class WadFile {
             // The file names itself aren't unique, but with the path they are
             rawWad.seek(nameOffset);
             byte[] nameArray = rawWad.read(nameSize);
-            wadFileEntries = LinkedHashMap.newLinkedHashMap(files);
+            wadFileEntries = new LinkedHashMap<>(files);
             String path = "";
             for (WadFileEntry entry : entries) {
                 int offset = entry.getNameOffset() - nameOffset;

@@ -19,8 +19,8 @@ package toniarts.openkeeper.view.loader;
 import com.jme3.asset.AssetManager;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import toniarts.openkeeper.game.component.DoorViewState;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.tools.convert.map.Door;
@@ -34,8 +34,8 @@ import toniarts.openkeeper.utils.AssetUtils;
  */
 public final class DoorLoader implements ILoader<DoorViewState> {
 
-    private static final Logger logger = System.getLogger(DoorLoader.class.getName());
-    
+    private static final Logger logger = Logger.getLogger(DoorLoader.class.getName());
+
     private final KwdFile kwdFile;
 
     public DoorLoader(KwdFile kwdFile) {

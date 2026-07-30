@@ -23,7 +23,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.System.Logger;
+import toniarts.openkeeper.utils.Logger;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 import toniarts.openkeeper.Main;
 import static toniarts.openkeeper.Main.TITLE;
-import static toniarts.openkeeper.Main.getApplicationIcons;
+import toniarts.openkeeper.desktop.DesktopApplicationIcons;
 import static toniarts.openkeeper.game.data.Level.LevelType.Level;
 import static toniarts.openkeeper.game.data.Level.LevelType.MPD;
 import static toniarts.openkeeper.game.data.Level.LevelType.Secret;
@@ -245,9 +245,9 @@ public final class Settings {
         private final Integer resourceKey;
         private final Integer specialKey;  // Control, Alt, Shift
     }
-    
-    private static final Logger logger = System.getLogger(Settings.class.getName());
-    
+
+    private static final Logger logger = Logger.getLogger(Settings.class.getName());
+
     private static final Settings INSTANCE;
     private static final int MAX_FPS = 200;
     private static final Path USER_HOME_FOLDER = Paths.get(System.getProperty("user.home"), ".".concat(Main.TITLE));
@@ -255,7 +255,7 @@ public final class Settings {
     public static final List<String> OPENGL = Settings.getRenderers();
     public static final List<Integer> SAMPLES = new ArrayList<>(Arrays.asList(new Integer[]{0, 2, 4, 6, 8, 16}));
     public static final List<Integer> ANISOTROPHIES = new ArrayList<>(Arrays.asList(new Integer[]{0, 2, 4, 8, 16}));
-    
+
     private final AppSettings settings;
 
     static {
@@ -279,7 +279,9 @@ public final class Settings {
 
         // Assing some app level settings
         settings.setTitle(TITLE);
-        settings.setIcons(getApplicationIcons());
+        if (!Boolean.getBoolean("openkeeper.embedded")) {
+            DesktopApplicationIcons.applyTo(settings);
+        }
 
         // We don't allow this to be changed, assets were not meant to use this
         settings.setGammaCorrection(false);

@@ -20,7 +20,8 @@ import com.simsilica.es.Entity;
 import com.simsilica.es.EntityComponent;
 import com.simsilica.es.EntityContainer;
 import com.simsilica.es.EntityData;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -40,7 +41,7 @@ import toniarts.openkeeper.utils.Point;
  */
 public abstract class MapTileContainer extends EntityContainer<IMapTileInformation> implements IMapDataInformation<IMapTileInformation> {
 
-    private static final System.Logger logger = System.getLogger(MapTileContainer.class.getName());
+    private static final Logger logger = Logger.getLogger(MapTileContainer.class.getName());
 
     private final int width;
     private final int height;
@@ -81,7 +82,7 @@ public abstract class MapTileContainer extends EntityContainer<IMapTileInformati
             return;
         }
 
-        logger.log(System.Logger.Level.TRACE, "MapTileContainer.updateObjects({0})", set.size());
+        logger.log(Logger.Level.TRACE, "MapTileContainer.updateObjects({0})", set.size());
 
         // Collect the tiles
         Point[] updatableTiles = new Point[set.size()];

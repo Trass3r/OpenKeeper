@@ -59,7 +59,7 @@ public final class Keeper implements Comparable<Keeper>, IIndexable, Savable {
     private transient Player player;
     private short id;
     private boolean destroyed = false;
-    private Set<Short> allies = HashSet.newHashSet(4);
+    private Set<Short> allies = new HashSet<>(4);
 
     public Keeper() {
 

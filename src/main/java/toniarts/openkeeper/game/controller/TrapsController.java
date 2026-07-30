@@ -19,8 +19,8 @@ package toniarts.openkeeper.game.controller;
 import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.Map;
 import toniarts.openkeeper.game.component.Health;
 import toniarts.openkeeper.game.component.Interaction;
@@ -46,8 +46,8 @@ import toniarts.openkeeper.utils.WorldUtils;
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
 public final class TrapsController implements ITrapsController {
-    
-    private static final Logger logger = System.getLogger(TrapsController.class.getName());
+
+    private static final Logger logger = Logger.getLogger(TrapsController.class.getName());
 
     private KwdFile kwdFile;
     private EntityData entityData;

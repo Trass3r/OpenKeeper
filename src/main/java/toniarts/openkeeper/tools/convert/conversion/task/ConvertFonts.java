@@ -20,8 +20,8 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -55,7 +55,7 @@ import toniarts.openkeeper.utils.Utils;
  */
 public final class ConvertFonts extends ConversionTask {
 
-    private static final Logger logger = System.getLogger(ConvertFonts.class.getName());
+    private static final Logger logger = Logger.getLogger(ConvertFonts.class.getName());
 
     private final ExecutorService executorService;
 

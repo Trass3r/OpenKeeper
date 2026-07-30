@@ -71,7 +71,8 @@ import toniarts.openkeeper.tools.convert.map.Variable;
 import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.utils.WorldUtils;
 
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +82,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.SequencedMap;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
@@ -93,7 +93,7 @@ import java.util.stream.Collectors;
  */
 public final class GameWorldController implements IGameWorldController, IPlayerActions {
 
-    private static final System.Logger logger = System.getLogger(GameWorldController.class.getName());
+    private static final Logger logger = Logger.getLogger(GameWorldController.class.getName());
 
     /**
      * When dealing with gold... We currently better lock it. Logic stuff happens in single thread. But player
@@ -429,7 +429,7 @@ public final class GameWorldController implements IGameWorldController, IPlayerA
         mapController.updateRooms(updatableTiles.toArray(Point[]::new));
 
         // New room, calculate gold capacity
-        IRoomController instance = mapController.getRoomControllerByCoordinates(instancePlots.getFirst());
+        IRoomController instance = mapController.getRoomControllerByCoordinates(instancePlots.get(0));
         if (adjacentInstances.isEmpty()) {
             addGoldCapacityToPlayer(instance.getEntityId());
             //notifyOnBuild(instance.getOwnerId(), mapController.getRoomActuals().get(instance));

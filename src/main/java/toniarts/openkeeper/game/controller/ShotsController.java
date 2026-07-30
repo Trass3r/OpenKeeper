@@ -19,7 +19,7 @@ package toniarts.openkeeper.game.controller;
 import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
-import java.lang.System.Logger;
+import toniarts.openkeeper.utils.Logger;
 import java.util.Map;
 import toniarts.openkeeper.game.controller.entity.EntityController;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
@@ -37,7 +37,7 @@ import toniarts.openkeeper.utils.WorldUtils;
  */
 public final class ShotsController implements IShotsController {
 
-    private static final Logger logger = System.getLogger(ShotsController.class.getName());
+    private static final Logger logger = Logger.getLogger(ShotsController.class.getName());
 
     private final KwdFile kwdFile;
     private final EntityData entityData;

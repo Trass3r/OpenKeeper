@@ -1,0 +1,87 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace = 'toniarts.openkeeper.android'
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = 'toniarts.openkeeper.android'
+        minSdk = 30
+        targetSdk = 36
+        versionCode = 1
+        versionName = '0.1.0'
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+
+        release {
+            minifyEnabled = false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets', '../assets']
+        }
+    }
+
+    androidResources {
+        ignoreAssetsPatterns.addAll([
+                '!.svn',
+                '!.git',
+                '!.ds_store',
+                '!*.scc',
+                '.*',
+                '<dir>_*',
+                '!CVS',
+                '!thumbs.db',
+                '!picasa.ini',
+                '!*~',
+                '!Converted'
+        ])
+    }
+
+    packaging {
+        resources {
+            excludes += [
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/LICENSE',
+                    'META-INF/LICENSE.txt',
+                    'META-INF/NOTICE',
+                    'META-INF/NOTICE.txt',
+                    'license.txt'
+            ]
+        }
+    }
+
+    lint {
+        // Nifty GUI contains optional desktop integrations that are not loaded
+        // by the Android runtime.
+        disable 'InvalidPackage'
+        abortOnError = false
+    }
+}
+
+dependencies {
+    implementation project(':runtime')
+    implementation "org.jmonkeyengine:jme3-core:$rootProject.jmonkeyengine_version"
+    implementation "org.jmonkeyengine:jme3-android:$rootProject.jmonkeyengine_version"
+    implementation "org.jmonkeyengine:jme3-android-native:$rootProject.jmonkeyengine_version"
+    implementation "org.jmonkeyengine:jme3-plugins:$rootProject.jmonkeyengine_version"
+    implementation "org.jmonkeyengine:jme3-effects:$rootProject.jmonkeyengine_version"
+    implementation "org.jmonkeyengine:jme3-networking:$rootProject.jmonkeyengine_version"
+    implementation "org.jmonkeyengine:jme3-niftygui:$rootProject.jmonkeyengine_version"
+}

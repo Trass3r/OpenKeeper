@@ -22,8 +22,8 @@ import com.jme3.audio.AudioData.DataType;
 import com.jme3.audio.AudioNode;
 import com.jme3.audio.AudioSource;
 import java.io.File;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.Queue;
@@ -61,8 +61,8 @@ public final class SoundState extends AbstractPauseAwareState {
         }
     }
 
-    private static final Logger logger = System.getLogger(SoundState.class.getName());
-    
+    private static final Logger logger = Logger.getLogger(SoundState.class.getName());
+
     private Main app;
     private AppStateManager stateManager;
     private AudioNode speechNode = null;

@@ -23,8 +23,8 @@ import com.jme3.scene.Node;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
+import toniarts.openkeeper.utils.Logger;
+import toniarts.openkeeper.utils.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,7 +52,7 @@ import toniarts.openkeeper.utils.Utils;
  */
 public final class ConvertModels extends ConversionTask {
 
-    private static final Logger logger = System.getLogger(ConvertModels.class.getName());
+    private static final Logger logger = Logger.getLogger(ConvertModels.class.getName());
 
     private final AssetManager assetManager;
     private final ExecutorService executorService;
@@ -120,7 +120,7 @@ public final class ConvertModels extends ConversionTask {
         } catch (IOException ex) {
             throw new RuntimeException("Could not open the meshes.wad archive!", ex);
         }
-        Map<String, KmfFile> kmfs = LinkedHashMap.newLinkedHashMap(wad.getWadFileEntryCount());
+        Map<String, KmfFile> kmfs = new LinkedHashMap<>(wad.getWadFileEntryCount());
         AtomicInteger progress = new AtomicInteger(0);
         int total = wad.getWadFileEntryCount();
         for (final String entry : wad.getWadFileEntries()) {
