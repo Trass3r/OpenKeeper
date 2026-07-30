@@ -8,17 +8,24 @@
  */
 package toniarts.openkeeper.android;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.InputDevice;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.widget.FrameLayout;
 import com.jme3.app.AndroidHarness;
+import com.jme3.input.TouchInput;
 import com.jme3.system.AppSettings;
 import java.io.File;
 import java.util.Locale;
 import toniarts.openkeeper.Main;
+import toniarts.openkeeper.view.PlayerCameraState;
 import toniarts.openkeeper.view.PlayerInteractionState;
 
 /**
@@ -34,6 +41,7 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
             | MotionEvent.BUTTON_STYLUS_SECONDARY
             | MotionEvent.BUTTON_SECONDARY;
     private static final long PALM_REJECTION_GRACE_MS = 200L;
+    private static final long TWO_FINGER_TAP_TIMEOUT_MS = 500L;
 
     private boolean stylusInRange;
     private boolean stylusTouching;
@@ -42,6 +50,20 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
     private boolean suppressedFingerGesture;
     private long lastStylusMoveLog;
     private long lastStylusEventTime;
+    private MotionEvent pendingFingerDown;
+    private boolean multiFingerGesture;
+    private boolean multiFingerTapCandidate;
+    private float fingerDownX;
+    private float fingerDownY;
+    private float multiFingerStartX;
+    private float multiFingerStartY;
+    private float multiFingerStartSpan;
+    private float multiFingerTapX;
+    private float multiFingerTapY;
+    private int touchSlop;
+    private VirtualJoystickView movementJoystick;
+    private VirtualJoystickView viewJoystick;
+    private VirtualJoystickView activeJoystickGesture;
 
     public OpenKeeperAndroidActivity() {
         appClass = Main.class.getName();
@@ -61,6 +83,9 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        touchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
+        Main.setEmbeddedCameraControlsListener(
+                this::setVirtualJoysticksVisible);
         File privateFiles = getFilesDir();
         File externalFiles = getExternalFilesDir(null);
         System.setProperty("user.home", privateFiles.getAbsolutePath());
@@ -84,6 +109,7 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
             // needlessly expensive; Android scales this buffer fullscreen.
             view.getHolder().setFixedSize(RENDER_WIDTH, RENDER_HEIGHT);
         }
+        setupVirtualJoysticks();
         enterImmersiveMode();
     }
 
@@ -103,7 +129,27 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         stylusSecondaryTouch = false;
         suppressedFingerGesture = false;
         lastStylusEventTime = 0L;
+        resetFingerGesture();
+        activeJoystickGesture = null;
+        if (movementJoystick != null) {
+            movementJoystick.cancelInput();
+        }
+        if (viewJoystick != null) {
+            viewJoystick.cancelInput();
+        }
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Main.setEmbeddedCameraControlsListener(null);
+        if (movementJoystick != null) {
+            movementJoystick.cancelInput();
+        }
+        if (viewJoystick != null) {
+            viewJoystick.cancelInput();
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -170,6 +216,7 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         boolean stylusEvent = isStylusEvent(event);
         if (stylusEvent) {
             lastStylusEventTime = event.getEventTime();
+            resetFingerGesture();
         }
 
         if (!stylusEvent && isFingerEvent(event)) {
@@ -191,6 +238,19 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
                 }
                 return true;
             }
+            if (action == MotionEvent.ACTION_DOWN) {
+                activeJoystickGesture = findJoystickAt(event);
+            }
+            if (activeJoystickGesture != null) {
+                resetFingerGesture();
+                boolean handled = super.dispatchTouchEvent(event);
+                if (action == MotionEvent.ACTION_UP
+                        || action == MotionEvent.ACTION_CANCEL) {
+                    activeJoystickGesture = null;
+                }
+                return handled;
+            }
+            return dispatchFingerTouchEvent(event);
         }
 
         if (stylusEvent) {
@@ -209,7 +269,7 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
                     stylusTouching = true;
                     stylusInRange = true;
                     if (stylusSecondaryTouch) {
-                        postStylusSecondary(event, true);
+                        postSecondaryPointer(event, true);
                         return true;
                     }
                     break;
@@ -254,11 +314,274 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         return super.dispatchTouchEvent(event);
     }
 
+    private boolean dispatchFingerTouchEvent(MotionEvent event) {
+        int action = event.getActionMasked();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                resetFingerGesture();
+                pendingFingerDown = MotionEvent.obtain(event);
+                fingerDownX = event.getX();
+                fingerDownY = event.getY();
+                return true;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                if (pendingFingerDown != null) {
+                    beginMultiFingerGesture(event);
+                    boolean downHandled = dispatchPendingFingerDown(false);
+                    return dispatchTouchEvent(event, false) || downHandled;
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (multiFingerGesture) {
+                    updateMultiFingerGesture(event);
+                    return dispatchTouchEvent(event, false);
+                }
+                if (pendingFingerDown != null) {
+                    float deltaX = event.getX() - fingerDownX;
+                    float deltaY = event.getY() - fingerDownY;
+                    if (deltaX * deltaX + deltaY * deltaY
+                            >= touchSlop * touchSlop) {
+                        boolean downHandled = dispatchPendingFingerDown(true);
+                        return super.dispatchTouchEvent(event) || downHandled;
+                    }
+                    return true;
+                }
+                break;
+            case MotionEvent.ACTION_POINTER_UP:
+                if (multiFingerGesture) {
+                    updateMultiFingerGesture(event);
+                    return dispatchTouchEvent(event, false);
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                if (multiFingerGesture) {
+                    boolean handled = dispatchTouchEvent(event, false);
+                    boolean performSecondary = multiFingerTapCandidate
+                            && event.getEventTime() - event.getDownTime()
+                            <= TWO_FINGER_TAP_TIMEOUT_MS;
+                    float secondaryX = multiFingerTapX;
+                    float secondaryY = multiFingerTapY;
+                    resetFingerGesture();
+                    if (performSecondary) {
+                        postSecondaryPointer(secondaryX, secondaryY, false);
+                    }
+                    return handled;
+                }
+                if (pendingFingerDown != null) {
+                    boolean downHandled = dispatchPendingFingerDown(true);
+                    boolean upHandled = super.dispatchTouchEvent(event);
+                    resetFingerGesture();
+                    return upHandled || downHandled;
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                if (multiFingerGesture) {
+                    boolean handled = dispatchTouchEvent(event, false);
+                    resetFingerGesture();
+                    return handled;
+                }
+                if (pendingFingerDown != null) {
+                    resetFingerGesture();
+                    return true;
+                }
+                break;
+            default:
+                break;
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    private void beginMultiFingerGesture(MotionEvent event) {
+        multiFingerGesture = true;
+        multiFingerTapCandidate = event.getPointerCount() == 2;
+        multiFingerStartX = getCentroidX(event);
+        multiFingerStartY = getCentroidY(event);
+        multiFingerStartSpan = getPointerSpan(event);
+        multiFingerTapX = multiFingerStartX;
+        multiFingerTapY = multiFingerStartY;
+    }
+
+    private void updateMultiFingerGesture(MotionEvent event) {
+        if (event.getPointerCount() != 2) {
+            multiFingerTapCandidate = false;
+            return;
+        }
+
+        float centroidX = getCentroidX(event);
+        float centroidY = getCentroidY(event);
+        float span = getPointerSpan(event);
+        multiFingerTapX = centroidX;
+        multiFingerTapY = centroidY;
+        if (Math.hypot(centroidX - multiFingerStartX,
+                centroidY - multiFingerStartY) >= touchSlop
+                || Math.abs(span - multiFingerStartSpan) >= touchSlop) {
+            multiFingerTapCandidate = false;
+        }
+    }
+
+    private boolean dispatchPendingFingerDown(boolean simulateMouse) {
+        if (pendingFingerDown == null) {
+            return false;
+        }
+        try {
+            return dispatchTouchEvent(pendingFingerDown, simulateMouse);
+        } finally {
+            pendingFingerDown.recycle();
+            pendingFingerDown = null;
+        }
+    }
+
+    private boolean dispatchTouchEvent(MotionEvent event, boolean simulateMouse) {
+        TouchInput touchInput = getJmeApplication() != null
+                && getJmeApplication().getContext() != null
+                ? getJmeApplication().getContext().getTouchInput()
+                : null;
+        if (touchInput == null || touchInput.isSimulateMouse() == simulateMouse) {
+            return super.dispatchTouchEvent(event);
+        }
+
+        boolean previousValue = touchInput.isSimulateMouse();
+        touchInput.setSimulateMouse(simulateMouse);
+        try {
+            return super.dispatchTouchEvent(event);
+        } finally {
+            touchInput.setSimulateMouse(previousValue);
+        }
+    }
+
+    private void resetFingerGesture() {
+        if (pendingFingerDown != null) {
+            pendingFingerDown.recycle();
+            pendingFingerDown = null;
+        }
+        multiFingerGesture = false;
+        multiFingerTapCandidate = false;
+    }
+
+    private static float getCentroidX(MotionEvent event) {
+        float x = 0f;
+        for (int i = 0; i < event.getPointerCount(); i++) {
+            x += event.getX(i);
+        }
+        return x / event.getPointerCount();
+    }
+
+    private static float getCentroidY(MotionEvent event) {
+        float y = 0f;
+        for (int i = 0; i < event.getPointerCount(); i++) {
+            y += event.getY(i);
+        }
+        return y / event.getPointerCount();
+    }
+
+    private static float getPointerSpan(MotionEvent event) {
+        if (event.getPointerCount() < 2) {
+            return 0f;
+        }
+        return (float) Math.hypot(event.getX(1) - event.getX(0),
+                event.getY(1) - event.getY(0));
+    }
+
+    private void setupVirtualJoysticks() {
+        movementJoystick = new VirtualJoystickView(this, "MOVE",
+                Color.rgb(255, 199, 82), Color.rgb(171, 83, 24));
+        movementJoystick.setVisibility(View.GONE);
+        movementJoystick.setListener(this::postVirtualCameraMove);
+
+        int size = dpToPixels(152);
+        FrameLayout.LayoutParams movementLayout = new FrameLayout.LayoutParams(
+                size, size, Gravity.END | Gravity.BOTTOM);
+        movementLayout.setMarginEnd(dpToPixels(18));
+        movementLayout.bottomMargin = dpToPixels(84);
+        addContentView(movementJoystick, movementLayout);
+
+        viewJoystick = new VirtualJoystickView(this, "VIEW",
+                Color.rgb(112, 205, 255), Color.rgb(33, 112, 166));
+        viewJoystick.setVisibility(View.GONE);
+        viewJoystick.setListener(this::postVirtualCameraView);
+
+        FrameLayout.LayoutParams viewLayout = new FrameLayout.LayoutParams(
+                size, size, Gravity.START | Gravity.BOTTOM);
+        viewLayout.setMarginStart(dpToPixels(18));
+        viewLayout.bottomMargin = dpToPixels(84);
+        addContentView(viewJoystick, viewLayout);
+    }
+
+    private void setVirtualJoysticksVisible(boolean visible) {
+        runOnUiThread(() -> {
+            if (movementJoystick == null || viewJoystick == null) {
+                return;
+            }
+            if (!visible) {
+                activeJoystickGesture = null;
+                movementJoystick.cancelInput();
+                viewJoystick.cancelInput();
+            }
+            movementJoystick.setVisibility(visible ? View.VISIBLE : View.GONE);
+            viewJoystick.setVisibility(visible ? View.VISIBLE : View.GONE);
+        });
+    }
+
+    private VirtualJoystickView findJoystickAt(MotionEvent event) {
+        if (isInsideJoystick(event, movementJoystick)) {
+            return movementJoystick;
+        }
+        if (isInsideJoystick(event, viewJoystick)) {
+            return viewJoystick;
+        }
+        return null;
+    }
+
+    private static boolean isInsideJoystick(MotionEvent event,
+            VirtualJoystickView joystick) {
+        if (joystick == null || joystick.getVisibility() != View.VISIBLE) {
+            return false;
+        }
+
+        int[] location = new int[2];
+        joystick.getLocationOnScreen(location);
+        float x = event.getRawX();
+        float y = event.getRawY();
+        return x >= location[0]
+                && x < location[0] + joystick.getWidth()
+                && y >= location[1]
+                && y < location[1] + joystick.getHeight();
+    }
+
+    private void postVirtualCameraMove(float horizontal, float vertical) {
+        if (!(getJmeApplication() instanceof Main main)) {
+            return;
+        }
+        main.enqueue(() -> {
+            PlayerCameraState cameraState
+                    = main.getStateManager().getState(PlayerCameraState.class);
+            if (cameraState != null) {
+                cameraState.handleVirtualJoystick(horizontal, vertical);
+            }
+        });
+    }
+
+    private void postVirtualCameraView(float horizontal, float vertical) {
+        if (!(getJmeApplication() instanceof Main main)) {
+            return;
+        }
+        main.enqueue(() -> {
+            PlayerCameraState cameraState
+                    = main.getStateManager().getState(PlayerCameraState.class);
+            if (cameraState != null) {
+                cameraState.handleVirtualViewJoystick(horizontal, vertical);
+            }
+        });
+    }
+
+    private int dpToPixels(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
     private void beginStylusSecondary(MotionEvent event) {
         if (!stylusSecondaryActive) {
             stylusSecondaryActive = true;
             Log.d(SPEN_LOG_TAG, "S Pen secondary button pressed");
-            postStylusSecondary(event, true);
+            postSecondaryPointer(event, true);
         }
     }
 
@@ -267,7 +590,7 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
             return;
         }
         if (performAction) {
-            postStylusSecondary(event, false);
+            postSecondaryPointer(event, false);
         }
         Log.d(SPEN_LOG_TAG, performAction
                 ? "S Pen secondary button released"
@@ -275,23 +598,31 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         stylusSecondaryActive = false;
     }
 
-    private void postStylusSecondary(MotionEvent event, boolean pressed) {
-        if (!(getJmeApplication() instanceof Main main) || view == null
-                || view.getWidth() == 0 || view.getHeight() == 0
-                || event.getPointerCount() == 0) {
+    private void postSecondaryPointer(MotionEvent event, boolean pressed) {
+        if (event.getPointerCount() == 0) {
             return;
         }
 
         int pointerIndex = Math.max(0, Math.min(event.getActionIndex(),
                 event.getPointerCount() - 1));
-        float normalizedX = event.getX(pointerIndex) / view.getWidth();
-        float normalizedY = 1f - event.getY(pointerIndex) / view.getHeight();
+        postSecondaryPointer(event.getX(pointerIndex),
+                event.getY(pointerIndex), pressed);
+    }
+
+    private void postSecondaryPointer(float x, float y, boolean pressed) {
+        if (!(getJmeApplication() instanceof Main main) || view == null
+                || view.getWidth() == 0 || view.getHeight() == 0) {
+            return;
+        }
+
+        float normalizedX = x / view.getWidth();
+        float normalizedY = 1f - y / view.getHeight();
 
         main.enqueue(() -> {
             PlayerInteractionState interactionState
                     = main.getStateManager().getState(PlayerInteractionState.class);
             if (interactionState != null) {
-                interactionState.handleStylusSecondary(
+                interactionState.handleSecondaryPointer(
                         normalizedX, normalizedY, pressed);
             }
         });

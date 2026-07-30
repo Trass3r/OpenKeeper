@@ -107,6 +107,7 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
     private RawInputListener inputListener;
     private boolean inputListenerAdded = false;
     private final Set<Integer> keys = new HashSet<>();
+    private final Set<Integer> activeTouchPointers = new HashSet<>();
     private IEntityViewControl interactiveControl;
     private Label tooltip;
     private KeeperHandState keeperHandState;
@@ -252,6 +253,7 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
             app.getInputManager().removeRawInputListener(inputListener);
             inputListenerAdded = false;
             keys.clear();
+            activeTouchPointers.clear();
         }
     }
 
@@ -262,6 +264,7 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
         keeperHandState = null;
         app.getInputManager().removeRawInputListener(inputListener);
         keys.clear();
+        activeTouchPointers.clear();
         selectionHandler.cleanup();
         CheatState cheatState = this.stateManager.getState(CheatState.class);
         if (cheatState != null) {
@@ -696,6 +699,20 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
             @Override
             public void onTouchEvent(TouchEvent evt) {
                 switch (evt.getType()) {
+                    case DOWN:
+                        activeTouchPointers.add(evt.getPointerId());
+                        if (activeTouchPointers.size() == 1) {
+                            updatePointerPosition(evt.getX(), evt.getY());
+                        }
+                        break;
+                    case MOVE:
+                        if (activeTouchPointers.size() <= 1) {
+                            updatePointerPosition(evt.getX(), evt.getY());
+                        }
+                        break;
+                    case UP:
+                        activeTouchPointers.remove(evt.getPointerId());
+                        break;
                     case HOVER_START:
                     case HOVER_MOVE:
                         // Android styluses, including Samsung S Pen, report
@@ -712,14 +729,15 @@ public abstract class PlayerInteractionState extends AbstractPauseAwareState {
     }
 
     /**
-     * Receives a normalized S Pen barrel-button event from the Android host.
-     * The Android UI thread enqueues this method on the jME update thread.
+     * Receives a normalized secondary-pointer event from the Android host.
+     * This covers an S Pen barrel action and a two-finger touch tap. The
+     * Android UI thread enqueues this method on the jME update thread.
      *
      * @param normalizedX horizontal position from 0 (left) to 1 (right)
      * @param normalizedY vertical position from 0 (bottom) to 1 (top)
-     * @param pressed true while the barrel button is held
+     * @param pressed true while the secondary pointer action is held
      */
-    public void handleStylusSecondary(float normalizedX, float normalizedY, boolean pressed) {
+    public void handleSecondaryPointer(float normalizedX, float normalizedY, boolean pressed) {
         if (!isInitialized() || !isEnabled() || keeperHandState == null || selectionHandler == null) {
             return;
         }

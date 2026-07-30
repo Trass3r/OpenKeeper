@@ -86,11 +86,16 @@ public final class PlayerCamera {
     protected void move(float dx, float dz) {
 
         // Moving is strafing over the map plane
-        Vector3f vel = cam.getLeft();
+        Vector3f vel = new Vector3f();
         if (dx != 0) {
-            vel.multLocal(dx);
-        } else if (dz != 0) {
-            vel.crossLocal(Vector3f.UNIT_Y).multLocal(dz);
+            vel.addLocal(cam.getLeft().multLocal(dx));
+        }
+        if (dz != 0) {
+            vel.addLocal(cam.getLeft().crossLocal(Vector3f.UNIT_Y)
+                    .multLocal(dz));
+        }
+        if (vel.lengthSquared() == 0) {
+            return;
         }
 
         Vector3f look = getLookAt();

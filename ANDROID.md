@@ -56,10 +56,13 @@ Uninstalling the app may remove this directory, so keep the PC installation.
 
 ## Mobile controls
 
-- Tap: click/select/interact
-- One-finger drag: select or tag a tile area
-- Two-finger drag: pan the camera
-- Pinch: zoom the camera
+- Tap: click/select/interact on release
+- One-finger drag: select or tag a tile area after a short movement threshold
+- Two-finger drag: pan the camera without clicking the map
+- Pinch: zoom the camera without clicking the map
+- Quick two-finger tap: secondary/right-click action
+- Lower-right MOVE joystick: analog camera movement during gameplay
+- Lower-left VIEW joystick: horizontal camera rotation and vertical zoom
 - Android Back: OpenKeeper's exit/back handling
 
 ### Samsung S Pen and other Android styluses

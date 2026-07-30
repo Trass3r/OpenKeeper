@@ -97,6 +97,7 @@ public final class Main extends SimpleApplication {
     private static final Object LOCK = new Object();
     private static Map<String, String> params;
     private static boolean debug;
+    private static volatile EmbeddedCameraControlsListener embeddedCameraControlsListener;
 
     private NiftyJmeDisplay niftyDisplay;
     private byte[] gameUiXml;
@@ -119,6 +120,42 @@ public final class Main extends SimpleApplication {
         params = new HashMap<>();
         params.put("nomovies", null);
         debug = false;
+    }
+
+    /**
+     * Registers the platform host that presents embedded camera controls.
+     *
+     * @param listener listener, or null to detach the current platform host
+     */
+    public static void setEmbeddedCameraControlsListener(
+            EmbeddedCameraControlsListener listener) {
+        embeddedCameraControlsListener = listener;
+    }
+
+    /**
+     * Requests that the platform host show or hide its camera controls.
+     *
+     * @param visible true while interactive player camera input is available
+     */
+    public static void setEmbeddedCameraControlsVisible(boolean visible) {
+        EmbeddedCameraControlsListener listener = embeddedCameraControlsListener;
+        if (listener != null) {
+            listener.onVisibilityChanged(visible);
+        }
+    }
+
+    /**
+     * Receives embedded camera-control visibility changes.
+     */
+    @FunctionalInterface
+    public interface EmbeddedCameraControlsListener {
+
+        /**
+         * Called from the jMonkeyEngine update thread.
+         *
+         * @param visible true when the platform controls should be visible
+         */
+        void onVisibilityChanged(boolean visible);
     }
 
     public static void main(String[] args) throws InvocationTargetException, InterruptedException {

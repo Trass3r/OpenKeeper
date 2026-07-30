@@ -74,6 +74,11 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
     private PlayerCamera camera;
     private Camera storedCamera;
     private final Player player;
+    private float virtualMoveX;
+    private float virtualMoveY;
+    private float virtualViewX;
+    private float virtualViewY;
+    private boolean embeddedControlsVisible;
 
     private final Set<Integer> keys = new HashSet<>();
 
@@ -84,6 +89,8 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
     private static final float ROTATION_SPEED = 4f;
     private static final float TOUCH_MOVE_SPEED = 0.018f;
     private static final float TOUCH_ZOOM_SPEED = 24f;
+    private static final float VIRTUAL_ROTATION_SPEED = 1.8f;
+    private static final float VIRTUAL_ZOOM_SPEED = 8f;
     private static final String CAMERA_MOUSE_ZOOM_IN = "CAMERA_MOUSE_ZOOM_IN";
     private static final String CAMERA_MOUSE_ZOOM_OUT = "CAMERA_MOUSE_ZOOM_OUT";
     private static final String SPECIAL_KEY_CONTROL = "SPECIAL_KEY_CONTROL";
@@ -232,6 +239,7 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
             // The controls
             registerInput();
         } else {
+            setEmbeddedControlsVisible(false);
             cameraStore();
             unregisterInput();
         }
@@ -239,6 +247,36 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
 
     public PlayerCamera getCamera() {
         return camera;
+    }
+
+    /**
+     * Sets analog camera movement supplied by an embedded platform host.
+     *
+     * @param horizontal movement from -1 (left) to 1 (right)
+     * @param vertical movement from -1 (down) to 1 (up)
+     */
+    public void handleVirtualJoystick(float horizontal, float vertical) {
+        virtualMoveX = Float.isFinite(horizontal)
+                ? Math.max(-1f, Math.min(1f, horizontal))
+                : 0f;
+        virtualMoveY = Float.isFinite(vertical)
+                ? Math.max(-1f, Math.min(1f, vertical))
+                : 0f;
+    }
+
+    /**
+     * Applies analog camera rotation and zoom from the Android VIEW joystick.
+     *
+     * @param horizontal view movement from -1 (left) to 1 (right)
+     * @param vertical view movement from -1 (down) to 1 (up)
+     */
+    public void handleVirtualViewJoystick(float horizontal, float vertical) {
+        virtualViewX = Float.isFinite(horizontal)
+                ? Math.max(-1f, Math.min(1f, horizontal))
+                : 0f;
+        virtualViewY = Float.isFinite(vertical)
+                ? Math.max(-1f, Math.min(1f, vertical))
+                : 0f;
     }
 
     private Vector2f getCameraMapLimit() {
@@ -354,6 +392,7 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
     public void cleanup() {
 
         // Unregister controls
+        setEmbeddedControlsVisible(false);
         unregisterInput();
 
         super.cleanup();
@@ -363,12 +402,40 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
     public void update(float tpf) {
         super.update(tpf);
 
+        boolean controlsVisible = isEnabled()
+                && stateManager.getState(Cinematic.class) == null;
+        setEmbeddedControlsVisible(controlsVisible);
+        if (controlsVisible && (virtualMoveX != 0f || virtualMoveY != 0f)) {
+            camera.move(-virtualMoveX * MOVE_SPEED * tpf,
+                    virtualMoveY * MOVE_SPEED * tpf);
+        }
+        if (controlsVisible && virtualViewX != 0f) {
+            camera.rotateAround(virtualViewX * VIRTUAL_ROTATION_SPEED * tpf);
+        }
+        if (controlsVisible && virtualViewY != 0f) {
+            camera.zoom(virtualViewY * VIRTUAL_ZOOM_SPEED * tpf);
+        }
+
         // Update the container
         container.update(tpf);
 
         // Update audio listener position
         app.getListener().setLocation(app.getCamera().getLocation());
         app.getListener().setRotation(app.getCamera().getRotation());
+    }
+
+    private void setEmbeddedControlsVisible(boolean visible) {
+        if (embeddedControlsVisible == visible) {
+            return;
+        }
+        embeddedControlsVisible = visible;
+        if (!visible) {
+            virtualMoveX = 0f;
+            virtualMoveY = 0f;
+            virtualViewX = 0f;
+            virtualViewY = 0f;
+        }
+        Main.setEmbeddedCameraControlsVisible(visible);
     }
 
     private void addKeyMapping(Setting s) {
