@@ -63,6 +63,9 @@ Uninstalling the app may remove this directory, so keep the PC installation.
 - Quick two-finger tap: secondary/right-click action
 - Lower-right MOVE joystick: analog camera movement during gameplay
 - Lower-left VIEW joystick: horizontal camera rotation and vertical zoom
+- MOVE and VIEW accept separate fingers and can be used simultaneously
+- Gameplay gear button: configure VIEW visibility, stick sides, zoom direction,
+  size, opacity, and MOVE/VIEW sensitivity; settings persist across launches
 - Android Back: OpenKeeper's exit/back handling
 
 ### Samsung S Pen and other Android styluses

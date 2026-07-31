@@ -8,6 +8,7 @@
  */
 package toniarts.openkeeper.android;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -19,6 +20,7 @@ import android.view.View;
 /**
  * A lightweight analog joystick drawn above the Android game surface.
  */
+@SuppressLint("ViewConstructor")
 final class VirtualJoystickView extends View {
 
     @FunctionalInterface
@@ -79,6 +81,46 @@ final class VirtualJoystickView extends View {
         this.listener = listener;
     }
 
+    boolean beginInput(int pointerId, float rawX, float rawY) {
+        if (activePointerId != INVALID_POINTER_ID) {
+            return false;
+        }
+        activePointerId = pointerId;
+        if (getParent() != null) {
+            getParent().requestDisallowInterceptTouchEvent(true);
+        }
+        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+        updateFromScreen(rawX, rawY);
+        return true;
+    }
+
+    boolean updateInput(int pointerId, float rawX, float rawY) {
+        if (activePointerId != pointerId) {
+            return false;
+        }
+        updateFromScreen(rawX, rawY);
+        return true;
+    }
+
+    boolean endInput(int pointerId, boolean performClick) {
+        if (activePointerId != pointerId) {
+            return false;
+        }
+        cancelInput();
+        if (performClick) {
+            performClick();
+        }
+        return true;
+    }
+
+    boolean ownsPointer(int pointerId) {
+        return activePointerId == pointerId;
+    }
+
+    void setControlOpacity(float opacity) {
+        setAlpha(Math.max(0.2f, Math.min(1f, opacity)));
+    }
+
     void cancelInput() {
         activePointerId = INVALID_POINTER_ID;
         setOutput(0f, 0f);
@@ -121,25 +163,21 @@ final class VirtualJoystickView extends View {
                 if (event.getToolType(0) != MotionEvent.TOOL_TYPE_FINGER) {
                     return false;
                 }
-                activePointerId = event.getPointerId(0);
-                getParent().requestDisallowInterceptTouchEvent(true);
-                performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
-                updateFromTouch(event.getX(0), event.getY(0));
-                return true;
+                return beginInput(event.getPointerId(0), event.getRawX(0),
+                        event.getRawY(0));
             case MotionEvent.ACTION_MOVE:
                 int pointerIndex = event.findPointerIndex(activePointerId);
                 if (pointerIndex >= 0) {
-                    updateFromTouch(event.getX(pointerIndex),
-                            event.getY(pointerIndex));
+                    updateInput(activePointerId, event.getRawX(pointerIndex),
+                            event.getRawY(pointerIndex));
                 }
                 return activePointerId != INVALID_POINTER_ID;
             case MotionEvent.ACTION_POINTER_UP:
-                if (event.getPointerId(event.getActionIndex()) == activePointerId) {
-                    cancelInput();
-                }
+                endInput(event.getPointerId(event.getActionIndex()), false);
                 return true;
             case MotionEvent.ACTION_UP:
-                if (event.getPointerId(event.getActionIndex()) == activePointerId) {
+                int pointerId = event.getPointerId(event.getActionIndex());
+                if (ownsPointer(pointerId)) {
                     cancelInput();
                     performClick();
                 }
@@ -178,6 +216,12 @@ final class VirtualJoystickView extends View {
                     -directionY * scaledMagnitude);
         }
         invalidate();
+    }
+
+    private void updateFromScreen(float rawX, float rawY) {
+        int[] location = new int[2];
+        getLocationOnScreen(location);
+        updateFromTouch(rawX - location[0], rawY - location[1]);
     }
 
     private void setOutput(float horizontal, float vertical) {

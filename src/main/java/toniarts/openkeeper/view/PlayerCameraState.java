@@ -78,6 +78,8 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
     private float virtualMoveY;
     private float virtualViewX;
     private float virtualViewY;
+    private float virtualMoveSensitivity = 1f;
+    private float virtualViewSensitivity = 1f;
     private boolean embeddedControlsVisible;
 
     private final Set<Integer> keys = new HashSet<>();
@@ -279,6 +281,23 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
                 : 0f;
     }
 
+    /**
+     * Sets speed multipliers supplied by an embedded platform's camera UI.
+     *
+     * @param moveSensitivity MOVE speed multiplier
+     * @param viewSensitivity rotation and zoom speed multiplier
+     */
+    public void setVirtualControlSensitivity(float moveSensitivity,
+            float viewSensitivity) {
+        virtualMoveSensitivity = sanitizeSensitivity(moveSensitivity);
+        virtualViewSensitivity = sanitizeSensitivity(viewSensitivity);
+    }
+
+    private static float sanitizeSensitivity(float sensitivity) {
+        return Float.isFinite(sensitivity)
+                ? Math.max(0.5f, Math.min(1.5f, sensitivity)) : 1f;
+    }
+
     private Vector2f getCameraMapLimit() {
         GameMap gm = this.stateManager.getState(GameClientState.class).getLevelData().getMap();
         return new Vector2f(gm.getWidth(), gm.getHeight());
@@ -406,14 +425,17 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
                 && stateManager.getState(Cinematic.class) == null;
         setEmbeddedControlsVisible(controlsVisible);
         if (controlsVisible && (virtualMoveX != 0f || virtualMoveY != 0f)) {
-            camera.move(-virtualMoveX * MOVE_SPEED * tpf,
-                    virtualMoveY * MOVE_SPEED * tpf);
+            camera.move(-virtualMoveX * MOVE_SPEED * virtualMoveSensitivity
+                    * tpf, virtualMoveY * MOVE_SPEED
+                    * virtualMoveSensitivity * tpf);
         }
         if (controlsVisible && virtualViewX != 0f) {
-            camera.rotateAround(virtualViewX * VIRTUAL_ROTATION_SPEED * tpf);
+            camera.rotateAround(virtualViewX * VIRTUAL_ROTATION_SPEED
+                    * virtualViewSensitivity * tpf);
         }
         if (controlsVisible && virtualViewY != 0f) {
-            camera.zoom(virtualViewY * VIRTUAL_ZOOM_SPEED * tpf);
+            camera.zoom(virtualViewY * VIRTUAL_ZOOM_SPEED
+                    * virtualViewSensitivity * tpf);
         }
 
         // Update the container

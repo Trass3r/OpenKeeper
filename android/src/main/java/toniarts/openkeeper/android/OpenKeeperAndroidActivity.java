@@ -9,6 +9,7 @@
 package toniarts.openkeeper.android;
 
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -19,6 +20,7 @@ import android.view.ViewConfiguration;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import com.jme3.app.AndroidHarness;
 import com.jme3.input.TouchInput;
 import com.jme3.system.AppSettings;
@@ -34,6 +36,7 @@ import toniarts.openkeeper.view.PlayerInteractionState;
 public final class OpenKeeperAndroidActivity extends AndroidHarness {
 
     private static final String SPEN_LOG_TAG = "OpenKeeperSpen";
+    private static final String CONTROLS_LOG_TAG = "OpenKeeperControls";
     private static final int RENDER_WIDTH = 1920;
     private static final int RENDER_HEIGHT = 886;
     private static final int STYLUS_SECONDARY_BUTTONS
@@ -61,9 +64,13 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
     private float multiFingerTapX;
     private float multiFingerTapY;
     private int touchSlop;
+    private AndroidControlSettings controlSettings;
     private VirtualJoystickView movementJoystick;
     private VirtualJoystickView viewJoystick;
-    private VirtualJoystickView activeJoystickGesture;
+    private ImageButton controlSettingsButton;
+    private boolean virtualJoysticksVisible;
+    private boolean virtualJoystickGesture;
+    private boolean controlSettingsButtonGesture;
 
     public OpenKeeperAndroidActivity() {
         appClass = Main.class.getName();
@@ -84,6 +91,7 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         touchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
+        controlSettings = AndroidControlSettings.load(this);
         Main.setEmbeddedCameraControlsListener(
                 this::setVirtualJoysticksVisible);
         File privateFiles = getFilesDir();
@@ -109,7 +117,7 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
             // needlessly expensive; Android scales this buffer fullscreen.
             view.getHolder().setFixedSize(RENDER_WIDTH, RENDER_HEIGHT);
         }
-        setupVirtualJoysticks();
+        setupVirtualControls();
         enterImmersiveMode();
     }
 
@@ -130,7 +138,8 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         suppressedFingerGesture = false;
         lastStylusEventTime = 0L;
         resetFingerGesture();
-        activeJoystickGesture = null;
+        virtualJoystickGesture = false;
+        controlSettingsButtonGesture = false;
         if (movementJoystick != null) {
             movementJoystick.cancelInput();
         }
@@ -143,6 +152,8 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
     @Override
     protected void onDestroy() {
         Main.setEmbeddedCameraControlsListener(null);
+        virtualJoystickGesture = false;
+        controlSettingsButtonGesture = false;
         if (movementJoystick != null) {
             movementJoystick.cancelInput();
         }
@@ -238,17 +249,36 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
                 }
                 return true;
             }
-            if (action == MotionEvent.ACTION_DOWN) {
-                activeJoystickGesture = findJoystickAt(event);
-            }
-            if (activeJoystickGesture != null) {
+            if (action == MotionEvent.ACTION_DOWN
+                    && isInsideView(event, 0, controlSettingsButton)) {
+                controlSettingsButtonGesture = true;
                 resetFingerGesture();
                 boolean handled = super.dispatchTouchEvent(event);
                 if (action == MotionEvent.ACTION_UP
                         || action == MotionEvent.ACTION_CANCEL) {
-                    activeJoystickGesture = null;
+                    controlSettingsButtonGesture = false;
                 }
                 return handled;
+            }
+            if (controlSettingsButtonGesture) {
+                boolean handled = super.dispatchTouchEvent(event);
+                if (action == MotionEvent.ACTION_UP
+                        || action == MotionEvent.ACTION_CANCEL) {
+                    controlSettingsButtonGesture = false;
+                }
+                return handled;
+            }
+            if (action == MotionEvent.ACTION_DOWN) {
+                virtualJoystickGesture = beginVirtualJoystickPointer(event,
+                        event.getActionIndex());
+                if (virtualJoystickGesture) {
+                    resetFingerGesture();
+                    return true;
+                }
+            }
+            if (virtualJoystickGesture) {
+                dispatchVirtualJoystickEvent(event);
+                return true;
             }
             return dispatchFingerTouchEvent(event);
         }
@@ -481,80 +511,239 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
                 event.getY(1) - event.getY(0));
     }
 
-    private void setupVirtualJoysticks() {
+    private void setupVirtualControls() {
         movementJoystick = new VirtualJoystickView(this, "MOVE",
                 Color.rgb(255, 199, 82), Color.rgb(171, 83, 24));
         movementJoystick.setVisibility(View.GONE);
         movementJoystick.setListener(this::postVirtualCameraMove);
-
-        int size = dpToPixels(152);
-        FrameLayout.LayoutParams movementLayout = new FrameLayout.LayoutParams(
-                size, size, Gravity.END | Gravity.BOTTOM);
-        movementLayout.setMarginEnd(dpToPixels(18));
-        movementLayout.bottomMargin = dpToPixels(84);
-        addContentView(movementJoystick, movementLayout);
+        addContentView(movementJoystick, createJoystickLayout(Gravity.END));
 
         viewJoystick = new VirtualJoystickView(this, "VIEW",
                 Color.rgb(112, 205, 255), Color.rgb(33, 112, 166));
         viewJoystick.setVisibility(View.GONE);
         viewJoystick.setListener(this::postVirtualCameraView);
+        addContentView(viewJoystick, createJoystickLayout(Gravity.START));
 
-        FrameLayout.LayoutParams viewLayout = new FrameLayout.LayoutParams(
-                size, size, Gravity.START | Gravity.BOTTOM);
-        viewLayout.setMarginStart(dpToPixels(18));
-        viewLayout.bottomMargin = dpToPixels(84);
-        addContentView(viewJoystick, viewLayout);
+        controlSettingsButton = new ImageButton(this);
+        controlSettingsButton.setVisibility(View.GONE);
+        controlSettingsButton.setContentDescription(
+                "Open Android camera control settings");
+        controlSettingsButton.setImageResource(
+                android.R.drawable.ic_menu_preferences);
+        controlSettingsButton.setColorFilter(Color.WHITE);
+        controlSettingsButton.setPadding(dpToPixels(10), dpToPixels(10),
+                dpToPixels(10), dpToPixels(10));
+        GradientDrawable buttonBackground = new GradientDrawable();
+        buttonBackground.setShape(GradientDrawable.OVAL);
+        buttonBackground.setColor(Color.argb(170, 20, 16, 12));
+        buttonBackground.setStroke(dpToPixels(1),
+                Color.argb(210, 255, 199, 82));
+        controlSettingsButton.setBackground(buttonBackground);
+        controlSettingsButton.setOnClickListener(view -> {
+            cancelVirtualJoystickInput();
+            AndroidControlSettings.show(this, controlSettings,
+                    this::applyControlSettings);
+        });
+
+        int buttonSize = dpToPixels(48);
+        FrameLayout.LayoutParams buttonLayout = new FrameLayout.LayoutParams(
+                buttonSize, buttonSize, Gravity.END | Gravity.TOP);
+        buttonLayout.setMarginEnd(dpToPixels(16));
+        buttonLayout.topMargin = dpToPixels(14);
+        addContentView(controlSettingsButton, buttonLayout);
+
+        updateControlViews();
+    }
+
+    private FrameLayout.LayoutParams createJoystickLayout(
+            int horizontalGravity) {
+        int size = dpToPixels(controlSettings.getJoystickSize());
+        FrameLayout.LayoutParams layout = new FrameLayout.LayoutParams(
+                size, size, horizontalGravity | Gravity.BOTTOM);
+        if (horizontalGravity == Gravity.START) {
+            layout.setMarginStart(dpToPixels(18));
+        } else {
+            layout.setMarginEnd(dpToPixels(18));
+        }
+        layout.bottomMargin = dpToPixels(84);
+        return layout;
+    }
+
+    private void applyControlSettings(AndroidControlSettings settings) {
+        controlSettings = settings;
+        controlSettings.save(this);
+        updateControlViews();
+        postVirtualControlSensitivity();
+    }
+
+    private void updateControlViews() {
+        if (movementJoystick == null || viewJoystick == null
+                || controlSettingsButton == null) {
+            return;
+        }
+
+        int movementSide = controlSettings.isSidesSwapped()
+                ? Gravity.START : Gravity.END;
+        int viewSide = controlSettings.isSidesSwapped()
+                ? Gravity.END : Gravity.START;
+        movementJoystick.setLayoutParams(createJoystickLayout(movementSide));
+        viewJoystick.setLayoutParams(createJoystickLayout(viewSide));
+        movementJoystick.setControlOpacity(
+                controlSettings.getJoystickOpacity());
+        viewJoystick.setControlOpacity(controlSettings.getJoystickOpacity());
+
+        movementJoystick.setVisibility(virtualJoysticksVisible
+                ? View.VISIBLE : View.GONE);
+        boolean showView = virtualJoysticksVisible
+                && controlSettings.isViewVisible();
+        viewJoystick.setVisibility(showView ? View.VISIBLE : View.GONE);
+        controlSettingsButton.setVisibility(virtualJoysticksVisible
+                ? View.VISIBLE : View.GONE);
+        if (!showView) {
+            viewJoystick.cancelInput();
+        }
     }
 
     private void setVirtualJoysticksVisible(boolean visible) {
         runOnUiThread(() -> {
-            if (movementJoystick == null || viewJoystick == null) {
-                return;
-            }
+            virtualJoysticksVisible = visible;
             if (!visible) {
-                activeJoystickGesture = null;
-                movementJoystick.cancelInput();
-                viewJoystick.cancelInput();
+                cancelVirtualJoystickInput();
+                controlSettingsButtonGesture = false;
             }
-            movementJoystick.setVisibility(visible ? View.VISIBLE : View.GONE);
-            viewJoystick.setVisibility(visible ? View.VISIBLE : View.GONE);
+            updateControlViews();
+            if (visible) {
+                postVirtualControlSensitivity();
+            }
         });
     }
 
-    private VirtualJoystickView findJoystickAt(MotionEvent event) {
-        if (isInsideJoystick(event, movementJoystick)) {
+    private void dispatchVirtualJoystickEvent(MotionEvent event) {
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_POINTER_DOWN:
+                beginVirtualJoystickPointer(event, event.getActionIndex());
+                break;
+            case MotionEvent.ACTION_MOVE:
+                updateVirtualJoystickPointers(event);
+                break;
+            case MotionEvent.ACTION_POINTER_UP:
+                endVirtualJoystickPointer(event, event.getActionIndex(),
+                        false);
+                break;
+            case MotionEvent.ACTION_UP:
+                endVirtualJoystickPointer(event, event.getActionIndex(),
+                        true);
+                virtualJoystickGesture = false;
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                cancelVirtualJoystickInput();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private boolean beginVirtualJoystickPointer(MotionEvent event,
+            int pointerIndex) {
+        if (pointerIndex < 0 || pointerIndex >= event.getPointerCount()
+                || event.getToolType(pointerIndex)
+                != MotionEvent.TOOL_TYPE_FINGER) {
+            return false;
+        }
+
+        VirtualJoystickView joystick = findJoystickAt(event, pointerIndex);
+        if (joystick == null) {
+            return false;
+        }
+
+        int pointerId = event.getPointerId(pointerIndex);
+        boolean accepted = joystick.beginInput(pointerId,
+                event.getRawX(pointerIndex), event.getRawY(pointerIndex));
+        if (accepted) {
+            Log.d(CONTROLS_LOG_TAG, String.format(Locale.ROOT,
+                    "%s pointer %d down", joystick == movementJoystick
+                            ? "MOVE" : "VIEW", pointerId));
+        }
+        return accepted;
+    }
+
+    private void updateVirtualJoystickPointers(MotionEvent event) {
+        for (int i = 0; i < event.getPointerCount(); i++) {
+            int pointerId = event.getPointerId(i);
+            float rawX = event.getRawX(i);
+            float rawY = event.getRawY(i);
+            movementJoystick.updateInput(pointerId, rawX, rawY);
+            viewJoystick.updateInput(pointerId, rawX, rawY);
+        }
+    }
+
+    private void endVirtualJoystickPointer(MotionEvent event,
+            int pointerIndex, boolean performClick) {
+        if (pointerIndex < 0 || pointerIndex >= event.getPointerCount()) {
+            return;
+        }
+        int pointerId = event.getPointerId(pointerIndex);
+        if (movementJoystick.endInput(pointerId, performClick)) {
+            Log.d(CONTROLS_LOG_TAG, String.format(Locale.ROOT,
+                    "MOVE pointer %d up", pointerId));
+        }
+        if (viewJoystick.endInput(pointerId, performClick)) {
+            Log.d(CONTROLS_LOG_TAG, String.format(Locale.ROOT,
+                    "VIEW pointer %d up", pointerId));
+        }
+    }
+
+    private void cancelVirtualJoystickInput() {
+        virtualJoystickGesture = false;
+        if (movementJoystick != null) {
+            movementJoystick.cancelInput();
+        }
+        if (viewJoystick != null) {
+            viewJoystick.cancelInput();
+        }
+    }
+
+    private VirtualJoystickView findJoystickAt(MotionEvent event,
+            int pointerIndex) {
+        if (isInsideView(event, pointerIndex, movementJoystick)) {
             return movementJoystick;
         }
-        if (isInsideJoystick(event, viewJoystick)) {
+        if (isInsideView(event, pointerIndex, viewJoystick)) {
             return viewJoystick;
         }
         return null;
     }
 
-    private static boolean isInsideJoystick(MotionEvent event,
-            VirtualJoystickView joystick) {
-        if (joystick == null || joystick.getVisibility() != View.VISIBLE) {
+    private static boolean isInsideView(MotionEvent event, int pointerIndex,
+            View target) {
+        if (target == null || target.getVisibility() != View.VISIBLE
+                || pointerIndex < 0
+                || pointerIndex >= event.getPointerCount()) {
             return false;
         }
 
         int[] location = new int[2];
-        joystick.getLocationOnScreen(location);
-        float x = event.getRawX();
-        float y = event.getRawY();
+        target.getLocationOnScreen(location);
+        float x = event.getRawX(pointerIndex);
+        float y = event.getRawY(pointerIndex);
         return x >= location[0]
-                && x < location[0] + joystick.getWidth()
+                && x < location[0] + target.getWidth()
                 && y >= location[1]
-                && y < location[1] + joystick.getHeight();
+                && y < location[1] + target.getHeight();
     }
 
     private void postVirtualCameraMove(float horizontal, float vertical) {
         if (!(getJmeApplication() instanceof Main main)) {
             return;
         }
+        float moveSensitivity = controlSettings.getMoveSensitivity();
+        float viewSensitivity = controlSettings.getViewSensitivity();
         main.enqueue(() -> {
             PlayerCameraState cameraState
                     = main.getStateManager().getState(PlayerCameraState.class);
             if (cameraState != null) {
+                cameraState.setVirtualControlSensitivity(moveSensitivity,
+                        viewSensitivity);
                 cameraState.handleVirtualJoystick(horizontal, vertical);
             }
         });
@@ -564,11 +753,34 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         if (!(getJmeApplication() instanceof Main main)) {
             return;
         }
+        float moveSensitivity = controlSettings.getMoveSensitivity();
+        float viewSensitivity = controlSettings.getViewSensitivity();
+        float adjustedVertical = controlSettings.isViewVerticalInverted()
+                ? -vertical : vertical;
         main.enqueue(() -> {
             PlayerCameraState cameraState
                     = main.getStateManager().getState(PlayerCameraState.class);
             if (cameraState != null) {
-                cameraState.handleVirtualViewJoystick(horizontal, vertical);
+                cameraState.setVirtualControlSensitivity(moveSensitivity,
+                        viewSensitivity);
+                cameraState.handleVirtualViewJoystick(horizontal,
+                        adjustedVertical);
+            }
+        });
+    }
+
+    private void postVirtualControlSensitivity() {
+        if (!(getJmeApplication() instanceof Main main)) {
+            return;
+        }
+        float moveSensitivity = controlSettings.getMoveSensitivity();
+        float viewSensitivity = controlSettings.getViewSensitivity();
+        main.enqueue(() -> {
+            PlayerCameraState cameraState
+                    = main.getStateManager().getState(PlayerCameraState.class);
+            if (cameraState != null) {
+                cameraState.setVirtualControlSensitivity(moveSensitivity,
+                        viewSensitivity);
             }
         });
     }
