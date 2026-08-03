@@ -32,8 +32,9 @@ From PowerShell in the repository root:
 
 The first run converts the DK2 assets, builds and installs the debug APK,
 uploads both the converted assets and original `Data` directory to the app's
-external storage, and launches OpenKeeper. The upload is large; later runs can
-skip work:
+external storage, and launches OpenKeeper. ADB negotiates compression for the
+transfer and skips unchanged files, but the first upload is still large. Later
+runs can skip work:
 
 ```powershell
 # Rebuild/install code while keeping data already on the device
@@ -65,14 +66,16 @@ Uninstalling the app may remove this directory, so keep the PC installation.
 
 - Tap: click/select/interact on release
 - One-finger drag: select or tag a tile area after a short movement threshold
-- Two-finger drag: pan the camera without clicking the map
+- Two-finger drag: move the map beneath the gesture without clicking it
+- Two-finger twist: rotate the camera
 - Pinch: zoom the camera without clicking the map
 - Quick two-finger tap: secondary/right-click action
 - Lower-right MOVE joystick: analog camera movement during gameplay
 - Lower-left VIEW joystick: horizontal camera rotation and vertical zoom
 - MOVE and VIEW accept separate fingers and can be used simultaneously
 - Gameplay gear button: configure VIEW visibility, stick sides, zoom direction,
-  size, opacity, and MOVE/VIEW sensitivity; settings persist across launches
+  size, opacity, MOVE/VIEW sensitivity, and the maximum zoom-out distance;
+  settings persist across launches
 - Android Back: OpenKeeper's exit/back handling
 
 ### Samsung S Pen and other Android styluses
@@ -106,5 +109,12 @@ phones.
   filtering and SSAO remain configurable.
 - Original pre-rendered TGQ movies are skipped because their decoder currently
   depends on desktop AWT image classes. Gameplay cinematics still run.
+- Fatal-error dialogs provide selectable details and a Copy button so reports
+  can include the complete exception.
 - Converted and original DK2 assets are intentionally excluded from Git and
   from the APK.
+
+The shared desktop sources retain their standard `System.Logger` usage. During
+the Android runtime build, Gradle creates an ignored generated-source copy that
+redirects only those logging references to an Android-compatible adapter. This
+keeps platform compatibility out of the shared source files.
