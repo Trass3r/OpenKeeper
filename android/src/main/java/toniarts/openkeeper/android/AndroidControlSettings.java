@@ -39,16 +39,20 @@ final class AndroidControlSettings {
     private static final String JOYSTICK_OPACITY = "joystick_opacity";
     private static final String MOVE_SENSITIVITY = "move_sensitivity";
     private static final String VIEW_SENSITIVITY = "view_sensitivity";
+    private static final String MAXIMUM_ZOOM = "maximum_zoom";
 
     private static final int DEFAULT_JOYSTICK_SIZE = 152;
     private static final int DEFAULT_JOYSTICK_OPACITY = 100;
     private static final int DEFAULT_SENSITIVITY = 100;
+    private static final int DEFAULT_MAXIMUM_ZOOM = 200;
     private static final int MIN_JOYSTICK_SIZE = 112;
     private static final int MAX_JOYSTICK_SIZE = 200;
     private static final int MIN_OPACITY = 35;
     private static final int MAX_OPACITY = 100;
     private static final int MIN_SENSITIVITY = 50;
     private static final int MAX_SENSITIVITY = 150;
+    private static final int MIN_MAXIMUM_ZOOM = 100;
+    private static final int MAX_MAXIMUM_ZOOM = 300;
 
     private final boolean showView;
     private final boolean swapSides;
@@ -57,10 +61,12 @@ final class AndroidControlSettings {
     private final int joystickOpacity;
     private final int moveSensitivity;
     private final int viewSensitivity;
+    private final int maximumZoom;
 
     private AndroidControlSettings(boolean showView, boolean swapSides,
             boolean invertViewVertical, int joystickSize,
-            int joystickOpacity, int moveSensitivity, int viewSensitivity) {
+            int joystickOpacity, int moveSensitivity, int viewSensitivity,
+            int maximumZoom) {
         this.showView = showView;
         this.swapSides = swapSides;
         this.invertViewVertical = invertViewVertical;
@@ -72,6 +78,8 @@ final class AndroidControlSettings {
                 MAX_SENSITIVITY);
         this.viewSensitivity = clamp(viewSensitivity, MIN_SENSITIVITY,
                 MAX_SENSITIVITY);
+        this.maximumZoom = clamp(maximumZoom, MIN_MAXIMUM_ZOOM,
+                MAX_MAXIMUM_ZOOM);
     }
 
     static AndroidControlSettings load(Context context) {
@@ -85,13 +93,15 @@ final class AndroidControlSettings {
                 preferences.getInt(JOYSTICK_OPACITY,
                         DEFAULT_JOYSTICK_OPACITY),
                 preferences.getInt(MOVE_SENSITIVITY, DEFAULT_SENSITIVITY),
-                preferences.getInt(VIEW_SENSITIVITY, DEFAULT_SENSITIVITY));
+                preferences.getInt(VIEW_SENSITIVITY, DEFAULT_SENSITIVITY),
+                preferences.getInt(MAXIMUM_ZOOM, DEFAULT_MAXIMUM_ZOOM));
     }
 
     static AndroidControlSettings defaults() {
         return new AndroidControlSettings(true, false, false,
                 DEFAULT_JOYSTICK_SIZE, DEFAULT_JOYSTICK_OPACITY,
-                DEFAULT_SENSITIVITY, DEFAULT_SENSITIVITY);
+                DEFAULT_SENSITIVITY, DEFAULT_SENSITIVITY,
+                DEFAULT_MAXIMUM_ZOOM);
     }
 
     void save(Context context) {
@@ -104,6 +114,7 @@ final class AndroidControlSettings {
                 .putInt(JOYSTICK_OPACITY, joystickOpacity)
                 .putInt(MOVE_SENSITIVITY, moveSensitivity)
                 .putInt(VIEW_SENSITIVITY, viewSensitivity)
+                .putInt(MAXIMUM_ZOOM, maximumZoom)
                 .apply();
     }
 
@@ -132,6 +143,9 @@ final class AndroidControlSettings {
         SliderRow viewSlider = addSlider(content, "VIEW speed",
                 MIN_SENSITIVITY, MAX_SENSITIVITY,
                 current.viewSensitivity, "%");
+        SliderRow maximumZoomSlider = addSlider(content,
+                "Maximum zoom-out", MIN_MAXIMUM_ZOOM, MAX_MAXIMUM_ZOOM,
+                current.maximumZoom, "%");
 
         ScrollView scrollView = new ScrollView(activity);
         scrollView.addView(content, new ScrollView.LayoutParams(
@@ -153,7 +167,8 @@ final class AndroidControlSettings {
                                     sizeSlider.getValue(),
                                     opacitySlider.getValue(),
                                     moveSlider.getValue(),
-                                    viewSlider.getValue());
+                                    viewSlider.getValue(),
+                                    maximumZoomSlider.getValue());
                     listener.onSettingsChanged(settings);
                 })
                 .show();
@@ -185,6 +200,10 @@ final class AndroidControlSettings {
 
     float getViewSensitivity() {
         return viewSensitivity / 100f;
+    }
+
+    float getMaximumZoomMultiplier() {
+        return maximumZoom / 100f;
     }
 
     private static CheckBox addCheckBox(LinearLayout parent, String label,

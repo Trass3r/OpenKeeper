@@ -8,7 +8,13 @@
  */
 package toniarts.openkeeper.android;
 
+import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,10 +27,15 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
 import com.jme3.app.AndroidHarness;
 import com.jme3.input.TouchInput;
 import com.jme3.system.AppSettings;
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Locale;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.view.PlayerCameraState;
@@ -45,6 +56,8 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
             | MotionEvent.BUTTON_SECONDARY;
     private static final long PALM_REJECTION_GRACE_MS = 200L;
     private static final long TWO_FINGER_TAP_TIMEOUT_MS = 500L;
+    private static final float TWO_FINGER_ROTATION_SLOP
+            = (float) Math.toRadians(2d);
 
     private boolean stylusInRange;
     private boolean stylusTouching;
@@ -63,6 +76,9 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
     private float multiFingerStartSpan;
     private float multiFingerTapX;
     private float multiFingerTapY;
+    private float multiFingerLastAngle;
+    private float multiFingerAccumulatedRotation;
+    private boolean multiFingerRotationActive;
     private int touchSlop;
     private AndroidControlSettings controlSettings;
     private VirtualJoystickView movementJoystick;
@@ -161,6 +177,18 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
             viewJoystick.cancelInput();
         }
         super.onDestroy();
+    }
+
+    @Override
+    public void handleError(String errorMessage, Throwable throwable) {
+        String details = formatError(errorMessage, throwable);
+        if (throwable != null) {
+            Log.e("OpenKeeper", errorMessage != null
+                    ? errorMessage : "Uncaught exception", throwable);
+        } else {
+            Log.e("OpenKeeper", details);
+        }
+        runOnUiThread(() -> showCopyableError(details));
     }
 
     @Override
@@ -428,6 +456,9 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         multiFingerStartSpan = getPointerSpan(event);
         multiFingerTapX = multiFingerStartX;
         multiFingerTapY = multiFingerStartY;
+        multiFingerLastAngle = getPointerAngle(event);
+        multiFingerAccumulatedRotation = 0f;
+        multiFingerRotationActive = false;
     }
 
     private void updateMultiFingerGesture(MotionEvent event) {
@@ -439,11 +470,26 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         float centroidX = getCentroidX(event);
         float centroidY = getCentroidY(event);
         float span = getPointerSpan(event);
+        float angle = getPointerAngle(event);
+        float angleDelta = normalizeAngle(angle - multiFingerLastAngle);
+        multiFingerLastAngle = angle;
+        multiFingerAccumulatedRotation += angleDelta;
         multiFingerTapX = centroidX;
         multiFingerTapY = centroidY;
         if (Math.hypot(centroidX - multiFingerStartX,
                 centroidY - multiFingerStartY) >= touchSlop
                 || Math.abs(span - multiFingerStartSpan) >= touchSlop) {
+            multiFingerTapCandidate = false;
+        }
+        if (!multiFingerRotationActive
+                && Math.abs(multiFingerAccumulatedRotation)
+                >= TWO_FINGER_ROTATION_SLOP) {
+            multiFingerRotationActive = true;
+            postTwoFingerCameraRotation(multiFingerAccumulatedRotation);
+        } else if (multiFingerRotationActive && angleDelta != 0f) {
+            postTwoFingerCameraRotation(angleDelta);
+        }
+        if (multiFingerRotationActive) {
             multiFingerTapCandidate = false;
         }
     }
@@ -485,6 +531,9 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         }
         multiFingerGesture = false;
         multiFingerTapCandidate = false;
+        multiFingerLastAngle = 0f;
+        multiFingerAccumulatedRotation = 0f;
+        multiFingerRotationActive = false;
     }
 
     private static float getCentroidX(MotionEvent event) {
@@ -509,6 +558,24 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         }
         return (float) Math.hypot(event.getX(1) - event.getX(0),
                 event.getY(1) - event.getY(0));
+    }
+
+    private static float getPointerAngle(MotionEvent event) {
+        if (event.getPointerCount() < 2) {
+            return 0f;
+        }
+        return (float) Math.atan2(event.getY(1) - event.getY(0),
+                event.getX(1) - event.getX(0));
+    }
+
+    private static float normalizeAngle(float angle) {
+        while (angle > Math.PI) {
+            angle -= (float) (Math.PI * 2d);
+        }
+        while (angle < -Math.PI) {
+            angle += (float) (Math.PI * 2d);
+        }
+        return angle;
     }
 
     private void setupVirtualControls() {
@@ -738,12 +805,14 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         }
         float moveSensitivity = controlSettings.getMoveSensitivity();
         float viewSensitivity = controlSettings.getViewSensitivity();
+        float maximumZoom = controlSettings.getMaximumZoomMultiplier();
         main.enqueue(() -> {
             PlayerCameraState cameraState
                     = main.getStateManager().getState(PlayerCameraState.class);
             if (cameraState != null) {
                 cameraState.setVirtualControlSensitivity(moveSensitivity,
                         viewSensitivity);
+                cameraState.setMaximumZoomMultiplier(maximumZoom);
                 cameraState.handleVirtualJoystick(horizontal, vertical);
             }
         });
@@ -755,6 +824,7 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         }
         float moveSensitivity = controlSettings.getMoveSensitivity();
         float viewSensitivity = controlSettings.getViewSensitivity();
+        float maximumZoom = controlSettings.getMaximumZoomMultiplier();
         float adjustedVertical = controlSettings.isViewVerticalInverted()
                 ? -vertical : vertical;
         main.enqueue(() -> {
@@ -763,8 +833,23 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
             if (cameraState != null) {
                 cameraState.setVirtualControlSensitivity(moveSensitivity,
                         viewSensitivity);
+                cameraState.setMaximumZoomMultiplier(maximumZoom);
                 cameraState.handleVirtualViewJoystick(horizontal,
                         adjustedVertical);
+            }
+        });
+    }
+
+    private void postTwoFingerCameraRotation(float angle) {
+        if (!Float.isFinite(angle)
+                || !(getJmeApplication() instanceof Main main)) {
+            return;
+        }
+        main.enqueue(() -> {
+            PlayerCameraState cameraState
+                    = main.getStateManager().getState(PlayerCameraState.class);
+            if (cameraState != null) {
+                cameraState.handleTwoFingerRotation(angle);
             }
         });
     }
@@ -775,18 +860,65 @@ public final class OpenKeeperAndroidActivity extends AndroidHarness {
         }
         float moveSensitivity = controlSettings.getMoveSensitivity();
         float viewSensitivity = controlSettings.getViewSensitivity();
+        float maximumZoom = controlSettings.getMaximumZoomMultiplier();
         main.enqueue(() -> {
             PlayerCameraState cameraState
                     = main.getStateManager().getState(PlayerCameraState.class);
             if (cameraState != null) {
                 cameraState.setVirtualControlSensitivity(moveSensitivity,
                         viewSensitivity);
+                cameraState.setMaximumZoomMultiplier(maximumZoom);
             }
         });
     }
 
     private int dpToPixels(int dp) {
         return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
+    private static String formatError(String errorMessage,
+            Throwable throwable) {
+        StringBuilder details = new StringBuilder();
+        details.append(errorMessage != null && !errorMessage.isBlank()
+                ? errorMessage : "Uncaught exception");
+        if (throwable != null) {
+            StringWriter stackTrace = new StringWriter(1024);
+            throwable.printStackTrace(new PrintWriter(stackTrace));
+            details.append("\n\n").append(stackTrace);
+        }
+        return details.toString();
+    }
+
+    private void showCopyableError(String details) {
+        TextView errorText = new TextView(this);
+        errorText.setText(details);
+        errorText.setTextIsSelectable(true);
+        errorText.setTypeface(Typeface.MONOSPACE);
+        errorText.setTextSize(12f);
+        int padding = dpToPixels(16);
+        errorText.setPadding(padding, padding, padding, padding);
+
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setFillViewport(true);
+        scrollView.addView(errorText, new ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT,
+                ScrollView.LayoutParams.WRAP_CONTENT));
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("OpenKeeper error")
+                .setView(scrollView)
+                .setNeutralButton("Copy", null)
+                .setPositiveButton("Exit", this)
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(
+                DialogInterface.BUTTON_NEUTRAL).setOnClickListener(view -> {
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(
+                    Context.CLIPBOARD_SERVICE);
+            clipboard.setPrimaryClip(ClipData.newPlainText(
+                    "OpenKeeper error", details));
+            Toast.makeText(this, "Error copied", Toast.LENGTH_SHORT).show();
+        }));
+        dialog.show();
     }
 
     private void beginStylusSecondary(MotionEvent event) {

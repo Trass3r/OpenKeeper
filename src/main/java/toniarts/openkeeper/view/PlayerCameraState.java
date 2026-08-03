@@ -80,6 +80,7 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
     private float virtualViewY;
     private float virtualMoveSensitivity = 1f;
     private float virtualViewSensitivity = 1f;
+    private float maximumZoomMultiplier = 1f;
     private boolean embeddedControlsVisible;
 
     private final Set<Integer> keys = new HashSet<>();
@@ -156,8 +157,8 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
                     // the gesture and is handled once via the primary pointer.
                     if (activeTouchPointers.size() >= 2
                             && evt.getPointerId() == primaryTouchPointer) {
-                        camera.move(-evt.getDeltaX() * TOUCH_MOVE_SPEED,
-                                evt.getDeltaY() * TOUCH_MOVE_SPEED);
+                        camera.move(evt.getDeltaX() * TOUCH_MOVE_SPEED,
+                                -evt.getDeltaY() * TOUCH_MOVE_SPEED);
                         evt.setConsumed();
                     }
                     break;
@@ -215,6 +216,7 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
 
         // The camera
         camera = new PlayerCamera(app.getCamera(), getCameraPresets());
+        camera.setMaximumZoomMultiplier(maximumZoomMultiplier);
         camera.setLimit(getCameraMapLimit());
         loadCameraStartLocation();
         // Add listener
@@ -282,6 +284,18 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
     }
 
     /**
+     * Rotates the gameplay camera by a two-finger twist gesture.
+     *
+     * @param angle signed gesture angle delta in radians
+     */
+    public void handleTwoFingerRotation(float angle) {
+        if (camera != null && Float.isFinite(angle)
+                && stateManager.getState(Cinematic.class) == null) {
+            camera.rotateAround(angle);
+        }
+    }
+
+    /**
      * Sets speed multipliers supplied by an embedded platform's camera UI.
      *
      * @param moveSensitivity MOVE speed multiplier
@@ -291,6 +305,20 @@ public final class PlayerCameraState extends AbstractPauseAwareState implements 
             float viewSensitivity) {
         virtualMoveSensitivity = sanitizeSensitivity(moveSensitivity);
         virtualViewSensitivity = sanitizeSensitivity(viewSensitivity);
+    }
+
+    /**
+     * Sets an embedded platform's extension of the map-defined zoom-out
+     * limit.
+     *
+     * @param multiplier zoom-out multiplier between 1 and 3
+     */
+    public void setMaximumZoomMultiplier(float multiplier) {
+        maximumZoomMultiplier = Float.isFinite(multiplier)
+                ? Math.max(1f, Math.min(3f, multiplier)) : 1f;
+        if (camera != null) {
+            camera.setMaximumZoomMultiplier(maximumZoomMultiplier);
+        }
     }
 
     private static float sanitizeSensitivity(float sensitivity) {

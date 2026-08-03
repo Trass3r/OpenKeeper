@@ -36,6 +36,7 @@ public final class PlayerCamera {
     private final Camera cam;
     private final Thing.Camera presets;
     private Vector2f limit;
+    private float maximumZoomMultiplier = 1f;
 
     public PlayerCamera(Camera cam, Thing.Camera presets) {
         this.cam = cam;
@@ -75,12 +76,24 @@ public final class PlayerCamera {
         if (pos.y < presets.getZoomValueMin()) {
             //pos.setY(presets.getHeightMin());
             return;
-        } else if (pos.y > presets.getZoomValueMax()) {
+        } else if (pos.y > presets.getZoomValueMax()
+                * maximumZoomMultiplier) {
             //pos.setY(presets.getHeightMax());
             return;
         }
 
         cam.setLocation(pos);
+    }
+
+    /**
+     * Extends the map-defined maximum zoom-out height without modifying the
+     * original camera preset used by cinematics and other game systems.
+     *
+     * @param multiplier zoom-out multiplier between 1 and 3
+     */
+    public void setMaximumZoomMultiplier(float multiplier) {
+        maximumZoomMultiplier = Float.isFinite(multiplier)
+                ? Math.max(1f, Math.min(3f, multiplier)) : 1f;
     }
 
     protected void move(float dx, float dz) {
