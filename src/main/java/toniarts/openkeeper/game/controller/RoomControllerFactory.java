@@ -18,8 +18,8 @@ package toniarts.openkeeper.game.controller;
 
 import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Map;
 import toniarts.openkeeper.common.RoomInstance;
 import toniarts.openkeeper.game.controller.room.CasinoController;
@@ -51,7 +51,7 @@ import toniarts.openkeeper.tools.convert.map.Variable.MiscVariable.MiscType;
  */
 public final class RoomControllerFactory {
 
-    private static final Logger logger = Logger.getLogger(RoomControllerFactory.class.getName());
+    private static final Logger logger = System.getLogger(RoomControllerFactory.class.getName());
 
     private RoomControllerFactory() {
         // Nope

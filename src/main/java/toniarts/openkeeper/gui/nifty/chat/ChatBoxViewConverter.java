@@ -21,8 +21,8 @@ import de.lessvoid.nifty.elements.Element;
 import de.lessvoid.nifty.elements.render.TextRenderer;
 import de.lessvoid.nifty.tools.Color;
 import toniarts.openkeeper.game.data.PlayerColors;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 
 /**
  * Handles the displaying of the items in the ChatBox.
@@ -32,7 +32,7 @@ import toniarts.openkeeper.utils.Logger.Level;
  */
 public final class ChatBoxViewConverter implements ListBoxViewConverter<ChatEntry> {
 
-    private static final Logger logger = Logger.getLogger(ChatBoxViewConverter.class.getName());
+    private static final Logger logger = System.getLogger(ChatBoxViewConverter.class.getName());
 
     private static final String CHAT_LINE_TEXT = "#chat-line-text";
 

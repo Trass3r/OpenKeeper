@@ -43,8 +43,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -86,7 +86,7 @@ import toniarts.openkeeper.video.MovieState;
  */
 public final class Main extends SimpleApplication {
 
-    private static final Logger logger = Logger.getLogger(Main.class.getName());
+    private static final Logger logger = System.getLogger(Main.class.getName());
 
     private static boolean folderOk = false;
     private static boolean conversionOk = false;
@@ -330,7 +330,7 @@ public final class Main extends SimpleApplication {
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            Logger.getLogger(DKFolderSelector.class.getName()).log(Level.ERROR, (String) null, ex);
+            System.getLogger(DKFolderSelector.class.getName()).log(Level.ERROR, (String) null, ex);
         }
     }
 

@@ -19,8 +19,8 @@ package toniarts.openkeeper.view.loader;
 import com.jme3.asset.AssetManager;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import toniarts.openkeeper.game.component.ObjectViewState;
 import toniarts.openkeeper.tools.convert.map.ArtResource;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
@@ -33,7 +33,7 @@ import toniarts.openkeeper.utils.AssetUtils;
  */
 public final class ObjectLoader implements ILoader<ObjectViewState> {
 
-    private static final Logger logger = Logger.getLogger(ObjectLoader.class.getName());
+    private static final Logger logger = System.getLogger(ObjectLoader.class.getName());
 
     private final KwdFile kwdFile;
 

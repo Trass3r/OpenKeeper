@@ -20,8 +20,8 @@ import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
 import toniarts.openkeeper.utils.Point;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Objects;
 import toniarts.openkeeper.game.component.CreatureSleep;
 import toniarts.openkeeper.game.component.CreatureSpells;
@@ -48,7 +48,7 @@ import toniarts.openkeeper.utils.WorldUtils;
  */
 public class EntityController implements IEntityController {
 
-    private static final Logger logger = Logger.getLogger(EntityController.class.getName());
+    private static final Logger logger = System.getLogger(EntityController.class.getName());
 
     protected final EntityId entityId;
     protected final EntityData entityData;

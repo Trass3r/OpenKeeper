@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.game.trigger;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,7 +29,7 @@ import java.util.Map;
  */
 public abstract class TriggerData {
 
-    private static final Logger logger = Logger.getLogger(TriggerData.class.getName());
+    private static final Logger logger = System.getLogger(TriggerData.class.getName());
 
     /**
      * This TriggerActionData's id.

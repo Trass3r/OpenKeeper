@@ -19,8 +19,8 @@ package toniarts.openkeeper.tools.convert;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
@@ -39,7 +39,7 @@ import java.nio.file.StandardOpenOption;
  */
 public final class BufferedResourceReader implements IResourceReader {
 
-    private static final Logger logger = Logger.getLogger(BufferedResourceReader.class.getName());
+    private static final Logger logger = System.getLogger(BufferedResourceReader.class.getName());
 
     private final BufferedInputStream input;
 

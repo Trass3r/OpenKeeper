@@ -39,7 +39,7 @@ import toniarts.openkeeper.view.map.MapRoomContainer;
 import toniarts.openkeeper.view.map.MapTileContainer;
 import toniarts.openkeeper.view.map.MapViewController;
 
-import toniarts.openkeeper.utils.Logger;
+import java.lang.System.Logger;
 import java.util.Collection;
 import java.util.List;
 
@@ -50,7 +50,7 @@ import java.util.List;
  */
 public abstract class PlayerMapViewState extends AbstractAppState implements MapListener, PlayerActionListener {
 
-    private static final Logger logger = Logger.getLogger(PlayerMapViewState.class.getName());
+    private static final Logger logger = System.getLogger(PlayerMapViewState.class.getName());
 
     private Main app;
     private AppStateManager stateManager;

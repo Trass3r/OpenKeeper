@@ -19,8 +19,8 @@ package toniarts.openkeeper.game.network.lobby;
 import com.jme3.network.service.AbstractClientService;
 import com.jme3.network.service.ClientServiceManager;
 import com.jme3.network.service.rmi.RmiClientService;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -37,7 +37,7 @@ import toniarts.openkeeper.game.state.lobby.LobbySessionListener;
 public final class LobbyClientService extends AbstractClientService
         implements toniarts.openkeeper.game.state.lobby.LobbyClientService {
 
-    private static final Logger logger = Logger.getLogger(LobbyClientService.class.getName());
+    private static final Logger logger = System.getLogger(LobbyClientService.class.getName());
 
     private RmiClientService rmiService;
     private LobbySession delegate;

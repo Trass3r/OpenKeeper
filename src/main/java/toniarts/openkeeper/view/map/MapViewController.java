@@ -45,8 +45,8 @@ import toniarts.openkeeper.view.map.construction.RoomConstructor;
 import toniarts.openkeeper.view.map.construction.SingleQuadConstructor;
 import toniarts.openkeeper.view.map.construction.WaterConstructor;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.*;
 
 /**
@@ -56,7 +56,7 @@ import java.util.*;
  */
 public abstract class MapViewController implements ILoader<KwdFile> {
 
-    private static final Logger logger = Logger.getLogger(MapViewController.class.getName());
+    private static final Logger logger = System.getLogger(MapViewController.class.getName());
 
     public final static ColorRGBA COLOR_FLASH = new ColorRGBA(0.8f, 0, 0, 1);
     private final static ColorRGBA COLOR_TAG = new ColorRGBA(0.6f, 0.6f, 1, 1);

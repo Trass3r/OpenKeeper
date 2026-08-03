@@ -41,8 +41,8 @@ import com.jme3.network.service.HostedServiceManager;
 import com.jme3.network.service.rmi.RmiHostedService;
 import com.jme3.network.service.rmi.RmiRegistry;
 import com.simsilica.event.EventBus;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import toniarts.openkeeper.game.network.NetworkConstants;
 import toniarts.openkeeper.game.network.chat.ChatHostedService;
 import toniarts.openkeeper.game.network.lobby.LobbyHostedService;
@@ -57,7 +57,7 @@ import toniarts.openkeeper.game.network.lobby.LobbyHostedService;
  */
 public final class AccountHostedService extends AbstractHostedConnectionService {
 
-    private static final Logger logger = Logger.getLogger(AccountHostedService.class.getName());
+    private static final Logger logger = System.getLogger(AccountHostedService.class.getName());
 
     private static final String ATTRIBUTE_SESSION = "account.session";
     private static final String ATTRIBUTE_PLAYER_NAME = "account.playerName";

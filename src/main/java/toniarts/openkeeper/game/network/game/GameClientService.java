@@ -29,8 +29,8 @@ import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
 import com.simsilica.es.client.EntityDataClientService;
 import toniarts.openkeeper.utils.Point;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Collection;
 import java.util.List;
 import toniarts.openkeeper.game.data.Keeper;
@@ -51,7 +51,7 @@ import toniarts.openkeeper.tools.convert.map.TriggerAction;
 public final class GameClientService extends AbstractClientService
         implements GameSessionClientService {
 
-    private static final Logger logger = Logger.getLogger(GameClientService.class.getName());
+    private static final Logger logger = System.getLogger(GameClientService.class.getName());
 
     private RmiClientService rmiService;
     private GameSession delegate;

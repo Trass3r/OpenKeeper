@@ -19,8 +19,8 @@ package toniarts.openkeeper.game.task;
 import com.jme3.math.Vector2f;
 import com.simsilica.es.EntityId;
 import toniarts.openkeeper.utils.Point;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ import toniarts.openkeeper.utils.WorldUtils;
  */
 public abstract class AbstractTask implements Task {
 
-    private static final Logger logger = Logger.getLogger(AbstractTask.class.getName());
+    private static final Logger logger = System.getLogger(AbstractTask.class.getName());
 
     private static final AtomicLong ID_GENENERATOR = new AtomicLong();
 

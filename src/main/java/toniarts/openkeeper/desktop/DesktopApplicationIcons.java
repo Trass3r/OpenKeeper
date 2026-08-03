@@ -13,8 +13,8 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import javax.imageio.ImageIO;
 import toniarts.openkeeper.Main;
 
@@ -23,7 +23,7 @@ import toniarts.openkeeper.Main;
  */
 public final class DesktopApplicationIcons {
 
-    private static final Logger logger = Logger.getLogger(DesktopApplicationIcons.class.getName());
+    private static final Logger logger = System.getLogger(DesktopApplicationIcons.class.getName());
 
     private DesktopApplicationIcons() {
     }

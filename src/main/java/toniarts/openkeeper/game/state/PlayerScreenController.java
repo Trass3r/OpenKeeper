@@ -66,8 +66,8 @@ import toniarts.openkeeper.view.text.SpellIconTextParser;
 import toniarts.openkeeper.view.text.TrapIconTextParser;
 
 import java.io.File;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.*;
 import java.util.List;
 
@@ -82,7 +82,7 @@ public final class PlayerScreenController implements IPlayerScreenController {
         MAIN, QUIT, CONFIRMATION;
     }
 
-    private static final Logger logger = Logger.getLogger(PlayerScreenController.class.getName());
+    private static final Logger logger = System.getLogger(PlayerScreenController.class.getName());
 
     public static final float SCREEN_UPDATE_INTERVAL = 0.250f;
     /**

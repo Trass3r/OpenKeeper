@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.game.network;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -36,7 +36,7 @@ import toniarts.openkeeper.tools.convert.ConversionUtils;
 @Deprecated
 public abstract class LocalServerSearch {
 
-    private static final Logger logger = Logger.getLogger(LocalServerSearch.class.getName());
+    private static final Logger logger = System.getLogger(LocalServerSearch.class.getName());
 
     private static final int nThreads = 10;
 

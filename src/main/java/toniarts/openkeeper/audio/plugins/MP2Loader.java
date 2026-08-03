@@ -27,8 +27,8 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import toniarts.openkeeper.audio.plugins.decoder.AudioInformation;
 import toniarts.openkeeper.audio.plugins.decoder.Decoder;
 import toniarts.openkeeper.audio.plugins.decoder.MediaInformation;
@@ -42,7 +42,7 @@ import toniarts.openkeeper.audio.plugins.decoder.UnsupportedMediaException;
  */
 public final class MP2Loader implements AssetLoader {
 
-    private static final Logger logger = Logger.getLogger(MP2Loader.class.getName());
+    private static final Logger logger = System.getLogger(MP2Loader.class.getName());
 
     public static final String FILE_EXTENSION = "mp2";
 

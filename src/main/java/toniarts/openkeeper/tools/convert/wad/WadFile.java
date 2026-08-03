@@ -21,8 +21,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,7 +48,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class WadFile {
 
-    private static final Logger logger = Logger.getLogger(WadFile.class.getName());
+    private static final Logger logger = System.getLogger(WadFile.class.getName());
 
     private final Path file;
     private final Map<String, WadFileEntry> wadFileEntries;

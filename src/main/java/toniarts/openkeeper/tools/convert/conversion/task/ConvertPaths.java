@@ -24,8 +24,8 @@ import com.jme3.math.Vector3f;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,7 +49,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class ConvertPaths extends ConversionTask {
 
-    private static final Logger logger = Logger.getLogger(ConvertPaths.class.getName());
+    private static final Logger logger = System.getLogger(ConvertPaths.class.getName());
 
     public ConvertPaths(String dungeonKeeperFolder, String destination, boolean overwriteData) {
         super(dungeonKeeperFolder, destination, overwriteData);

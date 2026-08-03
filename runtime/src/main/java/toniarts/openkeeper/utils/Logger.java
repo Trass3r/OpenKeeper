@@ -11,8 +11,9 @@ package toniarts.openkeeper.utils;
 import java.util.function.Supplier;
 
 /**
- * Logging facade that provides the small Logger surface used by
- * OpenKeeper while remaining available on Android.
+ * Android implementation of the small {@link System.Logger} surface used by
+ * the shared OpenKeeper sources. The runtime build rewrites only the generated
+ * Android-compatible source copy to reference this class.
  */
 public final class Logger {
 
@@ -66,7 +67,8 @@ public final class Logger {
         }
     }
 
-    public void log(Level level, Supplier<String> messageSupplier, Throwable thrown) {
+    public void log(Level level, Supplier<String> messageSupplier,
+            Throwable thrown) {
         if (isLoggable(level)) {
             delegate.log(toJavaLevel(level), messageSupplier.get(), thrown);
         }

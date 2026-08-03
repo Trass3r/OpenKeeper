@@ -24,8 +24,8 @@ import com.simsilica.es.EntityId;
 import com.simsilica.es.EntitySet;
 import com.simsilica.es.filter.FieldFilter;
 import toniarts.openkeeper.utils.Point;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -107,7 +107,7 @@ import toniarts.openkeeper.utils.WorldUtils;
  */
 public final class TaskManager implements ITaskManager, IGameLogicUpdatable {
 
-    private static final Logger logger = Logger.getLogger(TaskManager.class.getName());
+    private static final Logger logger = System.getLogger(TaskManager.class.getName());
 
     private final IMapController mapController;
     private final IGameWorldController gameWorldController;

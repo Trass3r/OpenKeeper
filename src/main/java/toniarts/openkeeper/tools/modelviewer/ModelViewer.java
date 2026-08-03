@@ -54,8 +54,8 @@ import de.lessvoid.nifty.controls.ListBox;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -124,7 +124,7 @@ public final class ModelViewer extends SimpleApplication {
         }
     }
 
-    private static final Logger logger = Logger.getLogger(ModelViewer.class.getName());
+    private static final Logger logger = System.getLogger(ModelViewer.class.getName());
 
     //private final static float SCALE = 2;
     private static String dkIIFolder;

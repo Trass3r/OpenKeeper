@@ -24,7 +24,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.AbstractControl;
 import toniarts.openkeeper.tools.convert.map.EffectElement;
 
-import toniarts.openkeeper.utils.Logger;
+import java.lang.System.Logger;
 
 import static toniarts.openkeeper.view.effect.EffectControl.calculateVelocity;
 
@@ -34,7 +34,7 @@ import static toniarts.openkeeper.view.effect.EffectControl.calculateVelocity;
  */
 public abstract class EffectElementControl extends AbstractControl {
 
-    private static final Logger log = Logger.getLogger(EffectElementControl.class.getName());
+    private static final Logger log = System.getLogger(EffectElementControl.class.getName());
 
     private EffectElement effect;
 

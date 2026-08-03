@@ -17,8 +17,8 @@
 package toniarts.openkeeper.setup;
 
 import java.awt.event.WindowEvent;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Arrays;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
@@ -31,7 +31,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public abstract class DKFolderSelector extends javax.swing.JFrame {
 
-    private static final Logger logger = Logger.getLogger(DKFolderSelector.class.getName());
+    private static final Logger logger = System.getLogger(DKFolderSelector.class.getName());
 
     final JFileChooser fc = new JFileChooser();
 

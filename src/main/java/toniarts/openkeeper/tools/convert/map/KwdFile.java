@@ -17,8 +17,8 @@
 package toniarts.openkeeper.tools.convert.map;
 
 import java.io.IOException;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -81,7 +81,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class KwdFile {
 
-    private static final Logger logger = Logger.getLogger(KwdFile.class.getName());
+    private static final Logger logger = System.getLogger(KwdFile.class.getName());
 
     // These are needed in various places, I don't know how to else recognize these
     private final static short ROOM_PORTAL_ID = 3;

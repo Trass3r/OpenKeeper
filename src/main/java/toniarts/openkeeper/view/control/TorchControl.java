@@ -30,8 +30,8 @@ import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.control.BillboardControl;
 import com.jme3.texture.Texture;
 import java.io.IOException;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import jme3tools.optimize.TextureAtlas;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 
@@ -41,7 +41,7 @@ import toniarts.openkeeper.tools.convert.map.KwdFile;
  */
 public final class TorchControl extends BillboardControl {
 
-    private static final Logger logger = Logger.getLogger(TorchControl.class.getName());
+    private static final Logger logger = System.getLogger(TorchControl.class.getName());
 
     private static final int FRAMES = 20;
     private Material material;

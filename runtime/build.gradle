@@ -2,9 +2,27 @@ plugins {
     id 'java-library'
 }
 
+def androidRuntimeSources = layout.buildDirectory.dir(
+        'generated/sources/androidCompatible')
+
+tasks.register('prepareAndroidCompatibleSources', Sync) {
+    from '../src/main/java'
+    into androidRuntimeSources
+    filteringCharset = 'UTF-8'
+    filesMatching('**/*.java') {
+        filter { String line ->
+            line.replace('import java.lang.System.Logger;',
+                    'import toniarts.openkeeper.utils.Logger;')
+                    .replace('import java.lang.System.Logger.Level;',
+                            'import toniarts.openkeeper.utils.Logger.Level;')
+                    .replace('System.getLogger(', 'Logger.getLogger(')
+        }
+    }
+}
+
 sourceSets {
     main {
-        java.srcDir '../src/main/java'
+        java.srcDirs = [androidRuntimeSources, 'src/main/java']
     }
 }
 
@@ -35,6 +53,7 @@ java {
 }
 
 tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('prepareAndroidCompatibleSources')
     options.release = 17
     options.compilerArgs += ['-proc:none', '-Xlint:deprecation']
 }

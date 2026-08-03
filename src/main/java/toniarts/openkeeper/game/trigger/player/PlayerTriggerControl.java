@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.game.trigger.player;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Set;
 import toniarts.openkeeper.game.controller.ICreaturesController;
 import toniarts.openkeeper.game.controller.IGameController;
@@ -46,7 +46,7 @@ import toniarts.openkeeper.utils.WorldUtils;
  */
 public class PlayerTriggerControl extends TriggerControl {
 
-    private static final Logger logger = Logger.getLogger(PlayerTriggerControl.class.getName());
+    private static final Logger logger = System.getLogger(PlayerTriggerControl.class.getName());
 
     private final short playerId;
     private final PlayerService playerService;

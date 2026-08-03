@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.video;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Queue;
@@ -46,7 +46,7 @@ import toniarts.openkeeper.video.tgq.TgqFrame;
  */
 public abstract class TgqPlayer {
 
-    private static final Logger logger = Logger.getLogger(TgqPlayer.class.getName());
+    private static final Logger logger = System.getLogger(TgqPlayer.class.getName());
 
     private final Path file;
     private static final int FPS = 25; // The specs say 15 FPS, but with this they are totally in sync, dunno why

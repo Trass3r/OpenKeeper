@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.utils;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.management.ManagementFactory;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -42,7 +42,7 @@ import toniarts.openkeeper.tools.convert.map.Player;
  */
 public final class Utils {
 
-    private static final Logger logger = Logger.getLogger(Utils.class.getName());
+    private static final Logger logger = System.getLogger(Utils.class.getName());
 
     private static final Random RANDOM = new Random();
     private static final String[] BLOOD_TYPES = {"IkI", "BO", "PoE", "BA", "MoO", "O", "ARh"};

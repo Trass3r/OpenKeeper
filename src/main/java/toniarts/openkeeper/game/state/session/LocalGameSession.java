@@ -18,8 +18,8 @@ import toniarts.openkeeper.utils.Point;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,7 +46,7 @@ import toniarts.openkeeper.utils.Utils;
  */
 public final class LocalGameSession implements GameSessionServerService, GameSessionClientService {
 
-    private static final Logger logger = Logger.getLogger(LocalGameSession.class.getName());
+    private static final Logger logger = System.getLogger(LocalGameSession.class.getName());
     private static final short PLAYER_ID = Player.KEEPER1_ID;
 
     private boolean playerInTransition = false;

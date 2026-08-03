@@ -46,8 +46,8 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ import toniarts.openkeeper.tools.convert.map.Terrain;
  */
 public final class AssetUtils {
 
-    private static final Logger logger = Logger.getLogger(AssetUtils.class.getName());
+    private static final Logger logger = System.getLogger(AssetUtils.class.getName());
 
     private final static Object ASSET_LOCK = new Object();
     private final static AssetCache ASSET_CACHE = new SimpleAssetCache();

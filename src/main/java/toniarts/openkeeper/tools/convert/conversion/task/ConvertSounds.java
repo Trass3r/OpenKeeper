@@ -17,8 +17,8 @@
 package toniarts.openkeeper.tools.convert.conversion.task;
 
 import java.io.IOException;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +39,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class ConvertSounds extends ConversionTask {
 
-    private static final Logger logger = Logger.getLogger(ConvertSounds.class.getName());
+    private static final Logger logger = System.getLogger(ConvertSounds.class.getName());
 
     public ConvertSounds(String dungeonKeeperFolder, String destination, boolean overwriteData) {
         super(dungeonKeeperFolder, destination, overwriteData);

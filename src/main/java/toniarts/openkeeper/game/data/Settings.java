@@ -23,7 +23,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import toniarts.openkeeper.utils.Logger;
+import java.lang.System.Logger;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -246,7 +246,7 @@ public final class Settings {
         private final Integer specialKey;  // Control, Alt, Shift
     }
 
-    private static final Logger logger = Logger.getLogger(Settings.class.getName());
+    private static final Logger logger = System.getLogger(Settings.class.getName());
 
     private static final Settings INSTANCE;
     private static final int MAX_FPS = 200;

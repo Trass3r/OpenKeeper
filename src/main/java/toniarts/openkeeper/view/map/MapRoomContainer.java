@@ -32,8 +32,8 @@ import toniarts.openkeeper.game.map.IRoomInformation;
 import toniarts.openkeeper.game.map.IRoomsInformation;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 
-import toniarts.openkeeper.utils.Logger.Level;
-import toniarts.openkeeper.utils.Logger;
+import java.lang.System.Logger.Level;
+import java.lang.System.Logger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,7 +46,7 @@ import java.util.function.Function;
  */
 public class MapRoomContainer extends EntityContainer<IRoomInformation> implements IRoomsInformation<IRoomInformation> {
 
-    private static final Logger logger = Logger.getLogger(MapRoomContainer.class.getName());
+    private static final Logger logger = System.getLogger(MapRoomContainer.class.getName());
 
     private final Map<EntityId, IRoomInformation> roomMap = new HashMap<>();
     private final Map<Short, Set<EntityId>> roomsByOwners = new HashMap<>();

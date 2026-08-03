@@ -23,8 +23,8 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,7 +49,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class EngineTexturesFile implements Iterable<String> {
 
-    private static final Logger logger = Logger.getLogger(EngineTexturesFile.class.getName());
+    private static final Logger logger = System.getLogger(EngineTexturesFile.class.getName());
 
     private static final boolean DECOMPRESSION_ENABLED = true;
     private static final int CHESS_BOARD_GRID_SIZE = 8;

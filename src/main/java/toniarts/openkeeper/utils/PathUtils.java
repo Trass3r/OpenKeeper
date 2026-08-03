@@ -19,8 +19,8 @@ package toniarts.openkeeper.utils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -38,7 +38,7 @@ import java.util.regex.Matcher;
 
 public final class PathUtils {
 
-    private static final Logger logger = Logger.getLogger(PathUtils.class.getName());
+    private static final Logger logger = System.getLogger(PathUtils.class.getName());
 
     private static final Map<String, String> FILENAME_CACHE = new HashMap<>();
     private static final PathTree PATH_CACHE = new PathTree();

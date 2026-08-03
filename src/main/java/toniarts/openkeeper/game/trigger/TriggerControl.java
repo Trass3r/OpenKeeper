@@ -17,8 +17,8 @@
 package toniarts.openkeeper.game.trigger;
 
 import toniarts.openkeeper.utils.Point;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.EnumSet;
 import toniarts.openkeeper.game.control.Control;
 import toniarts.openkeeper.game.controller.ICreaturesController;
@@ -45,7 +45,7 @@ import toniarts.openkeeper.utils.WorldUtils;
  */
 public class TriggerControl extends Control {
 
-    private static final Logger logger = Logger.getLogger(TriggerControl.class.getName());
+    private static final Logger logger = System.getLogger(TriggerControl.class.getName());
 
     private static final short LEVEL_SCORE_FLAG_ID = 128;
     private static final short TIME_LIMIT_TIMER_ID = 16;

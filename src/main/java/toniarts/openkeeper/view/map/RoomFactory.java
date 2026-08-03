@@ -22,8 +22,8 @@ import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.view.map.construction.*;
 import toniarts.openkeeper.view.map.construction.room.*;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 
 /**
  * A factory class you can use to build buildings
@@ -32,7 +32,7 @@ import toniarts.openkeeper.utils.Logger.Level;
  */
 public final class RoomFactory {
 
-    private static final Logger logger = Logger.getLogger(RoomFactory.class.getName());
+    private static final Logger logger = System.getLogger(RoomFactory.class.getName());
 
     private RoomFactory() {
         // Nope

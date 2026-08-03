@@ -33,8 +33,8 @@ import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.Color;
 import toniarts.openkeeper.utils.WorldUtils;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -52,7 +52,7 @@ import java.util.Map.Entry;
  */
 public class VisualEffect {
 
-    private static final Logger logger = Logger.getLogger(VisualEffect.class.getName());
+    private static final Logger logger = System.getLogger(VisualEffect.class.getName());
 
     private final Effect effect;
     private final Map<EffectElement, Spatial> effectElements;

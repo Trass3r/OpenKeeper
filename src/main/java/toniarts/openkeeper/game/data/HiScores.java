@@ -27,8 +27,8 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -104,7 +104,7 @@ public final class HiScores implements Savable {
         }
     }
 
-    private static final Logger logger = Logger.getLogger(HiScores.class.getName());
+    private static final Logger logger = System.getLogger(HiScores.class.getName());
 
     private static final int NUMBER_OF_ENTRIES = 10;
     private static final String HISCORES_FILENAME = "HiScores.okh";

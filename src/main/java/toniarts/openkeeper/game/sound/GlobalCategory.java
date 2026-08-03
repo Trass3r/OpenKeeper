@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.game.sound;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.List;
  */
 public final class GlobalCategory {
 
-    private static final Logger logger = Logger.getLogger(GlobalCategory.class.getName());
+    private static final Logger logger = System.getLogger(GlobalCategory.class.getName());
 
     public static final String AMBIENCE = "AMBIENCE";
     public static final String EFFECTS = "EFFECTS";

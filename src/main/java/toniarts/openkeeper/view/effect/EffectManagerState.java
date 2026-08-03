@@ -25,7 +25,7 @@ import com.jme3.scene.Node;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
 import toniarts.openkeeper.view.PlayerMapViewState;
 
-import toniarts.openkeeper.utils.Logger;
+import java.lang.System.Logger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +38,7 @@ import java.util.List;
  */
 public class EffectManagerState extends AbstractAppState {
 
-    private static final Logger logger = Logger.getLogger(EffectManagerState.class.getName());
+    private static final Logger logger = System.getLogger(EffectManagerState.class.getName());
 
     public static int ROOM_CLAIM_ID = 2;
 

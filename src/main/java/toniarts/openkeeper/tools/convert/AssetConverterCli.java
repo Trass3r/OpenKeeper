@@ -11,8 +11,8 @@ package toniarts.openkeeper.tools.convert;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.system.JmeSystem;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.net.URL;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.utils.SettingUtils;
@@ -23,7 +23,7 @@ import toniarts.openkeeper.utils.SettingUtils;
  */
 public final class AssetConverterCli {
 
-    private static final Logger logger = Logger.getLogger(AssetConverterCli.class.getName());
+    private static final Logger logger = System.getLogger(AssetConverterCli.class.getName());
 
     private AssetConverterCli() {
     }

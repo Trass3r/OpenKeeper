@@ -16,8 +16,8 @@
  */
 package toniarts.openkeeper.utils;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import toniarts.openkeeper.game.logic.IGameLogicUpdatable;
@@ -29,7 +29,7 @@ import toniarts.openkeeper.game.logic.IGameLogicUpdatable;
  */
 public final class GameLoop {
 
-    private static final Logger logger = Logger.getLogger(GameLoop.class.getName());
+    private static final Logger logger = System.getLogger(GameLoop.class.getName());
 
     public static final long INTERVAL_FPS_60 = 16666667L;
     private static final String NAME_PREFIX = "Game";

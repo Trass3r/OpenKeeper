@@ -44,7 +44,7 @@ import de.lessvoid.nifty.tools.Color;
 import de.lessvoid.nifty.tools.SizeValue;
 import java.io.File;
 import java.io.IOException;
-import toniarts.openkeeper.utils.Logger;
+import java.lang.System.Logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -93,7 +93,7 @@ import toniarts.openkeeper.utils.Utils;
  */
 public final class MainMenuScreenController implements IMainMenuScreenController {
 
-    private static final Logger logger = Logger.getLogger(MainMenuScreenController.class.getName());
+    private static final Logger logger = System.getLogger(MainMenuScreenController.class.getName());
 
     private final MainMenuState state;
     private Nifty nifty;

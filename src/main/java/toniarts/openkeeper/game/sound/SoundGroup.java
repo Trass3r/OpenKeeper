@@ -17,8 +17,8 @@
 package toniarts.openkeeper.game.sound;
 
 import java.io.File;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ import toniarts.openkeeper.utils.PathUtils;
  */
 public final class SoundGroup {
 
-    private static final Logger logger = Logger.getLogger(SoundGroup.class.getName());
+    private static final Logger logger = System.getLogger(SoundGroup.class.getName());
 
     private final SoundCategory category;
     private final SfxGroupEntry entry;

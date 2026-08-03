@@ -26,8 +26,8 @@ import de.lessvoid.nifty.input.NiftyInputEvent;
 import de.lessvoid.nifty.input.NiftyStandardInputEvent;
 import de.lessvoid.nifty.screen.KeyInputHandler;
 import de.lessvoid.nifty.screen.Screen;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,7 +43,7 @@ import toniarts.openkeeper.gui.nifty.chat.event.ChatTextSendEvent;
  */
 public final class ChatControl extends AbstractController implements KeyInputHandler, Chat {
 
-    private static final Logger logger = Logger.getLogger(ChatControl.class.getName());
+    private static final Logger logger = System.getLogger(ChatControl.class.getName());
 
     private static final String CHAT_BOX = "#chatBox";
     private static final String CHAT_TEXT_INPUT = "#chat-text-input";

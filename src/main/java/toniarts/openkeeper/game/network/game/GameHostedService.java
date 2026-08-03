@@ -31,8 +31,8 @@ import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
 import com.simsilica.es.server.EntityDataHostedService;
 import toniarts.openkeeper.utils.Point;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -66,7 +66,7 @@ public final class GameHostedService extends AbstractHostedConnectionService imp
         GAME_LOAD_PROGRESS
     }
 
-    private static final Logger logger = Logger.getLogger(GameHostedService.class.getName());
+    private static final Logger logger = System.getLogger(GameHostedService.class.getName());
 
     private boolean readyToLoad = false;
     private final Object loadLock = new Object();

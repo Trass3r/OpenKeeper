@@ -25,8 +25,8 @@ import com.jme3.texture.Image.Format;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.image.ColorSpace;
 import com.jme3.util.BufferUtils;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.ByteBuffer;
 import toniarts.openkeeper.video.tgq.TgqFrame;
 
@@ -38,7 +38,7 @@ import toniarts.openkeeper.video.tgq.TgqFrame;
  */
 public final class MovieMaterial {
 
-    private static final Logger logger = Logger.getLogger(MovieMaterial.class.getName());
+    private static final Logger logger = System.getLogger(MovieMaterial.class.getName());
 
     private static final Image emptyImage = new Image(Format.ABGR8, 1, 1, BufferUtils.createByteBuffer(new byte[]{0, 0, 0, 0}), ColorSpace.Linear);
     private boolean noFrame = true;

@@ -17,8 +17,8 @@
 package toniarts.openkeeper.tools.convert.str;
 
 import java.io.IOException;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ import toniarts.openkeeper.tools.convert.ISeekableResourceReader;
  */
 public final class StrFile {
 
-    private static final Logger logger = Logger.getLogger(StrFile.class.getName());
+    private static final Logger logger = System.getLogger(StrFile.class.getName());
 
     private static final String STR_HEADER_IDENTIFIER = "BFST";
     private static final int STR_HEADER_SIZE = 12;

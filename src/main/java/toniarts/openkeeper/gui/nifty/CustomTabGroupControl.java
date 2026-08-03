@@ -32,8 +32,8 @@ import de.lessvoid.nifty.elements.events.ElementShowEvent;
 import de.lessvoid.nifty.input.NiftyInputEvent;
 import de.lessvoid.nifty.loaderv2.types.ElementType;
 import de.lessvoid.nifty.screen.Screen;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.List;
 import org.bushe.swing.event.EventTopicSubscriber;
 
@@ -165,7 +165,7 @@ public final class CustomTabGroupControl extends AbstractController implements T
     /**
      * The logger that takes care for the output of log messages in this class.
      */
-    private static final Logger logger = Logger.getLogger(CustomTabGroupControl.class.getName());
+    private static final Logger logger = System.getLogger(CustomTabGroupControl.class.getName());
 
     /**
      * The subscriber of the show events for this control. This is required to

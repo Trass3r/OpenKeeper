@@ -29,8 +29,8 @@ import toniarts.openkeeper.game.navigation.pathfinding.MapPathFinder;
 import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.utils.Utils;
 
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -42,7 +42,7 @@ import java.util.Set;
  */
 public final class NavigationService implements INavigationService {
 
-    private static final Logger logger = Logger.getLogger(NavigationService.class.getName());
+    private static final Logger logger = System.getLogger(NavigationService.class.getName());
 
     private final IMapController mapController;
     private final IEntityPositionLookup entityPositionLookup;

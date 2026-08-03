@@ -20,8 +20,8 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -68,7 +68,7 @@ import toniarts.openkeeper.utils.WorldUtils;
  */
 public final class ObjectsController implements IObjectsController {
 
-    private static final Logger logger = Logger.getLogger(ObjectsController.class.getName());
+    private static final Logger logger = System.getLogger(ObjectsController.class.getName());
 
     public final static short OBJECT_GOLD_ID = 1;
     //public final static short OBJECT_GOLD_BAG_ID = 2;

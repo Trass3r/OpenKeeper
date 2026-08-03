@@ -18,8 +18,8 @@ package toniarts.openkeeper.setup;
 
 import com.jme3.asset.AssetManager;
 import java.awt.event.WindowEvent;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,7 +38,7 @@ import toniarts.openkeeper.tools.convert.AssetsConverter;
  */
 public abstract class DKConverter extends javax.swing.JFrame implements IFrameClosingBehavior {
 
-    private static final Logger logger = Logger.getLogger(DKConverter.class.getName());
+    private static final Logger logger = System.getLogger(DKConverter.class.getName());
 
     private static volatile boolean convertDone = false;
     private final String dungeonKeeperFolder;

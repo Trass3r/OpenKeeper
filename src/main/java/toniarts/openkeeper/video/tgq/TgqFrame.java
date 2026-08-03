@@ -17,8 +17,8 @@
 package toniarts.openkeeper.video.tgq;
 
 import java.awt.image.BufferedImage;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -38,7 +38,7 @@ import toniarts.openkeeper.tools.convert.ConversionUtils;
  */
 public final class TgqFrame implements Comparable<TgqFrame> {
 
-    private static final Logger logger = Logger.getLogger(TgqFrame.class.getName());
+    private static final Logger logger = System.getLogger(TgqFrame.class.getName());
 
     private final int width;
     private final int height;

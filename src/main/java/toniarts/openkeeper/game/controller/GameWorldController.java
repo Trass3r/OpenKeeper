@@ -71,8 +71,8 @@ import toniarts.openkeeper.tools.convert.map.Variable;
 import toniarts.openkeeper.utils.Point;
 import toniarts.openkeeper.utils.WorldUtils;
 
-import toniarts.openkeeper.utils.Logger.Level;
-import toniarts.openkeeper.utils.Logger;
+import java.lang.System.Logger.Level;
+import java.lang.System.Logger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,7 +93,7 @@ import java.util.stream.Collectors;
  */
 public final class GameWorldController implements IGameWorldController, IPlayerActions {
 
-    private static final Logger logger = Logger.getLogger(GameWorldController.class.getName());
+    private static final Logger logger = System.getLogger(GameWorldController.class.getName());
 
     /**
      * When dealing with gold... We currently better lock it. Logic stuff happens in single thread. But player

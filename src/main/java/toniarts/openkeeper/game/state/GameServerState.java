@@ -22,8 +22,8 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.math.Vector2f;
 import com.simsilica.es.EntityId;
 import toniarts.openkeeper.utils.Point;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.List;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.game.controller.IGameWorldController;
@@ -53,7 +53,7 @@ import toniarts.openkeeper.utils.Utils;
  */
 public final class GameServerState extends AbstractAppState {
 
-    private static final Logger logger = Logger.getLogger(GameServerState.class.getName());
+    private static final Logger logger = System.getLogger(GameServerState.class.getName());
 
     private Main app;
 

@@ -20,8 +20,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import toniarts.openkeeper.utils.Logger;
-import toniarts.openkeeper.utils.Logger.Level;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,7 +43,7 @@ import toniarts.openkeeper.tools.convert.IResourceReader;
  */
 public abstract class TgqFile implements AutoCloseable {
 
-    private static final Logger logger = Logger.getLogger(TgqFile.class.getName());
+    private static final Logger logger = System.getLogger(TgqFile.class.getName());
 
     private final IResourceReader file;
     private EAAudioHeader audioHeader;
