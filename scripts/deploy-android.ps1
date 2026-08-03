@@ -54,12 +54,12 @@ try {
 
     if (-not $SkipAssets) {
         & $adb -s $serial shell mkdir -p "$remoteFiles/Converted" "$remoteFiles/DK2"
-        & $adb -s $serial push --sync "assets\Converted\." "$remoteFiles/Converted/"
+        & $adb -s $serial push -z any --sync "assets\Converted\." "$remoteFiles/Converted/"
         if ($LASTEXITCODE -ne 0) {
             throw "Converted asset upload failed."
         }
 
-        & $adb -s $serial push --sync (Join-Path $Dk2Path "Data\.") "$remoteFiles/DK2/"
+        & $adb -s $serial push -z any --sync (Join-Path $Dk2Path "Data\.") "$remoteFiles/DK2/"
         if ($LASTEXITCODE -ne 0) {
             throw "Original DK2 data upload failed."
         }
