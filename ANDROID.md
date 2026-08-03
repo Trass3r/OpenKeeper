@@ -4,6 +4,13 @@ This branch runs OpenKeeper on Android using data from a legally owned
 Dungeon Keeper 2 installation. The APK does not contain Bullfrog/EA game
 assets.
 
+> [!IMPORTANT]
+> This is an experimental alpha, currently tested primarily on a Samsung
+> Galaxy S24 Ultra. Core gameplay works, but touch-control tuning and broader
+> device compatibility still need testing. When reporting a problem, include
+> the device model, Android version, the point reached in the game, and a
+> relevant `adb logcat` excerpt when possible.
+
 ## Requirements
 
 - Windows with JDK 25 available to Gradle

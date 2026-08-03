@@ -3,7 +3,10 @@ OpenKeeper
 
 An open source remake of the Dungeon Keeper II game and engine.
 
-Android build and deployment instructions are in [ANDROID.md](ANDROID.md).
+An experimental Android alpha is available on this branch. It has been tested
+on a Samsung Galaxy S24 Ultra, but the touch controls and wider device
+compatibility still need community testing and polish. Build, deployment,
+controls, and known limitations are documented in [ANDROID.md](ANDROID.md).
 
 Goal is to fully implement the game (version 1.7 with 3 bonus packs) as open source cross platform version, with minimal or no changes at all, using the original game assets. So it will require the original game to play / develop. Future development could have fan made graphics (to at least enable standalone version) and features.
 
