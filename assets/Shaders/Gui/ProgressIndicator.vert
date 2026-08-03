@@ -1,18 +1,21 @@
-#import "Common/ShaderLib/GLSLCompat.glsllib"
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 uniform mat4 g_WorldViewProjectionMatrix;
 uniform vec4 m_Color;
 
-attribute vec3 inPosition;
+in vec3 inPosition;
 
 #ifdef VERTEX_COLOR
-    attribute vec4 inColor;
+    in vec4 inColor;
 #endif
 
-attribute vec2 inTexCoord;
-varying vec2 texCoord;
+in vec2 inTexCoord;
+out vec2 texCoord;
 
-varying vec4 color;
+out vec4 color;
 
 void main() {
     gl_Position = g_WorldViewProjectionMatrix * vec4(inPosition, 1.0);

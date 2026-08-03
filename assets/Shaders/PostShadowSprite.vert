@@ -1,7 +1,16 @@
-#import "Common/ShaderLib/GLSLCompat.glsllib"
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
+
+// The jME animation libraries still declare their vertex inputs using the
+// legacy token. Keep that compatibility local instead of importing the full
+// GLSLCompat library, whose sampler declarations are invalid in GLSL ES 1.00.
+#define attribute in
 #import "Common/ShaderLib/Instancing.glsllib"
 #import "Common/ShaderLib/Skinning.glsllib"
 #import "Common/ShaderLib/MorphAnim.glsllib"
+#undef attribute
 
 uniform mat4 m_LightViewProjectionMatrix0;
 uniform mat4 m_LightViewProjectionMatrix1;

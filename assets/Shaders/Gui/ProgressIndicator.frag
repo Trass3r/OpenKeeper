@@ -1,11 +1,15 @@
-#import "Common/ShaderLib/GLSLCompat.glsllib"
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #ifdef TEXTURE
     uniform sampler2D m_Texture;
 #endif
 
-varying vec4 color;
-varying vec2 texCoord;
+in vec4 color;
+in vec2 texCoord;
+out vec4 fragColor;
 
 uniform float m_Progress;
 
@@ -18,14 +22,14 @@ void main() {
 
     #ifdef TEXTURE
       if (sweep < m_Progress) {
-        vec4 texVal = texture2D(m_Texture, texCoord);
-        gl_FragColor = texVal * color;
+        vec4 texVal = texture(m_Texture, texCoord);
+        fragColor = texVal * color;
       } else
         discard;
 
     #else
       if (sweep < m_Progress)
-        gl_FragColor = color;
+        fragColor = color;
       else
         discard;
 

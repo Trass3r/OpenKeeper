@@ -15,23 +15,23 @@ uniform vec4 m_Color5;
 uniform vec4 m_Color6;
 uniform vec4 m_Color7;
 
-attribute vec3 inPosition;
+in vec3 inPosition;
 
 #ifdef VERTEX_COLOR
-    attribute vec4 inColor;
+    in vec4 inColor;
 #endif
 
-attribute vec2 inTexCoord;
-varying vec2 texCoord;
+in vec2 inTexCoord;
+out vec2 texCoord;
 
-varying vec4 color;
-varying vec4 color1;
-varying vec4 color2;
-varying vec4 color3;
-varying vec4 color4;
-varying vec4 color5;
-varying vec4 color6;
-varying vec4 color7;
+out vec4 color;
+out vec4 color1;
+out vec4 color2;
+out vec4 color3;
+out vec4 color4;
+out vec4 color5;
+out vec4 color6;
+out vec4 color7;
 
 void main() {
     gl_Position = g_WorldViewProjectionMatrix * vec4(inPosition, 1.0);

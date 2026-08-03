@@ -8,7 +8,8 @@ uniform sampler2D m_TexCb;
 
 uniform bool m_NoFrame;
 
-varying vec2 texCoord;
+in vec2 texCoord;
+out vec4 fragColor;
 
 uniform vec2 m_AspectValues;
 uniform vec2 m_ValidRange;
@@ -46,7 +47,7 @@ void main(){
 	{
 
         if(!m_NoFrame) {
-            color = vec4(convert * vec3(texture2D(m_TexLuma,uv).r-(16.0/256.0), texture2D(m_TexCb,uv).r-0.5, texture2D(m_TexCr,uv).r - 0.5),1.0);
+            color = vec4(convert * vec3(texture(m_TexLuma,uv).r-(16.0/256.0), texture(m_TexCb,uv).r-0.5, texture(m_TexCr,uv).r - 0.5),1.0);
 	}
 
         }
@@ -58,5 +59,9 @@ void main(){
     }
 #endif
 
-    gl_FragColor = color;
+    fragColor = color;
 }
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
