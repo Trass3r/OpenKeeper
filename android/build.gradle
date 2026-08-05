@@ -26,6 +26,7 @@ android {
 
     buildTypes {
         debug {
+            debuggable true
             applicationIdSuffix '.debug'
             // Appends the exact time of the build so you can track it on device (e.g., "0.1.0-debug-20260806.0116")
             versionNameSuffix "-debug-${generateVersionTimestamp()}"
@@ -88,11 +89,11 @@ android {
 
 dependencies {
     implementation project(':runtime')
-    implementation "org.jmonkeyengine:jme3-core:$rootProject.jmonkeyengine_version"
-    implementation "org.jmonkeyengine:jme3-android:$rootProject.jmonkeyengine_version"
-    implementation "org.jmonkeyengine:jme3-android-native:$rootProject.jmonkeyengine_version"
-    implementation "org.jmonkeyengine:jme3-plugins:$rootProject.jmonkeyengine_version"
-    implementation "org.jmonkeyengine:jme3-effects:$rootProject.jmonkeyengine_version"
-    implementation "org.jmonkeyengine:jme3-networking:$rootProject.jmonkeyengine_version"
-    implementation "org.jmonkeyengine:jme3-niftygui:$rootProject.jmonkeyengine_version"
+    implementation "org.jmonkeyengine:jme3-core:${rootProject.jmonkeyengine_version}"
+    implementation "org.jmonkeyengine:jme3-android:${rootProject.jmonkeyengine_version}"
+    implementation "org.jmonkeyengine:jme3-android-native:${rootProject.jmonkeyengine_version}"
+    implementation "org.jmonkeyengine:jme3-plugins:${rootProject.jmonkeyengine_version}"
+    implementation "org.jmonkeyengine:jme3-effects:${rootProject.jmonkeyengine_version}"
+    implementation "org.jmonkeyengine:jme3-networking:${rootProject.jmonkeyengine_version}"
+    implementation "org.jmonkeyengine:jme3-niftygui:${rootProject.jmonkeyengine_version}"
 }
