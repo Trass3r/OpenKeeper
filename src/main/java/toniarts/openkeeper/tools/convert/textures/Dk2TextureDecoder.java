@@ -18,7 +18,6 @@ package toniarts.openkeeper.tools.convert.textures;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.util.Arrays;
 
 /**
@@ -145,7 +144,7 @@ public abstract class Dk2TextureDecoder {
         bs_alpha = 0;
     }
 
-    protected void decompress_func1(IntBuffer in, IntBuffer out) {
+    protected void decompress_func1(int[] in, int inPos, int[] out, int outPos) {
         long rx;
         int sa;
         int b, a, c, d, i, p, s;
@@ -154,23 +153,23 @@ public abstract class Dk2TextureDecoder {
         double rxf, rxg, rxs;
         double xf, xg;
 
-        if ((in.get(in.position() + 1) | in.get(in.position() + 2) | in.get(in.position() + 3) | in.get(in.position() + 4) | in.get(in.position() + 6) | in.get(in.position() + 7)) == 0) {
-            a = in.get();
-            out.put(out.position() + 0, a);
-            out.put(out.position() + 9, a);
-            out.put(out.position() + 18, a);
-            out.put(out.position() + 27, a);
-            out.put(out.position() + 36, a);
-            out.put(out.position() + 45, a);
-            out.put(out.position() + 54, a);
-            out.put(out.position() + 63, a);
+        if ((in[inPos + 1] | in[inPos + 2] | in[inPos + 3] | in[inPos + 4] | in[inPos + 6] | in[inPos + 7]) == 0) {
+            a = in[inPos];
+            out[outPos + 0] = a;
+            out[outPos + 9] = a;
+            out[outPos + 18] = a;
+            out[outPos + 27] = a;
+            out[outPos + 36] = a;
+            out[outPos + 45] = a;
+            out[outPos + 54] = a;
+            out[outPos + 63] = a;
             return;
         }
 
-        b = in.get(in.position() + 5) - in.get(in.position() + 3);
-        c = in.get(in.position() + 1) - in.get(in.position() + 7);
-        i = in.get(in.position() + 3) + in.get(in.position() + 5);
-        a = in.get(in.position() + 7) + in.get(in.position() + 1);
+        b = in[inPos + 5] - in[inPos + 3];
+        c = in[inPos + 1] - in[inPos + 7];
+        i = in[inPos + 3] + in[inPos + 5];
+        a = in[inPos + 7] + in[inPos + 1];
         xf = b;
         xg = c;
         p = i + a;
@@ -187,9 +186,9 @@ public abstract class Dk2TextureDecoder {
         rx *= norm_7af038;
         d = (int) (rx >> 32);
 
-        b = in.get(in.position() + 6);
+        b = in[inPos + 6];
         d += d;
-        a = in.get(in.position() + 2);
+        a = in[inPos + 2];
 
         c = ra;
         i = rb;
@@ -199,8 +198,8 @@ public abstract class Dk2TextureDecoder {
         sc = c & 0xFFFFFFFFL;
         sd = d & 0xFFFFFFFFL;
         si = i & 0xFFFFFFFFL;
-        c = in.get(in.position() + 0);
-        d = in.get(in.position() + 4);
+        c = in[inPos + 0];
+        d = in[inPos + 4];
         s = b + a;
         a -= b;
         b = d + c;
@@ -212,17 +211,17 @@ public abstract class Dk2TextureDecoder {
         d = (int) (rx >> 32);
 
         d += d;
-        out.put(out.position() + 18, (int) ((c - d) + sc));
-        out.put(out.position() + 45, (int) ((c - d) - sc));
-        out.put(out.position() + 27, (b - (s + d)) + ra);
-        out.put(out.position() + 36, (b - (s + d)) - ra);
-        out.put(out.position() + 0, (int) ((s + d) + b + si));
-        out.put(out.position() + 9, (int) (sd + d + c));
-        out.put(out.position() + 54, (int) (d + c - sd));
-        out.put(out.position() + 63, (int) ((s + d) + b - si));
+        out[outPos + 18] = (int) ((c - d) + sc);
+        out[outPos + 45] = (int) ((c - d) - sc);
+        out[outPos + 27] = (b - (s + d)) + ra;
+        out[outPos + 36] = (b - (s + d)) - ra;
+        out[outPos +  0] = (int) ((s + d) + b + si);
+        out[outPos +  9] = (int) (sd + d + c);
+        out[outPos + 54] = (int) (d + c - sd);
+        out[outPos + 63] = (int) ((s + d) + b - si);
     }
 
-    protected void decompress_func2(IntBuffer in, IntBuffer out) {
+    protected void decompress_func2(int[] in, int inPos, int[] out, int outPos) {
         long rx;
         int sa;
         int b, a, c, d, i, p, s;
@@ -231,10 +230,10 @@ public abstract class Dk2TextureDecoder {
         double rxf, rxg, rxs;
         double xf, xg;
 
-        b = in.get(in.position() + 5) - in.get(in.position() + 3);
-        c = in.get(in.position() + 1) - in.get(in.position() + 7);
-        i = in.get(in.position() + 3) + in.get(in.position() + 5);
-        a = in.get(in.position() + 7) + in.get(in.position() + 1);
+        b = in[inPos + 5] - in[inPos + 3];
+        c = in[inPos + 1] - in[inPos + 7];
+        i = in[inPos + 3] + in[inPos + 5];
+        a = in[inPos + 7] + in[inPos + 1];
         xf = b;
         xg = c;
         p = i + a;
@@ -251,9 +250,9 @@ public abstract class Dk2TextureDecoder {
         rx *= norm_7af038;
         d = (int) (rx >> 32);
 
-        b = in.get(in.position() + 6);
+        b = in[inPos + 6];
         d += d;
-        a = in.get(in.position() + 2);
+        a = in[inPos + 2];
 
         c = ra;
         i = rb;
@@ -263,8 +262,8 @@ public abstract class Dk2TextureDecoder {
         sc = c & 0xFFFFFFFFL;
         sd = d & 0xFFFFFFFFL;
         si = i & 0xFFFFFFFFL;
-        c = in.get(in.position() + 0);
-        d = in.get(in.position() + 4);
+        c = in[inPos + 0];
+        d = in[inPos + 4];
         s = b + a;
         a -= b;
         b = d + c;
@@ -285,22 +284,22 @@ public abstract class Dk2TextureDecoder {
         s = c + p;
         c -= p;
         p = ra;
-        out.put(out.position() + 2, s);
+        out[outPos + 2] = s;
         s = (int) sd;
-        out.put(out.position() + 5, c);
+        out[outPos + 5] = c;
         c = b + p;
         b -= p;
         p = (int) si;
-        out.put(out.position() + 3, c);
-        out.put(out.position() + 4, b);
+        out[outPos + 3] = c;
+        out[outPos + 4] = b;
         b = s + a;
         a -= s;
         c = d + p;
         d -= p;
-        out.put(out.position() + 0, c);
-        out.put(out.position() + 1, b);
-        out.put(out.position() + 6, a);
-        out.put(out.position() + 7, d);
+        out[outPos + 0] = c;
+        out[outPos + 1] = b;
+        out[outPos + 6] = a;
+        out[outPos + 7] = d;
     }
 
     protected long bs_read(int pos, int bits) {

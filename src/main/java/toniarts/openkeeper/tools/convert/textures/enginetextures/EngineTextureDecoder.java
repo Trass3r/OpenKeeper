@@ -17,7 +17,6 @@
 package toniarts.openkeeper.tools.convert.textures.enginetextures;
 
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import toniarts.openkeeper.tools.convert.textures.Dk2TextureDecoder;
 
 /**
@@ -63,7 +62,6 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
 
     @Override
     protected void decompress_block(ByteBuffer out, int stride, boolean alphaFlag) {
-        IntBuffer inp;
         double d;
         long xr, xg, xb;
         int ir, ig, ib;
@@ -74,14 +72,13 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
 
         decompress(alphaFlag);
 
-        inp = IntBuffer.wrap(decompress4_chunk);
         for (j = 0; j < 8; j++) {
             for (i = 0; i < 8; i++) {
                 int value;
-                r = inp.get(inp.position() + i + 0);
-                g = inp.get(inp.position() + i + 18);
-                b = inp.get(inp.position() + i + 9);
-                a = inp.get(inp.position() + i + 27);
+                r = decompress4_chunk[j * 64 + i + 0];
+                g = decompress4_chunk[j * 64 + i + 18];
+                b = decompress4_chunk[j * 64 + i + 9];
+                a = decompress4_chunk[j * 64 + i + 27];
                 d = float_7af014 * (g - float_7af004) + float_7af008 * (r - float_7af000) + double_7af048;
                 xr = (long) (d + (d > 0 ? 0.5f : -0.5f)) & 0xFFFFFFFFL;
                 ir = (int) xr;
@@ -103,7 +100,6 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
                 out.putInt(out.position() + i * 4, value);
             }
             out.position(Math.min(out.limit(), out.position() + stride));
-            inp.position(inp.position() + 64);
         }
     }
 
@@ -145,10 +141,10 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
             int i;
             bs_index = prepare_decompress((int) bs_red, bs_pos);
             for (i = 0; i < 8; i++) {
-                decompress_func1(IntBuffer.wrap(decompress2_chunk, i * 8, decompress2_chunk.length - i * 8), IntBuffer.wrap(decompress3_chunk, i, decompress3_chunk.length - i));
+                decompress_func1(decompress2_chunk, i * 8, decompress3_chunk, i);
             }
             for (i = 0; i < 8; i++) {
-                decompress_func2(IntBuffer.wrap(decompress3_chunk, i * 9, decompress3_chunk.length - i * 9), IntBuffer.wrap(decompress4_chunk, i * 64, decompress4_chunk.length - i * 64));
+                decompress_func2(decompress3_chunk, i * 9, decompress4_chunk, i * 64);
             }
         }
 
@@ -186,10 +182,10 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
             int i;
             bs_index = prepare_decompress((int) bs_green, bs_pos);
             for (i = 0; i < 8; i++) {
-                decompress_func1(IntBuffer.wrap(decompress2_chunk, i * 8, decompress2_chunk.length - i * 8), IntBuffer.wrap(decompress3_chunk, i, decompress3_chunk.length - i));
+                decompress_func1(decompress2_chunk, i * 8, decompress3_chunk, i);
             }
             for (i = 0; i < 8; i++) {
-                decompress_func2(IntBuffer.wrap(decompress3_chunk, i * 9, decompress3_chunk.length - i * 9), IntBuffer.wrap(decompress4_chunk, i * 64 + 9, decompress4_chunk.length - (i * 64 + 9)));
+                decompress_func2(decompress3_chunk, i * 9, decompress4_chunk, i * 64 + 9);
             }
         }
 
@@ -227,10 +223,10 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
             int i;
             bs_index = prepare_decompress((int) bs_blue, bs_pos);
             for (i = 0; i < 8; i++) {
-                decompress_func1(IntBuffer.wrap(decompress2_chunk, i * 8, decompress2_chunk.length - i * 8), IntBuffer.wrap(decompress3_chunk, i, decompress3_chunk.length - i));
+                decompress_func1(decompress2_chunk, i * 8, decompress3_chunk, i);
             }
             for (i = 0; i < 8; i++) {
-                decompress_func2(IntBuffer.wrap(decompress3_chunk, i * 9, decompress3_chunk.length - i * 9), IntBuffer.wrap(decompress4_chunk, i * 64 + 18, decompress4_chunk.length - (i * 64 + 18)));
+                decompress_func2(decompress3_chunk, i * 9, decompress4_chunk, i * 64 + 18);
             }
         }
 
@@ -271,10 +267,10 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
             int i;
             bs_index = prepare_decompress((int) bs_alpha, bs_pos);
             for (i = 0; i < 8; i++) {
-                decompress_func1(IntBuffer.wrap(decompress2_chunk, i * 8, decompress2_chunk.length - i * 8), IntBuffer.wrap(decompress3_chunk, i, decompress3_chunk.length - i));
+                decompress_func1(decompress2_chunk, i * 8, decompress3_chunk, i);
             }
             for (i = 0; i < 8; i++) {
-                decompress_func2(IntBuffer.wrap(decompress3_chunk, i * 9, decompress3_chunk.length - i * 9), IntBuffer.wrap(decompress4_chunk, i * 64 + 27, decompress4_chunk.length - (i * 64 + 27)));
+                decompress_func2(decompress3_chunk, i * 9, decompress4_chunk, i * 64 + 27);
             }
         }
     }

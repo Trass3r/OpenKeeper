@@ -17,7 +17,6 @@
 package toniarts.openkeeper.tools.convert.textures.loadingscreens;
 
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import toniarts.openkeeper.tools.convert.textures.Dk2TextureDecoder;
 
 /**
@@ -30,37 +29,35 @@ public final class LoadingScreenTextureDecoder extends Dk2TextureDecoder {
 
     @Override
     protected void decompress_block(ByteBuffer out, int stride, boolean alphaFlag) {
-        IntBuffer inp;
         int i;
         int bs_pos = (int) bs_index;
         long red = bs_read(bs_pos, 8);
         bs_index = prepare_decompress((int) red, bs_pos + 8);
         for (i = 0; i < 8; i++) {
-            decompress_func1(IntBuffer.wrap(decompress2_chunk, i * 8, decompress2_chunk.length - i * 8), IntBuffer.wrap(decompress3_chunk, i, decompress3_chunk.length - i));
+            decompress_func1(decompress2_chunk, i * 8, decompress3_chunk, i);
         }
         for (i = 0; i < 8; i++) {
-            decompress_func2(IntBuffer.wrap(decompress3_chunk, i * 9, decompress3_chunk.length - i * 9), IntBuffer.wrap(decompress4_chunk, i * 64, decompress4_chunk.length - (i * 64)));
+            decompress_func2(decompress3_chunk, i * 9, decompress4_chunk, i * 64);
         }
         bs_pos = (int) bs_index;
 
         long green = bs_read(bs_pos, 8);
         bs_index = prepare_decompress((int) green, bs_pos + 8);
         for (i = 0; i < 8; i++) {
-            decompress_func1(IntBuffer.wrap(decompress2_chunk, i * 8, decompress2_chunk.length - i * 8), IntBuffer.wrap(decompress3_chunk, i, decompress3_chunk.length - i));
+            decompress_func1(decompress2_chunk, i * 8, decompress3_chunk, i);
         }
         for (i = 0; i < 8; i++) {
-            decompress_func2(IntBuffer.wrap(decompress3_chunk, i * 9, decompress3_chunk.length - i * 9), IntBuffer.wrap(decompress4_chunk, i * 64 + 9, decompress4_chunk.length - (i * 64 + 9)));
+            decompress_func2(decompress3_chunk, i * 9, decompress4_chunk, i * 64 + 9);
         }
         bs_pos = (int) bs_index;
 
         long blue = bs_read(bs_pos, 8);
         bs_index = prepare_decompress((int) blue, bs_pos + 8);
         for (i = 0; i < 8; i++) {
-            decompress_func1(IntBuffer.wrap(decompress2_chunk, i * 8, decompress2_chunk.length - i * 8), IntBuffer.wrap(decompress3_chunk, i, decompress3_chunk.length - i));
+            decompress_func1(decompress2_chunk, i * 8, decompress3_chunk, i);
         }
         for (i = 0; i < 8; i++) {
-            decompress_func2(IntBuffer.wrap(decompress3_chunk, i * 9, decompress3_chunk.length - i * 9),
-                    IntBuffer.wrap(decompress4_chunk, i * 64 + 18, decompress4_chunk.length - (i * 64 + 18)));
+            decompress_func2(decompress3_chunk, i * 9, decompress4_chunk, i * 64 + 18);
         }
         bs_pos = (int) bs_index;
 
@@ -68,11 +65,10 @@ public final class LoadingScreenTextureDecoder extends Dk2TextureDecoder {
             long alpha = bs_read(bs_pos, 8);
             bs_index = prepare_decompress((int) alpha, bs_pos + 8);
             for (i = 0; i < 8; i++) {
-                decompress_func1(IntBuffer.wrap(decompress2_chunk, i * 8, decompress2_chunk.length - i * 8), IntBuffer.wrap(decompress3_chunk, i, decompress3_chunk.length - i));
+                decompress_func1(decompress2_chunk, i * 8, decompress3_chunk, i);
             }
             for (i = 0; i < 8; i++) {
-                decompress_func2(IntBuffer.wrap(decompress3_chunk, i * 9, decompress3_chunk.length - i * 9),
-                        IntBuffer.wrap(decompress4_chunk, i * 64 + 27, decompress4_chunk.length - (i * 64 + 27)));
+                decompress_func2(decompress3_chunk, i * 9, decompress4_chunk, i * 64 + 27);
             }
             bs_pos = (int) bs_index;
         }
@@ -80,7 +76,6 @@ public final class LoadingScreenTextureDecoder extends Dk2TextureDecoder {
         /* another check for a flag at 668dc7, set in the master routine */
         /* dword_7af600 = dest */
 
-        inp = IntBuffer.wrap(decompress4_chunk);
         if (alphaFlag) {
 //            dkabort(); /* 669427 */
         } else {
@@ -88,9 +83,9 @@ public final class LoadingScreenTextureDecoder extends Dk2TextureDecoder {
                 for (i = 0; i < 8; i++) {
                     int value;
                     /* some weird jumps that don't seem necessary */
-                    int r = inp.get(inp.position() + i + 0);
-                    int g = inp.get(inp.position() + i + 18);
-                    int b = inp.get(inp.position() + i + 9);
+                    int r = decompress4_chunk[j * 64 + i + 0];
+                    int g = decompress4_chunk[j * 64 + i + 18];
+                    int b = decompress4_chunk[j * 64 + i + 9];
 
                     value = clamp(r >> 16, 0, 255);
                     value |= clamp(g >> 16, 0, 255) << 16;
@@ -102,7 +97,6 @@ public final class LoadingScreenTextureDecoder extends Dk2TextureDecoder {
                     }
                 }
                 out.position(Math.min(out.limit(), out.position() + stride));
-                inp.position(inp.position() + 64);
             }
         }
     }
