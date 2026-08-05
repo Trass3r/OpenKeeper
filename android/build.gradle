@@ -2,6 +2,16 @@ plugins {
     id 'com.android.application'
 }
 
+// Generates a unique, strictly increasing integer using the current Unix timestamp in minutes
+def generateVersionCode() {
+    return (int) (System.currentTimeMillis() / 60000)
+}
+
+// Generates a readable timestamp string to attach to your debug version name
+def generateVersionTimestamp() {
+    return new java.text.SimpleDateFormat("yyyyMMdd.HHmm").format(new Date())
+}
+
 android {
     namespace = 'toniarts.openkeeper.android'
     compileSdk = 36
@@ -10,14 +20,15 @@ android {
         applicationId = 'toniarts.openkeeper.android'
         minSdk = 30
         targetSdk = 36
-        versionCode = 1
+        versionCode = generateVersionCode()
         versionName = '0.1.0'
     }
 
     buildTypes {
         debug {
             applicationIdSuffix '.debug'
-            versionNameSuffix '-debug'
+            // Appends the exact time of the build so you can track it on device (e.g., "0.1.0-debug-20260806.0116")
+            versionNameSuffix "-debug-${generateVersionTimestamp()}"
         }
 
         release {
