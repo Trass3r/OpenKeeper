@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
-import java.util.List;
 
 
 /**
@@ -34,6 +33,9 @@ import java.util.List;
 public final class ConversionUtils {
 
     private static final Logger logger = System.getLogger(ConversionUtils.class.getName());
+
+    private static final Charset WINDOWS_1252 = Charset.forName("windows-1252");
+    private static final Charset UTF_16LE = Charset.forName("UTF_16LE");
 
     public static final float FLOAT = 4096f; // or DIVIDER_FLOAT Fixed Point Single Precision Divider
     public static final float DOUBLE = 65536f; // or DIVIDER_DOUBLE Fixed Point Double Precision Divider
@@ -115,7 +117,19 @@ public final class ConversionUtils {
      * @return fresh String
      */
     public static String toString(byte[] bytes) {
-        return new String(bytes, Charset.forName("windows-1252"));
+        return new String(bytes, WINDOWS_1252);
+    }
+
+    /**
+     * Converts a byte array slice to a JAVA String
+     *
+     * @param bytes the bytearray to convert
+     * @param offset the start offset in bytes
+     * @param length the number of bytes to convert
+     * @return fresh String
+     */
+    public static String toString(byte[] bytes, int offset, int length) {
+        return new String(bytes, offset, length, WINDOWS_1252);
     }
 
     /**
@@ -126,7 +140,19 @@ public final class ConversionUtils {
      * @return fresh String
      */
     public static String toStringUtf16(byte[] bytes) {
-        return new String(bytes, Charset.forName("UTF_16LE"));
+        return new String(bytes, UTF_16LE);
+    }
+
+    /**
+     * Converts a byte array slice to a JAVA String (UTF16, LITTLE ENDIAN)
+     *
+     * @param bytes the bytearray to convert
+     * @param offset the start offset in bytes
+     * @param length the number of bytes to convert
+     * @return fresh String
+     */
+    public static String toStringUtf16(byte[] bytes, int offset, int length) {
+        return new String(bytes, offset, length, UTF_16LE);
     }
 
     /**
@@ -150,21 +176,6 @@ public final class ConversionUtils {
         return Integer.valueOf(b & 0xFF).shortValue();
     }
 
-    /**
-     * Converts a list of bytes to an array of bytes
-     *
-     * @param bytes the list of bytes
-     * @return the byte array
-     */
-    public static byte[] toByteArray(List<Byte> bytes) {
-        byte[] byteArray = new byte[bytes.size()];
-        int i = 0;
-        for (Byte b : bytes) {
-            byteArray[i] = b;
-            i++;
-        }
-        return byteArray;
-    }
 
     /**
      * Bit play<br>

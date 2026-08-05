@@ -22,7 +22,6 @@ import java.lang.System.Logger.Level;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -215,7 +214,7 @@ public final class ResourceChunkReader implements IResourceChunkReader {
             i++;
         }
 
-        return ConversionUtils.toString(Arrays.copyOf(bytes, i));
+        return ConversionUtils.toString(bytes, 0, i);
     }
 
     @Override
@@ -229,7 +228,7 @@ public final class ResourceChunkReader implements IResourceChunkReader {
             }
         }
 
-        return ConversionUtils.toStringUtf16(Arrays.copyOf(bytes, i));
+        return ConversionUtils.toStringUtf16(bytes, 0, i);
     }
 
     @Override
@@ -239,17 +238,17 @@ public final class ResourceChunkReader implements IResourceChunkReader {
         for (int i = 0; i < numberOfStrings; i++) {
 
             // A bit tricky, read until 0 byte
-            List<Byte> bytes = new ArrayList();
-            byte b = 0;
-            do {
-                b = buffer.get();
-                if (b != 0) {
-                    bytes.add(b);
-                } else {
-                    break;
-                }
-            } while (true);
-            strings.add(ConversionUtils.toString(ConversionUtils.toByteArray(bytes)));
+            int start = buffer.position();
+            while (buffer.get() != 0) {
+                // skip to the null terminator
+            }
+            int end = buffer.position() - 1;
+
+            byte[] bytes = new byte[end - start];
+            buffer.position(start);
+            buffer.get(bytes);
+            buffer.position(end + 1); // consume the null terminator
+            strings.add(ConversionUtils.toString(bytes));
         }
 
         return strings;
