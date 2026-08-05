@@ -138,6 +138,7 @@ public final class GeometryProcessor {
                 W  = !n.solidW(); NW = !n.solidNW();
             }
             case FLOOR -> {
+                // TODO: also consider claimed-ness (though that's technically not AO!)? not claimed SOLID block leads to very dark wall and floor next to it?
                 N  = n.solidN();  NE = n.solidNE();
                 E  = n.solidE();  SE = n.solidSE();
                 S  = n.solidS();  SW = n.solidSW();
@@ -151,7 +152,7 @@ public final class GeometryProcessor {
         float tileX = spatial.getWorldTranslation().x;
         float tileZ = spatial.getWorldTranslation().z;
 
-        AOComputer aoFn = (dx, dy, dz, dwx, dwy, dwz, ox, oy, oz, minY, maxY, maxZ) ->
+        AOComputer aoFn = (dx, dy, dz, dwx, dwy, dwz, minY, maxY, maxZ) ->
                 computeFloorAO(dwx - tileX, dwz - tileZ, dy, maxY, N, NE, E, SE, S, SW, W, NW);
         processSpatial(spatial, aoFn);
     }
@@ -192,16 +193,14 @@ public final class GeometryProcessor {
             boolean isCornerStart, boolean isCornerEnd) {
 
         spatial.depthFirstTraversal(child -> {
-            if (!(child instanceof Geometry geom)) {
+            if (!(child instanceof Geometry geom))
                 return;
-            }
-            if (Boolean.TRUE.equals(geom.getUserData(PROCESSED_KEY))) {
-                return;
-            }
 
-            AOComputer aoFn = (dx, dy, dz, dwx, dwy, dwz, ox, oy, oz, minY, maxY, maxZ) ->
-                    computeWallAO(dx, dy, dz, minY, maxZ,
-                            isCornerStart, isCornerEnd);
+            if (Boolean.TRUE.equals(geom.getUserData(PROCESSED_KEY)))
+                return;
+
+            AOComputer aoFn = (dx, dy, dz, dwx, dwy, dwz, minY, maxY, maxZ) ->
+                    computeWallAO(dx, dy, dz, minY, maxZ, isCornerStart, isCornerEnd);
 
             processGeometry(geom, aoFn);
         });
@@ -216,16 +215,26 @@ public final class GeometryProcessor {
      */
     private static void processSpatial(Spatial spatial, AOComputer aoFn) {
         spatial.depthFirstTraversal(child -> {
-            if (!(child instanceof Geometry geom)) {
+            if (!(child instanceof Geometry geom))
                 return;
-            }
             processGeometry(geom, aoFn);
         });
     }
 
     /**
-     * Walks a single geometry's vertex buffer once, applying noise
-     * displacement and AO color in the same loop.
+     * Processes a single geometry in one pass:
+     * <ol>
+     * <li>Scan undisplaced vertices for surface bounds.</li>
+     * <li>For each vertex: compute world-space position (including
+     *     translation), displace in world space, transform the result
+     *     back to local via the full inverse transform, then compute
+     *     per-vertex occlusion.</li>
+     * </ol>
+     * <p>
+     * Displacement in world space ensures that two tiles sharing a
+     * vertex (e.g. wall pieces meeting at a corner) apply the
+     * identical displacement regardless of their individual rotations
+     * — no gaps at tile boundaries.
      */
     private static void processGeometry(Geometry geom, AOComputer aoFn) {
         if (Boolean.TRUE.equals(geom.getUserData(PROCESSED_KEY)))
@@ -250,16 +259,12 @@ public final class GeometryProcessor {
         posData.get(vertices, 0, vertexCountX3);
         // java.util.Arrays.stream(vertices).map(v -> String.format(java.util.Locale.ROOT, "[%f, %f, %f]", v.x, v.y, v.z)).collect(java.util.stream.Collectors.joining(", ", "[", "]"))
 
-        // Inverse world rotation (no translation) for converting the noise
-        // vector from world space back to model-local space.
-        Transform invWorld = worldTransform.clone();
-        invWorld.setTranslation(0, 0, 0);
-        invWorld = invWorld.invert();
-
-        // Scan undisplaced vertices for surface bounds.
-        // maxY = highest point = surface for floors; minY = lowest = bottom for walls.
-        // maxZ = front face for walls (recess depth reference).
-        float minY = Float.MAX_VALUE, maxY = -Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
+        // Scan UNDISPLACED vertices for surface bounds.
+        // These are identical for same-type tiles, so the surface reference
+        // is consistent across adjacent tiles (no seams).
+        float minY = Float.MAX_VALUE;
+        float maxY = -Float.MAX_VALUE;
+        float maxZ = -Float.MAX_VALUE;
         for (int i = 0; i < vertexCount; i++) {
             float y = vertices[i * 3 + 1];
             float z = vertices[i * 3 + 2];
@@ -268,43 +273,52 @@ public final class GeometryProcessor {
             if (z > maxZ) maxZ = z;
         }
 
-        // Output buffers
-        var newPositions = new float[vertexCount * 3];
+        // Full inverse world transform (including translation).  Using
+        // the full inverse lets us displace in world space and convert
+        // the result back to a rotation-consistent local position.
+        Transform fullInvWorld = worldTransform.invert();
+
+        var newPositions = new float[vertexCountX3];
 
         // Reusable vectors to avoid allocation in the hot loop
         var localPos = new Vector3f();
         var worldPos = new Vector3f();
-        var invNoise = new Vector3f();
+        var displacedWorld = new Vector3f();
+
         for (int i = 0; i < vertexCount; ++i) {
             localPos.set(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
 
-            // Local → world (pre-displacement)
+            // World position (transformVector includes translation).
+            // Noise therefore varies uniquely per world location, while
+            // shared-edge vertices round to the same grid cell → seam-free.
             worldTransform.transformVector(localPos, worldPos);
 
-            // Compute world-space noise
-            var noise = getNoiseForWorldPos(worldPos);
+            var noise = getGridNoise(worldPos);
 
-            // Rotate noise back to local space for displacement
-            invWorld.transformVector(noise, invNoise);
+            // Displace in world space — two tiles sharing a world-space
+            // vertex apply the identical displacement regardless of the
+            // tiles' rotations.
+            displacedWorld.set(worldPos.x + noise.x,
+                               worldPos.y + noise.y,
+                               worldPos.z + noise.z);
 
-            // Displaced local position
-            float dx = localPos.x + invNoise.x;
-            float dy = localPos.y + invNoise.y;
-            float dz = localPos.z + invNoise.z;
+            // Transform back to local via full inverse for storage
+            fullInvWorld.transformVector(displacedWorld, localPos);
+
+            float dx = localPos.x;
+            float dy = localPos.y;
+            float dz = localPos.z;
             newPositions[i * 3]     = dx;
             newPositions[i * 3 + 1] = dy;
             newPositions[i * 3 + 2] = dz;
 
-            // Displaced world position (for rotation-independent AO)
-            float dwx = worldPos.x + noise.x;
-            float dwy = worldPos.y + noise.y;
-            float dwz = worldPos.z + noise.z;
-
-            // AO: pass both displaced local (for wall along-axis / depth) and
-            // displaced world (for floor tile-relative cardinal directions),
-            // plus surface bounds for intra-tile height/depth AO.
-            byte ao = (byte)(aoFn.computeAO(dx, dy, dz, dwx, dwy, dwz,
-                    localPos.x, localPos.y, localPos.z, minY, maxY, maxZ) * 255f);
+            // AO uses displaced world position + undisplaced surface bounds.
+            // computeFloorAO gets tile-relative coords (dwx - tileX, …).
+            // computeWallAO gets local coords (dx, dy, dz).
+            float occlusion = aoFn.computeAO(dx, dy, dz,
+                    displacedWorld.x, displacedWorld.y, displacedWorld.z,
+                    minY, maxY, maxZ);
+            byte ao = (byte) ((1.0f - occlusion) * 255f);
             colors[i * 3]     = ao;
             colors[i * 3 + 1] = ao;
             colors[i * 3 + 2] = ao;
@@ -338,30 +352,51 @@ public final class GeometryProcessor {
         }
     }
 
-    // ================================================================
-    //  Noise function
-    // ================================================================
-
     /**
-     * Generates a 3D noise vector at the given world position.
-     * Deterministic and grid-aligned so adjacent tiles get consistent
-     * displacements at shared vertex positions.
+     * Fast 3D displacement handling 5x5 to 3x3 seams without inner if-else branching.
      */
-    private static Vector3f getNoiseForWorldPos(Vector3f worldPos) {
-        final int POSITION_SCALE = 10;
-        int x = Math.round(worldPos.x * POSITION_SCALE);
-        int y = Math.round(worldPos.y * POSITION_SCALE);
-        int z = Math.round(worldPos.z * POSITION_SCALE);
+    public static Vector3f getGridNoise(Vector3f v) {
+        int ix = Math.round(v.x * 4.0f);
+        int iy = Math.round(v.y * 4.0f);
+        int iz = Math.round(v.z * 4.0f);
 
-        return new Vector3f(
-                hash3D(x, y, z) * NOISE_AMPLITUDE,
-                hash3D(x + 104729, y + 104729, z + 104729) * NOISE_AMPLITUDE,
-                hash3D(x + 15485863, y + 15485863, z + 15485863) * NOISE_AMPLITUDE);
+        boolean xOdd = (ix % 2 != 0);
+        boolean zOdd = (iz % 2 != 0);
+
+        // Edge vertex on a T-junction between 5x5 and 3x3 meshes
+        if (xOdd ^ zOdd) {
+            // If xOdd is true, step X by 1 and Z by 0. If false, step X by 0 and Z by 1.
+            int dx = xOdd ? 1 : 0;
+            int dz = zOdd ? 1 : 0;
+
+            var neighborA = sampleLattice(ix - dx, iy, iz - dz, NOISE_AMPLITUDE);
+            var neighborB = sampleLattice(ix + dx, iy, iz + dz, NOISE_AMPLITUDE);
+
+            return new Vector3f(
+                (neighborA.x + neighborB.x) * 0.5f,
+                (neighborA.y + neighborB.y) * 0.5f,
+                (neighborA.z + neighborB.z) * 0.5f
+            );
+        }
+
+        // Interior fine vertex or standard coarse vertex
+        return sampleLattice(ix, iy, iz, NOISE_AMPLITUDE);
     }
 
-    private static float hash3D(int x, int y, int z) {
-        int h = x * 73856093 ^ y * 19349663 ^ z * 83492791;
-        return (float) ((h & 0xFFFFFFFFL) / 4294967296.0 * 2.0 - 1.0);
+    private static Vector3f sampleLattice(int ix, int iy, int iz, float intensity) {
+        final int PRIME_X = 73856093;
+        final int PRIME_Y = 19349663;
+        final int PRIME_Z = 83492791;
+        int hx = (ix * PRIME_X) ^ (iy * PRIME_Y) ^ (iz * PRIME_Z);
+        int hy = (ix * PRIME_Y) ^ (iy * PRIME_Z) ^ (iz * PRIME_X);
+        int hz = (ix * PRIME_Z) ^ (iy * PRIME_X) ^ (iz * PRIME_Y);
+
+        hx = ((hx >>> 16) ^ hx) * 0x45d9f3b;
+        hy = ((hy >>> 16) ^ hy) * 0x45d9f3b;
+        hz = ((hz >>> 16) ^ hz) * 0x45d9f3b;
+
+        float scale = intensity / Integer.MAX_VALUE;
+        return new Vector3f(hx * scale, hy * scale, hz * scale);
     }
 
     // ================================================================
@@ -369,19 +404,22 @@ public final class GeometryProcessor {
     // ================================================================
 
     /**
-     * Computes floor/top AO with inter-tile edge occlusion and intra-tile
-     * surface-relative depth darkening.
+     * Computes floor/top occlusion from inter-tile edge neighbours and
+     * intra-tile depth below the undisplaced surface.
      *
      * @param x    tile-relative world X of the displaced vertex (center at 0)
      * @param z    tile-relative world Z of the displaced vertex
-     * @param dy   displaced local Y (height — noise IS applied)
-     * @param maxY highest undisplaced local Y = surface level
+     * @param dy   displaced local Y (after noise)
+     * @param maxY highest <em>undisplaced</em> local Y = surface reference
+     * @return occlusion in {@code [0, 1 - MIN_AO]} (0 = fully lit)
      */
     static float computeFloorAO(float x, float z, float dy, float maxY,
             boolean N, boolean NE, boolean E, boolean SE,
             boolean S, boolean SW, boolean W, boolean NW) {
 
-        // --- Inter-tile edge AO (existing logic) ---
+        float maxOcclusion = 1.0f - MIN_AO;
+
+        // --- Inter-tile edge occlusion ---
         float halfTile = 0.5f;
         float edgeThreshold = halfTile * EDGE_THRESHOLD;
 
@@ -390,7 +428,7 @@ public final class GeometryProcessor {
         boolean nearWest  = x < -(halfTile - edgeThreshold);
         boolean nearEast  = x > (halfTile - edgeThreshold);
 
-        float edgeAO = 1.0f;
+        float edgeOcclusion = 0.0f;
 
         if (nearNorth || nearSouth || nearWest || nearEast) {
             float occlusion = 0.0f;
@@ -431,41 +469,46 @@ public final class GeometryProcessor {
             }
 
             if (sampleCount > 0) {
-                edgeAO = Math.max(MIN_AO, 1.0f - occlusion / sampleCount);
+                edgeOcclusion = Math.min(maxOcclusion, occlusion / sampleCount);
             }
         }
 
-        // --- Intra-tile surface-relative depth AO ---
-        // Vertices below the surface (dy < maxY) are darker — crevices and
-        // noise-displaced pits get natural self-shadowing.
-        float depth = Math.max(0f, maxY - dy);
-        float surfaceAO = Math.max(MIN_AO, 1.0f - depth * DEPTH_SCALE);
+        // --- Intra-tile depth occlusion ---
+        // Depth below the undisplaced surface: noise pushing vertices
+        // down creates recesses (darker); noise pushing up puts the vertex
+        // above the reference plane (depth=0, stays lit).
+        float depth = maxY - dy;
+        float depthOcclusion = Math.min(maxOcclusion, (depth + NOISE_AMPLITUDE) * DEPTH_SCALE);
 
-        return Math.max(MIN_AO, edgeAO * surfaceAO);
+        edgeOcclusion = 0; // TODO: remove
+        // Combine: occl = 1 - (1-edge)*(1-depth), clamped to maxOcclusion
+        return Math.min(maxOcclusion,
+                1.0f - (1.0f - edgeOcclusion) * (1.0f - depthOcclusion));
     }
 
     /**
-     * Computes wall AO with inter-tile corner occlusion and intra-tile
-     * surface-relative depth darkening (bottom row + wall-face recess).
+     * Computes wall occlusion from inter-tile corners and intra-tile
+     * surface-relative depth (bottom row + wall-face recess).
      *
-     * @param worldX       tile-local X (along-wall) of displaced vertex
-     * @param dy           displaced local Y (height)
-     * @param dz           displaced local Z (depth into wall)
-     * @param minY         lowest undisplaced local Y (wall bottom)
-     * @param maxZ         highest undisplaced local Z (wall front face)
+     * @param worldX  tile-local X (along-wall) of displaced vertex
+     * @param dy      displaced local Y (height)
+     * @param dz      displaced local Z (depth into wall)
+     * @param minY    lowest <em>undisplaced</em> local Y (wall bottom)
+     * @param maxZ    highest <em>undisplaced</em> local Z (wall front face)
+     * @return occlusion in {@code [0, 1 - MIN_AO]} (0 = fully lit)
      */
-    static float computeWallAO(float worldX, float dy, float dz,
-            float minY, float maxZ,
-            boolean isCornerStart, boolean isCornerEnd) {
+    static float computeWallAO(float worldX, float dy, float dz, float minY, float maxZ, boolean isCornerStart, boolean isCornerEnd) {
 
-        // --- Inter-tile corner/edge AO ---
+        float maxOcclusion = 1.0f - MIN_AO;
+
+        // --- Inter-tile corner occlusion ---
         float halfTile = 0.5f;
         float edgeThreshold = halfTile * EDGE_THRESHOLD;
 
         boolean nearWest = worldX < -(halfTile - edgeThreshold);
         boolean nearEast = worldX > (halfTile - edgeThreshold);
 
-        float edgeAO = 1.0f;
+        float edgeOcclusion = 0.0f;
 
         if (nearWest || nearEast) {
             float occlusion = 0.0f;
@@ -481,22 +524,22 @@ public final class GeometryProcessor {
             }
 
             if (sampleCount > 0) {
-                edgeAO = Math.max(MIN_AO, 1.0f - occlusion / sampleCount);
+                edgeOcclusion = Math.min(maxOcclusion, occlusion / sampleCount);
             }
         }
 
-        // --- Intra-tile surface-relative AO ---
-        // Bottom row: vertices near minY are darker (touching floor).
-        // Proportional falloff over BOTTOM_RANGE replaces old binary check.
+        // --- Intra-tile depth occlusion ---
+        // Bottom: vertices near minY (touching floor) are darker.
+        // Proportional falloff over BOTTOM_RANGE.
         float bottomRatio = Math.max(0f, Math.min(1f, (dy - minY) / BOTTOM_RANGE));
-        float bottomAO = Math.max(MIN_AO, bottomRatio);
+        float bottomOcclusion = 1.0f - bottomRatio;
 
-        // Wall-face recess: vertices behind the front face (dz < maxZ) are
-        // darker — recessed into the wall.
+        // Recess: vertices behind the front face (dz < maxZ) are darker.
         float recess = Math.max(0f, maxZ - dz);
-        float recessAO = Math.max(MIN_AO, 1.0f - recess * DEPTH_SCALE);
+        float recessOcclusion = Math.min(maxOcclusion, recess * DEPTH_SCALE);
 
-        return Math.max(MIN_AO, edgeAO * bottomAO * recessAO);
+        // Combine: occl = 1 - (1-edge)*(1-bottom)*(1-recess), clamped
+        return Math.min(maxOcclusion, 1.0f - (1.0f - edgeOcclusion) * (1.0f - bottomOcclusion) * (1.0f - recessOcclusion));
     }
 
     // ================================================================
@@ -504,7 +547,7 @@ public final class GeometryProcessor {
     // ================================================================
 
     /**
-     * Computes the AO factor for a single vertex.
+     * Computes the occlusion factor for a single vertex.
      *
      * @param dx   displaced local X
      * @param dy   displaced local Y
@@ -512,18 +555,15 @@ public final class GeometryProcessor {
      * @param dwx  displaced world X
      * @param dwy  displaced world Y
      * @param dwz  displaced world Z
-     * @param ox   original (undisplaced) local X
-     * @param oy   original (undisplaced) local Y
-     * @param oz   original (undisplaced) local Z
-     * @param minY lowest undisplaced local Y in the geometry
-     * @param maxY highest undisplaced local Y in the geometry (surface for floors)
-     * @param maxZ highest undisplaced local Z in the geometry (front face for walls)
+     * @param minY lowest <em>undisplaced</em> local Y in the geometry
+     * @param maxY highest <em>undisplaced</em> local Y (surface for floors)
+     * @param maxZ highest <em>undisplaced</em> local Z (front face for walls)
+     * @return occlusion in {@code [0, 1 - MIN_AO]} where 0 = no occlusion (fully lit)
      */
     @FunctionalInterface
     private interface AOComputer {
         float computeAO(float dx, float dy, float dz,
                         float dwx, float dwy, float dwz,
-                        float ox, float oy, float oz,
                         float minY, float maxY, float maxZ);
     }
 }
