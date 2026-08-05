@@ -192,7 +192,11 @@ public final class EngineTexturesFile implements Iterable<String> {
 
     public byte[] getTextureAs(String textureEntry, String format) {
         ImageIO.setUseCache(false);
-        var result = new ByteArrayOutputStream();
+        var entry = engineTextureEntries.get(textureEntry);
+        if (entry == null)
+            throw new RuntimeException("File " + textureEntry + " not found from the texture archive!");
+        // Pre-size to the raw RGBA size (upper bound) to avoid growth re-allocations
+        var result = new ByteArrayOutputStream(entry.getResX() * entry.getResY() * 4);
         try {
             if (!ImageIO.write(getTexture(textureEntry), format, result))
                 throw new IllegalArgumentException("Failed to write texture as " + format);
