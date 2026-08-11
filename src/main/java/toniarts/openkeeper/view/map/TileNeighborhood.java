@@ -43,7 +43,7 @@ import toniarts.openkeeper.tools.convert.map.Terrain;
  * scattered {@code hasSameTile} / {@code isSolidTile} lookups that were
  * previously duplicated across constructors and AO logic.
  *
- * @see AmbientOcclusionUtils
+ * @see GeometryProcessor
  * @see <a href="https://github.com/tonihele/OpenKeeper/issues/479">Issue #479</a>
  */
 public record TileNeighborhood(byte sameTerrainMask, byte solidMask) {

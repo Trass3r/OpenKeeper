@@ -29,8 +29,6 @@ import java.nio.FloatBuffer;
  * Applies world-space-consistent geometry noise displacement <em>and</em>
  * per-vertex ambient occlusion in a single vertex-buffer walk.
  * <p>
- * Previously {@link VertexNoiseMaker} and {@link AmbientOcclusionUtils}
- * traversed each geometry twice (two mesh clones, two full vertex loops).
  * This processor clones the mesh once and computes noise displacement
  * and AO in one pass, with AO using the <em>displaced</em> vertex positions
  * for noise-aware occlusion.
@@ -38,19 +36,16 @@ import java.nio.FloatBuffer;
  * Must be called AFTER the spatial has been positioned via
  * {@code AssetUtils.translateToTile()} so that
  * {@link Geometry#getWorldTransform()} returns correct world coordinates.
- *
- * @see AmbientOcclusionUtils  (kept for compatibility with existing AO-only code paths)
- * @see VertexNoiseMaker       (kept for stand-alone noise use cases)
  */
 public final class GeometryProcessor {
 
-    // --- Noise constants (from VertexNoiseMaker) ---
-    private static final float NOISE_AMPLITUDE = 0.075f;
+    // --- Noise constants ---
+    static final float NOISE_AMPLITUDE = 0.075f;
 
-    // --- AO constants (from AmbientOcclusionUtils) ---
+    // --- AO constants ---
     private static final float AO_STRENGTH = 1f;
-    private static final float EDGE_THRESHOLD = 0.2f;
-    private static final float MIN_AO = 0.25f;
+    static final float EDGE_THRESHOLD = 0.2f;
+    static final float MIN_AO = 0.25f;
 
     /**
      * Scales depth-below-surface into AO darkening.
@@ -59,11 +54,11 @@ public final class GeometryProcessor {
     private static final float DEPTH_SCALE = 1f / NOISE_AMPLITUDE / 2;
 
     /** Height range (local Y) over which wall bottom darkening fades out. */
-    private static final float BOTTOM_RANGE = 0.15f;
+    static final float BOTTOM_RANGE = 0.15f;
 
     /** User-data key for per-wall-piece corner flags. */
-    private static final String WALL_CORNER_START_KEY = "wallCornerStart";
-    private static final String WALL_CORNER_END_KEY = "wallCornerEnd";
+    static final String WALL_CORNER_START_KEY = "wallCornerStart";
+    static final String WALL_CORNER_END_KEY = "wallCornerEnd";
 
     /** User-data key marking geometries that have already been processed. */
     private static final String PROCESSED_KEY = "geomProcessed";
@@ -400,7 +395,7 @@ public final class GeometryProcessor {
     }
 
     // ================================================================
-    //  AO computation (from AmbientOcclusionUtils)
+    //  AO computation
     // ================================================================
 
     /**

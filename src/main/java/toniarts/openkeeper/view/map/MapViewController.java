@@ -704,8 +704,8 @@ public abstract class MapViewController implements ILoader<KwdFile> {
 
                 // Store corner flags on the wall spatial so
                 // GeometryProcessor can read them after translateToTile.
-                wall.setUserData("wallCornerStart", isLeftCorner);
-                wall.setUserData("wallCornerEnd", isRightCorner);
+                wall.setUserData(GeometryProcessor.WALL_CORNER_START_KEY, isLeftCorner);
+                wall.setUserData(GeometryProcessor.WALL_CORNER_END_KEY, isRightCorner);
 
                 wall.rotate(0, direction.getAngle(), 0);
                 sideTileNode.attachChild(wall);
