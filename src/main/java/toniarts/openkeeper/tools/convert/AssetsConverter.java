@@ -103,8 +103,8 @@ public abstract class AssetsConverter implements IConversionTaskUpdate {
     public static final String THUMBNAILS_FOLDER = "Thumbnails/";
     public static final String MOUSE_CURSORS_FOLDER  = "Interface/Cursors/";
     public static final String PATHS_FOLDER  = "Interface/Paths/";
-    private static final String FONTS_FOLDER = "Interface/Fonts/";
-    private static final String TEXTS_FOLDER = "Interface/Texts/";
+    public static final String FONTS_FOLDER = "Interface/Fonts/";
+    public static final String TEXTS_FOLDER = "Interface/Texts/";
 
     private final String dungeonKeeperFolder;
     private final AssetManager assetManager;
@@ -239,7 +239,7 @@ public abstract class AssetsConverter implements IConversionTaskUpdate {
             case FONTS:
                 return new ConvertFonts(dungeonKeeperFolder, currentFolder + FONTS_FOLDER, OVERWRITE_DATA);
             case MAP_THUMBNAILS:
-                return new ConvertMapThumbnails(dungeonKeeperFolder, currentFolder + THUMBNAILS_FOLDER, OVERWRITE_DATA);
+                return new ConvertMapThumbnails(dungeonKeeperFolder, currentFolder + THUMBNAILS_FOLDER, OVERWRITE_DATA, assetManager);
         }
 
         throw new IllegalArgumentException("Conversion " + conversion + " not implemented!");
@@ -271,8 +271,12 @@ public abstract class AssetsConverter implements IConversionTaskUpdate {
      * @param destination the folder to save to
      * @throws IOException may fail
      */
+    public static void genererateMapThumbnail(KwdFile kwd, String destination, AssetManager assetManager) throws IOException {
+        ConvertMapThumbnails.genererateMapThumbnail(kwd, destination, assetManager);
+    }
+
     public static void genererateMapThumbnail(KwdFile kwd, String destination) throws IOException {
-        ConvertMapThumbnails.genererateMapThumbnail(kwd, destination);
+        genererateMapThumbnail(kwd, destination, null);
     }
 
 }

@@ -17,10 +17,7 @@
 package toniarts.openkeeper.tools.convert.spr;
 
 import java.awt.Color;
-import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.nio.file.Files;
@@ -164,5 +161,13 @@ public final class SprFile {
                 sprite.buffer.writeTo(bout);
             }
         }
+    }
+
+    // returns the PNG encoded bytes for a single sprite frame
+    public byte[] getFrameAsPng(int index) {
+        if (index < 0 || index >= sprites.size()) {
+            throw new IndexOutOfBoundsException("Frame " + index + " out of range, sprite has " + sprites.size() + " frames");
+        }
+        return sprites.get(index).buffer.toByteArray();
     }
 }

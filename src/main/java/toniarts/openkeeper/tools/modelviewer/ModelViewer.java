@@ -71,11 +71,7 @@ import toniarts.openkeeper.game.data.ISoundable;
 import toniarts.openkeeper.game.data.Settings;
 import toniarts.openkeeper.game.sound.*;
 import toniarts.openkeeper.gui.CursorFactory;
-import toniarts.openkeeper.tools.convert.AssetsConverter;
-import toniarts.openkeeper.tools.convert.DK2AssetLocator;
-import toniarts.openkeeper.tools.convert.KmfAssetInfo;
-import toniarts.openkeeper.tools.convert.KmfModelLoader;
-import toniarts.openkeeper.tools.convert.OpenKeeperAssetManager;
+import toniarts.openkeeper.tools.convert.*;
 import toniarts.openkeeper.tools.convert.textures.enginetextures.EngineTextureLoader;
 import toniarts.openkeeper.tools.convert.kmf.KmfFile;
 import toniarts.openkeeper.tools.convert.map.Creature;
@@ -216,7 +212,7 @@ public final class ModelViewer extends SimpleApplication {
         this.assetManager = new OpenKeeperAssetManager();
 
         // Distribution locator
-        assetManager.registerLocator(AssetsConverter.getAssetsFolder(), FileLocator.class);
+        assetManager.registerLocator(AssetsConverter.getAssetsFolder(), CaseInsensitiveFileLocator.class);
         assetManager.registerLoader(MP2Loader.class, "mp2");
         assetManager.registerLocator(dkIIFolder, DK2AssetLocator.class);
         assetManager.registerLoader(KmfModelLoader.class, "kmf");
@@ -272,8 +268,8 @@ public final class ModelViewer extends SimpleApplication {
         setupDebug();
 
         // Open a KMF model if set
-        if (kmfModel == null) {
-            kmfModel = java.nio.file.Path.of("IMP-Idle4.kmf"); // case-sensitive!
+        if (false && kmfModel == null) {
+            kmfModel = Path.of("IMP-Idle4.kmf"); // case-sensitive!
             Node node = (Node) assetManager.loadModel(new ModelKey(kmfModel.toString()));
             setupModel(node, false);
             //Node spat = (Node) AssetUtils.loadAsset(assetManager, kmfModel.toString(), null);
@@ -734,7 +730,7 @@ public final class ModelViewer extends SimpleApplication {
     private KwdFile getKwdFile() {
         // Read Alcatraz.kwd by default
         if (kwdFile == null) {
-            kwdFile = getKwdFile("Conquest.kwd");
+            kwdFile = getKwdFile("Alcatraz");
         }
 
         return kwdFile;
@@ -742,7 +738,7 @@ public final class ModelViewer extends SimpleApplication {
 
     private KwdFile getKwdFile(String name) {
         return new KwdFile(dkIIFolder,
-                Paths.get(dkIIFolder, PathUtils.DKII_MAPS_FOLDER, name));
+                Paths.get(dkIIFolder, PathUtils.DKII_MAPS_FOLDER, name + ".kwd"));
     }
 
     public void onSoundChanged(SoundFile soundFile) {

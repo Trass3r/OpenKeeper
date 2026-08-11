@@ -143,6 +143,10 @@ public final class WadFile {
         return new ArrayList(wadFileEntries.keySet());
     }
 
+    public boolean contains(String fileName) {
+        return wadFileEntries.containsKey(fileName);
+    }
+
     /**
      * Return the file count in this WAD archive
      *

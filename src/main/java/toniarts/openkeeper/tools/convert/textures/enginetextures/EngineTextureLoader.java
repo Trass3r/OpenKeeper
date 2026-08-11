@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 /**
  * AssetLoader for raw DK2 EngineTexture files (.dkt extension).
  * Reads the serialized format produced by
- * {@link EngineTexturesFile#getRawTextureData(String)}:
+ * {@link EngineTexturesFile#getRawTexture(String)}:
  *   [4 bytes: resX] [4 bytes: resY] [1 byte: alphaFlag]
  *   [4 bytes: count] [count * 4 bytes: compressed data as unsigned ints]
  *
@@ -40,6 +40,7 @@ public final class EngineTextureLoader implements AssetLoader {
 
     @Override
     public Object load(AssetInfo assetInfo) throws IOException {
+        // TODO: support TextureKey options like setGenerateMips
         try (InputStream in = assetInfo.openStream();
              DataInputStream dis = new DataInputStream(in)) {
 

@@ -195,13 +195,13 @@ public final class ConvertTextures extends ConversionTask {
 
             // Some of these archives contain .444 files, convert these to PNGs
             if (entry.endsWith(".444")) {
-                LoadingScreenFile lsf = new LoadingScreenFile(wad.getFileData(entry));
+                var image = LoadingScreenFile.loadImage(wad.getFileData(entry));
                 try {
                     Path destFile = Paths.get(destination, entry.substring(0, entry.length() - 3).concat("png"));
                     Files.createDirectories(destFile.getParent());
                     try (OutputStream os = Files.newOutputStream(destFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
                             BufferedOutputStream bos = new BufferedOutputStream(os)) {
-                        ImageIO.write(lsf.getImage(), "png", bos);
+                        ImageIO.write(image, "png", bos);
                     }
                 } catch (IOException ex) {
                     logger.log(Level.ERROR, "Failed to save the wad entry " + entry + "!", ex);

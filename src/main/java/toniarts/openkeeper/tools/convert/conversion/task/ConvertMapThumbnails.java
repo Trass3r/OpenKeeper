@@ -30,6 +30,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
+import com.jme3.asset.AssetManager;
 import toniarts.openkeeper.tools.convert.AssetsConverter;
 import toniarts.openkeeper.tools.convert.map.GameLevel;
 import toniarts.openkeeper.tools.convert.map.KwdFile;
@@ -47,8 +48,11 @@ public final class ConvertMapThumbnails extends ConversionTask {
 
     private static final Logger logger = System.getLogger(ConvertMapThumbnails.class.getName());
 
-    public ConvertMapThumbnails(String dungeonKeeperFolder, String destination, boolean overwriteData) {
+    private final AssetManager assetManager;
+
+    public ConvertMapThumbnails(String dungeonKeeperFolder, String destination, boolean overwriteData, AssetManager assetManager) {
         super(dungeonKeeperFolder, destination, overwriteData);
+        this.assetManager = assetManager;
     }
 
     @Override
@@ -101,7 +105,7 @@ public final class ConvertMapThumbnails extends ConversionTask {
         for (KwdFile kwd : maps) {
             updateStatus(i, total);
             try {
-                genererateMapThumbnail(kwd, destination);
+                genererateMapThumbnail(kwd, destination, assetManager);
             } catch (Exception ex) {
                 logger.log(Level.WARNING, "Failed to create a thumbnail from map: " + kwd.getGameLevel().getName() + "!", ex); // Not fatal
             }
@@ -116,11 +120,11 @@ public final class ConvertMapThumbnails extends ConversionTask {
      * @param destination the folder to save to
      * @throws IOException may fail
      */
-    public static void genererateMapThumbnail(KwdFile kwd, String destination) throws IOException {
+    public static void genererateMapThumbnail(KwdFile kwd, String destination, AssetManager assetManager) throws IOException {
 
         // Create the thumbnail & save it
         // TODO maybe image size in Settings ???
-        BufferedImage thumbnail = MapThumbnailGenerator.generateMap(kwd, 144, 144, false);
+        BufferedImage thumbnail = MapThumbnailGenerator.generateMap(kwd, 144, 144, false, assetManager);
 
         Path destinationPath = Paths.get(destination, PathUtils.stripFileName(kwd.getGameLevel().getName()) + ".png");
         try (OutputStream os = Files.newOutputStream(destinationPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);

@@ -30,7 +30,7 @@ public final class TextureExtractor {
 
     private static String dkIIFolder;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
         // Take Dungeon Keeper 2 root folder as parameter
         if (args.length != 2 || !Files.exists(Paths.get(args[1]))) {
@@ -49,7 +49,7 @@ public final class TextureExtractor {
         String destination = PathUtils.fixFilePath(args[0]);
 
         //Extract the meshes
-        EngineTexturesFile etFile = new EngineTexturesFile(cacheFolder);
+        var etFile = new EngineTexturesFile(cacheFolder);
         etFile.extractFileData(destination);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2025 OpenKeeper
+ * Copyright (C) 2026 OpenKeeper
  *
  * OpenKeeper is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import com.jme3.asset.AssetProcessor;
 import com.jme3.asset.DesktopAssetManager;
 import com.jme3.asset.cache.AssetCache;
 
-
 /**
  * A {@link DesktopAssetManager} subclass that dispatches asset loaders based on
  * the {@link AssetInfo}'s key rather than the original request key.
@@ -40,6 +39,9 @@ import com.jme3.asset.cache.AssetCache;
  * cross-format lookups are the exceptional case (original game files).
  */
 public final class OpenKeeperAssetManager extends DesktopAssetManager {
+    public OpenKeeperAssetManager() {
+        super(true);
+    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -47,6 +49,19 @@ public final class OpenKeeperAssetManager extends DesktopAssetManager {
                                       AssetProcessor proc, AssetCache cache) {
         // Dispatch based on the info's key (actual format found)
         // rather than the original request key's extension.
-        return (T) super.loadLocatedAsset(info.getKey(), info, proc, cache);
+        return (T)super.loadLocatedAsset(info.getKey(), info, proc, cache);
+    }
+
+    public AssetInfo locateAssetQuiet(AssetKey<?> key) {
+        try {
+            var field = DesktopAssetManager.class.getDeclaredField("handler");
+            field.setAccessible(true);
+            Object handler = field.get(this);
+            var method = handler.getClass().getMethod("tryLocate", AssetKey.class);
+            method.setAccessible(true);
+            return (AssetInfo) method.invoke(handler, key);
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalStateException("Failed to call tryLocate", ex);
+        }
     }
 }

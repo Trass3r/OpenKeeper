@@ -239,7 +239,8 @@ public final class AssetUtils {
             TextureKey textureKey = new TextureKey(textureName, false);
 
             // See if it exists
-            AssetInfo assetInfo = assetManager.locateAsset(textureKey);
+            //AssetInfo assetInfo = ((OpenKeeperAssetManager)assetManager).locateAssetQuiet(textureKey); // TODO:
+            var assetInfo = assetManager.locateAsset(textureKey);
             found = (assetInfo != null);
             TEXTURE_MAP_CACHE.put(textureName, found);
         }
@@ -696,7 +697,10 @@ public final class AssetUtils {
      * @return fully qualified and working asset key
      */
     public static String getCanonicalAssetKey(String asset) {
-        return PathUtils.getCanonicalRelativePath(AssetsConverter.getAssetsFolder(), asset).replace('\\', '/');
+        var base = Paths.get(AssetsConverter.getAssetsFolder()).normalize();
+        var target = base.resolve(asset).normalize();
+
+        return base.relativize(target).toString().replace('\\', '/');
     }
 
 }

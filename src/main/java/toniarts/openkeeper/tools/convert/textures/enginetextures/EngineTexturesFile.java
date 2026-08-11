@@ -23,15 +23,14 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 import javax.imageio.ImageIO;
 import toniarts.openkeeper.tools.convert.FileResourceReader;
 import toniarts.openkeeper.tools.convert.IResourceChunkReader;
@@ -58,12 +57,12 @@ public final class EngineTexturesFile implements Iterable<String> {
 
     private final int version;
 
-    private final Path file;
+    private final ISeekableResourceReader file;
     private EngineTextureDecoder decoder;
     private final Map<String, EngineTextureEntry> engineTextureEntries;
 
-    public EngineTexturesFile(Path file) {
-        this.file = file;
+    public EngineTexturesFile(Path file) throws IOException {
+        this.file = new FileResourceReader(file);
 
         // Read the names from the DIR file in the same folder
         Path dirFile = Paths.get(file.toString().substring(0, file.toString().length() - 3) + "dir");
@@ -88,7 +87,7 @@ public final class EngineTexturesFile implements Iterable<String> {
 
             // Read the entries
             int numberOfEntries = dirReader.readUnsignedInteger();
-            engineTextureEntries = HashMap.newHashMap(numberOfEntries);
+            engineTextureEntries = new TreeMap<>(String.CASE_INSENSITIVE_ORDER); // HashMap.newHashMap(numberOfEntries);
 
             dirReader = rawDir.readChunk(size);
             try (ISeekableResourceReader rawTextures = new FileResourceReader(file)) {
@@ -142,15 +141,8 @@ public final class EngineTexturesFile implements Iterable<String> {
     public void extractFileData(String destination) {
 
         // Open the Texture file for extraction
-        try (ISeekableResourceReader rawTextures = new FileResourceReader(file)) {
-
-            for (String textureEntry : engineTextureEntries.keySet()) {
-                extractFileData(textureEntry, destination, rawTextures, true);
-            }
-        } catch (IOException e) {
-
-            //Fug
-            throw new RuntimeException("Failed to open the file " + file + "!", e);
+        for (String textureEntry : engineTextureEntries.keySet()) {
+            extractFileData(textureEntry, destination, true);
         }
     }
 
@@ -163,27 +155,6 @@ public final class EngineTexturesFile implements Iterable<String> {
      * @return returns the extracted file
      */
     public Path extractFileData(String textureEntry, String destination, boolean overwrite) {
-
-        // Open the Texture file for extraction
-        try (ISeekableResourceReader rawTextures = new FileResourceReader(file)) {
-            return extractFileData(textureEntry, destination, rawTextures, overwrite);
-        } catch (IOException e) {
-
-            // Fug
-            throw new RuntimeException("Failed to open the file " + file + "!", e);
-        }
-    }
-
-    /**
-     * Extract a single file to a given location
-     *
-     * @param textureEntry texture to extract
-     * @param destination destination directory
-     * @param rawTextures the opened EngineTextures file
-     * @param overwrite overwrite destination file
-     *
-     */
-    private Path extractFileData(String textureEntry, String destination, ISeekableResourceReader rawTextures, boolean overwrite) {
 
         // See that the destination is formatted correctly and create it if it does not exist
         Path destinationFile = Paths.get(destination, textureEntry.concat(".png"));
@@ -202,9 +173,9 @@ public final class EngineTexturesFile implements Iterable<String> {
         }
 
         // Write to the file
-        try (OutputStream out = Files.newOutputStream(destinationFile);
-                BufferedOutputStream bout = new BufferedOutputStream(out)) {
-            getFileData(textureEntry, rawTextures).writeTo(bout);
+        try (var out = Files.newOutputStream(destinationFile);
+             var bout = new BufferedOutputStream(out)) {
+            bout.write(getTextureAs(textureEntry, "png"));
         } catch (IOException e) {
             throw new RuntimeException("Failed to write to " + destinationFile + "!", e);
         }
@@ -213,54 +184,51 @@ public final class EngineTexturesFile implements Iterable<String> {
     }
 
     /**
-     * Extract a single file
-     *
-     * @param textureEntry the texture to extract
-     * @param rawTextures the opened EngineTextures file
-     * @return the file data
+     * Extract a file as 
      */
-    private ByteArrayOutputStream getFileData(String textureEntry, ISeekableResourceReader rawTextures) {
-        ByteArrayOutputStream result = null;
+    public byte[] getTextureAsPng(String textureEntry) {
+        return getTextureAs(textureEntry, "png");
+    }
 
-        // Get the file
-        EngineTextureEntry engineTextureEntry = engineTextureEntries.get(textureEntry);
-        if (engineTextureEntry == null) {
-            throw new RuntimeException("File " + textureEntry + " not found from the texture archive!");
-        }
-
+    public byte[] getTextureAs(String textureEntry, String format) {
         ImageIO.setUseCache(false);
+        var result = new ByteArrayOutputStream();
         try {
-
-            // We should decompress the texture
-            BufferedImage image;
-            if (DECOMPRESSION_ENABLED) {
-
-                // Seek to the file we want and read it
-                rawTextures.seek(engineTextureEntry.getDataStartLocation());
-
-                IResourceChunkReader rawTexturesReader = rawTextures.readChunk(engineTextureEntry.getSize());
-                int count = (engineTextureEntry.getSize()) / 4;
-                long[] buf = new long[count];
-                for (int i = 0; i < count; i++) {
-                    buf[i] = rawTexturesReader.readUnsignedIntegerAsLong();
-                }
-
-                // Use the monstrous decompression routine
-                image = decompressTexture(buf, engineTextureEntry);
-            } else {
-
-                // Use our chess board texture
-                image = generateChessBoard(engineTextureEntry);
-            }
-            result = new ByteArrayOutputStream();
-            ImageIO.write(image, "png", result);
+            if (!ImageIO.write(getTexture(textureEntry), format, result))
+                throw new IllegalArgumentException("Failed to write texture as " + format);
         } catch (IOException e) {
-
-            // Fug
-            throw new RuntimeException("Faile to read the engine texture file!", e);
+            throw new RuntimeException("Failed to write texture as " + format + "!", e);
         }
+        return result.toByteArray();
+    }
 
-        return result;
+    public BufferedImage getTexture(String textureEntry) {
+        var engineTextureEntry = engineTextureEntries.get(textureEntry);
+        if (engineTextureEntry == null)
+            throw new RuntimeException("File " + textureEntry + " not found from the texture archive!");
+
+        BufferedImage image;
+        if (DECOMPRESSION_ENABLED)
+            image = decompressTexture(getRawFileData(engineTextureEntry), engineTextureEntry);
+        else
+            image = generateChessBoard(engineTextureEntry);
+        return image;
+    }
+
+    private long[] getRawFileData(EngineTextureEntry engineTextureEntry) {
+        try {
+            // Seek to the file we want and read it
+            file.seek(engineTextureEntry.getDataStartLocation());
+
+            var rawTexturesReader = file.readChunk(engineTextureEntry.getSize());
+            int count = (engineTextureEntry.getSize()) / 4;
+            var buf = new long[count];
+            for (int i = 0; i < count; ++i)
+                buf[i] = rawTexturesReader.readUnsignedIntegerAsLong();
+            return buf;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read the engine texture file!", e);
+        }
     }
 
     /**
@@ -339,15 +307,14 @@ public final class EngineTexturesFile implements Iterable<String> {
      * @param textureName the texture name (without extension)
      * @return serialized metadata + compressed data, or null if not found
      */
-    public byte[] getRawTextureData(String textureName) {
+    public byte[] getRawTexture(String textureName) {
         EngineTextureEntry entry = engineTextureEntries.get(textureName);
-        if (entry == null) {
+        if (entry == null)
             return null;
-        }
 
-        try (ISeekableResourceReader rawTextures = new FileResourceReader(file)) {
-            rawTextures.seek(entry.getDataStartLocation());
-            IResourceChunkReader reader = rawTextures.readChunk(entry.getSize());
+        try {
+            file.seek(entry.getDataStartLocation());
+            IResourceChunkReader reader = file.readChunk(entry.getSize());
             int count = entry.getSize() / 4;
             long[] buf = new long[count];
             for (int i = 0; i < count; i++) {

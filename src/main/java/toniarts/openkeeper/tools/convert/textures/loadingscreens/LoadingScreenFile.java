@@ -16,7 +16,13 @@
  */
 package toniarts.openkeeper.tools.convert.textures.loadingscreens;
 
+import com.jme3.asset.*;
+import com.jme3.texture.Image;
+import com.jme3.texture.image.ColorSpace;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import toniarts.openkeeper.tools.convert.textures.ImageUtil;
@@ -29,12 +35,29 @@ import toniarts.openkeeper.tools.convert.textures.ImageUtil;
  *
  * @author Toni Helenius <helenius.toni@gmail.com>
  */
-public final class LoadingScreenFile {
+public final class LoadingScreenFile implements AssetLoader {
 
-    private final BufferedImage image;
+    @Override
+    public Object load(AssetInfo assetInfo) throws IOException {
+        try (InputStream input = assetInfo.openStream()) {
+            byte[] fileData = input.readAllBytes();
+            var img = loadImage(fileData);
+            int resX = img.getWidth();
+            int resY = img.getHeight();
+            int[] pixels = ((DataBufferInt)img.getRaster().getDataBuffer()).getData();
+            ByteBuffer buffer = ByteBuffer.allocateDirect(pixels.length * 4).order(ByteOrder.nativeOrder());
+            var intbuf = buffer.asIntBuffer();
+            if (assetInfo.getKey() instanceof TextureKey textureKey && textureKey.isFlipY())
+                for (int y = resY - 1; y >= 0; y--)
+                    intbuf.put(pixels, y * resX, resX);
+            else
+                intbuf.put(pixels);
+            buffer.flip();
+            return new Image(Image.Format.BGRA8, resX, resY, buffer, ColorSpace.sRGB);
+        }
+    }
 
-    public LoadingScreenFile(byte[] fileData) {
-
+    public static BufferedImage loadImage(byte[] fileData) {
         ByteBuffer buf = ByteBuffer.wrap(fileData);
         buf.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -50,24 +73,13 @@ public final class LoadingScreenFile {
             data[i] = buf.getInt() & 0xFFFFFFFFL;
         }
 
-        // Decompress to image
-        image = decompressTexture(data, width, height, alphaFlag);
+        return decompressTexture(data, width, height, alphaFlag);
     }
 
-    private BufferedImage decompressTexture(long[] data, int width, int height, boolean alphaFlag) {
-
+    private static BufferedImage decompressTexture(long[] data, int width, int height, boolean alphaFlag) {
         // Decompress the texture
         byte[] pixels = new LoadingScreenTextureDecoder().dd_texture(data, width * (32 / 8)/*(bpp / 8 = bytes per pixel)*/, width, height, alphaFlag);
 
         return ImageUtil.createImage(width, height, alphaFlag, pixels);
-    }
-
-    /**
-     * Get the decompressed RGBA image
-     *
-     * @return the image
-     */
-    public BufferedImage getImage() {
-        return image;
     }
 }

@@ -21,6 +21,9 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import static java.awt.image.BufferedImage.TYPE_INT_RGB;
+
+import com.jme3.asset.AssetManager;
+import com.jme3.texture.Texture2D;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
@@ -56,13 +59,22 @@ import toniarts.openkeeper.tools.convert.map.Tile;
 public final class MapThumbnailGenerator {
 
     private static final Logger logger = System.getLogger(MapThumbnailGenerator.class.getName());
-    
     private static final String PALETTE_IMAGE = "Textures/Thumbnails/MapColours.png";
+    private static AssetManager assetManager;
     private static ColorModel cm;
     private static Map<Short, Color> playerColors;
 
     private MapThumbnailGenerator() {
         // Nope
+    }
+
+    public static void setAssetManager(AssetManager assetManager) {
+        MapThumbnailGenerator.assetManager = assetManager;
+    }
+
+    public static BufferedImage generateMap(final KwdFile kwd, final Integer width, final Integer height, final boolean preserveAspectRatio, AssetManager assetManager) {
+        setAssetManager(assetManager);
+        return generateMap(kwd, width, height, preserveAspectRatio);
     }
 
     private static ColorModel getColorModel() {
@@ -155,38 +167,33 @@ public final class MapThumbnailGenerator {
 
     private static ColorModel readPalette() {
         try {
-            Path palettePath = Paths.get(PathUtils.getRealFileName(AssetsConverter.getAssetsFolder(), PALETTE_IMAGE));
+            if (assetManager == null) {
+                throw new IllegalStateException("AssetManager must be set before generating map thumbnails.");
+            }
 
-            // Read the DK II palette image
-            BufferedImage paletteImage = readImageFromPath(palettePath);
+            String assetPath = PathUtils.convertFileSeparators(PALETTE_IMAGE);
+            var texture = assetManager.loadTexture(assetPath);
+            if (!(texture instanceof Texture2D))
+                throw new RuntimeException("Palette image did not load as a Texture2D: " + assetPath);
+
+            var paletteImage = ((Texture2D)texture).getImage();
 
             // The palette image is generally an image where 1 column represents one color, column width is 1px
             // We know that is is 64x16, but just play along with "dynamic" (we'll fail if it is over 256)
             byte[] r = new byte[paletteImage.getWidth()];
             byte[] g = new byte[paletteImage.getWidth()];
             byte[] b = new byte[paletteImage.getWidth()];
-            for (int x = 0; x < paletteImage.getWidth(); x++) {
-                int color = paletteImage.getRGB(x, 0);
-                r[x] = (byte) ((color & 0xff0000) >> 16);
-                g[x] = (byte) ((color & 0xff00) >> 8);
-                b[x] = (byte) (color & 0xff);
+            var data = paletteImage.getData(0);
+            for (int x = 0; x < paletteImage.getWidth(); ++x) {
+                b[x] = data.get(x*3);
+                g[x] = data.get(x*3 + 1);
+                r[x] = data.get(x*3 + 2);
             }
 
-            // Create the actual palette
             return new IndexColorModel(8, paletteImage.getWidth(), r, g, b);
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to create the map thumbnail palette!", e);
-
-            // TODO: Create a random palette here?
             throw new RuntimeException("Failed to create the map thumbnail palette!", e);
-        }
-    }
-
-    private static BufferedImage readImageFromPath(Path palettePath) throws IOException {
-        ImageIO.setUseCache(false);
-        try (InputStream is = Files.newInputStream(palettePath);
-                BufferedInputStream bis = new BufferedInputStream(is)) {
-            return ImageIO.read(bis);
         }
     }
 
@@ -281,6 +288,11 @@ public final class MapThumbnailGenerator {
      * @return the player color
      */
     public static Color getPlayerColor(short playerId) {
+        return getPlayerColors().get(playerId);
+    }
+    
+    public static Color getPlayerColor(short playerId, AssetManager assetManager) {
+        setAssetManager(assetManager);
         return getPlayerColors().get(playerId);
     }
 }
