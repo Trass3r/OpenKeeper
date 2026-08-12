@@ -189,12 +189,19 @@ public final class KmfModelLoader implements AssetLoader {
             //Each sprite represents a geometry (+ mesh) since they each have their own material
             Mesh mesh = new Mesh();
 
+            // Create LOD levels
+            // FIXME: LODs are broken so we only take L0
+            var lodData = createIndices(subMesh.getTriangles().subList(0, 1));
+            final int vertexCount = lodData.maxIndex + 1; // vs. subMesh.getVertices().size()
+            mesh.setBuffer(lodData.lodLevels[0]);
+            // mesh.setLodLevels(lodData.lodLevels); // needs to include L0!
+
             //Vertices, UV (texture coordinates), normals
-            var vertices = new Vector3f[subMesh.getVertices().size()];
-            var texCoord = new Vector2f[subMesh.getVertices().size()];
-            var normals  = new Vector3f[subMesh.getVertices().size()];
-            int i = 0;
-            for (MeshVertex meshVertex : subMesh.getVertices()) {
+            var vertices = new Vector3f[vertexCount];
+            var texCoord = new Vector2f[vertexCount];
+            var normals  = new Vector3f[vertexCount];
+            for (int i = 0; i < vertexCount; ++i) {
+                MeshVertex meshVertex = subMesh.getVertices().get(i);
 
                 //Vertice
                 javax.vecmath.Vector3f v = sourceMesh.getGeometries().get(meshVertex.getGeomIndex());
@@ -206,16 +213,8 @@ public final class KmfModelLoader implements AssetLoader {
 
                 //Normals
                 v = meshVertex.getNormal();
-                normals[i] = new Vector3f(v.x, -v.z, v.y);
-
-                i++;
+                normals[i] = new Vector3f(v.x + 0, -v.z + 0, v.y + 0); // convert to Y-up and prevent -0
             }
-
-            // Create LOD levels
-            // FIXME: LODs are broken so we only take L0
-            var lodLevels = createIndices(subMesh.getTriangles().subList(0, 1));
-            mesh.setBuffer(lodLevels[0]);
-            // mesh.setLodLevels(lodLevels); // needs to include L0!
 
             mesh.setBuffer(Type.Position, 3, BufferUtils.createFloatBuffer(vertices));
             mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoord));
@@ -279,12 +278,19 @@ public final class KmfModelLoader implements AssetLoader {
             //Each sprite represents a geometry (+ mesh) since they each have their own material
             Mesh mesh = new Mesh();
 
+            // Create LOD levels
+            // FIXME: LODs are broken so we only take L0
+            var lodData = createIndices(subMesh.getTriangles().subList(0, 1));
+            final int vertexCount = lodData.maxIndex + 1; // vs. subMesh.getVertices().size()
+            mesh.setBuffer(lodData.lodLevels[0]);
+            // mesh.setLodLevels(lodData.lodLevels); // needs to include L0!
+
             // Base Pose vertices, uvs, normals
-            var vertices = new Vector3f[subMesh.getVertices().size()];
-            var texCoord = new Vector2f[subMesh.getVertices().size()];
-            var normals  = new Vector3f[subMesh.getVertices().size()];
-            int i = 0;
-            for (var animVertex : subMesh.getVertices()) {
+            var vertices = new Vector3f[vertexCount];
+            var texCoord = new Vector2f[vertexCount];
+            var normals  = new Vector3f[vertexCount];
+            for (int i = 0; i < vertexCount; ++i) {
+                var animVertex = subMesh.getVertices().get(i);
 
                 // Bind Pose
                 javax.vecmath.Vector3f baseCoord = null;
@@ -369,9 +375,7 @@ public final class KmfModelLoader implements AssetLoader {
 
                 //Normals
                 var v = animVertex.getNormal();
-                normals[i] = new Vector3f(v.x, -v.z, v.y);
-
-                i++;
+                normals[i] = new Vector3f(v.x + 0, -v.z + 0, v.y + 0); // convert to Y-up and prevent -0
             }
 
             // We have all the animation vertices from a single pose
@@ -425,12 +429,6 @@ public final class KmfModelLoader implements AssetLoader {
                 poseFrames.add(f);
             }
 
-            // Create LOD levels
-            // FIXME: LODs are broken so we only take L0
-            var lodLevels = createIndices(subMesh.getTriangles().subList(0, 1));
-            mesh.setBuffer(lodLevels[0]);
-            //mesh.setLodLevels(lodLevels); // needs to include L0!
-
             mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoord));
             // used by PoseTrack
             mesh.setBuffer(Type.BindPosePosition, 3, BufferUtils.createFloatBuffer(vertices));
@@ -464,7 +462,9 @@ public final class KmfModelLoader implements AssetLoader {
         return node;
     }
 
-    private VertexBuffer[] createIndices(final List<List<Triangle>> trianglesList) {
+    private static record LODData(VertexBuffer[] lodLevels, int maxIndex) {}
+
+    private LODData createIndices(final List<List<Triangle>> trianglesList) {
 
         // Triangles are not in order, sometimes they are very random, many missing etc.
         // For JME 3.0 this was somehow ok, but JME 3.1 doesn't do some automatic organizing etc.
@@ -483,14 +483,17 @@ public final class KmfModelLoader implements AssetLoader {
 
         var lodLevels = new VertexBuffer[trianglesList.size()];
         int lod = 0;
+        int maxIndex = -1;
         for (var triangles : trianglesList) {
             // in case of an empty buffer, put one 0 there to prevent exception in LwjglRender.checkLimit
             var indexes = new byte[Math.max(1, 3 * triangles.size())];
             int x = 0;
             for (Triangle triangle : triangles) {
-                indexes[x * 3] = triangle.getTriangle()[2];
-                indexes[x * 3 + 1] = triangle.getTriangle()[1];
-                indexes[x * 3 + 2] = triangle.getTriangle()[0];
+                byte[] triangleIndices = triangle.getTriangle();
+                indexes[x * 3 + 0] = triangleIndices[2];
+                indexes[x * 3 + 1] = triangleIndices[1];
+                indexes[x * 3 + 2] = triangleIndices[0];
+                maxIndex = Math.max(maxIndex, Math.max(Math.max(triangleIndices[0] & 0xFF, triangleIndices[1] & 0xFF), triangleIndices[2] & 0xFF));
                 ++x;
             }
             var buf = new VertexBuffer(Type.Index);
@@ -499,7 +502,7 @@ public final class KmfModelLoader implements AssetLoader {
             lodLevels[lod] = buf;
             ++lod;
         }
-        return lodLevels;
+        return new LODData(lodLevels, maxIndex);
     }
 
     /**
