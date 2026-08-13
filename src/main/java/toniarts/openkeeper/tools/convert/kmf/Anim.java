@@ -50,9 +50,9 @@ public final class Anim {
     private String name;
     private int frames;
     private int indexes;
-    private Vector3f pos;
+    private Vector3f boundingSphereCenter;
     private float scale;
-    private float cubeScale;
+    private float boundingSphereRadius;
     private FrameFactorFunction frameFactorFunction;
     //CTRL
     private List<AnimControl> controls;
@@ -74,12 +74,12 @@ public final class Anim {
         this.name = name;
     }
 
-    public Vector3f getPos() {
-        return pos;
+    public Vector3f getBoundingSphereCenter() {
+        return boundingSphereCenter;
     }
 
-    protected void setPos(float x, float y, float z) {
-        this.pos = new Vector3f(x, y, z);
+    protected void setBoundingSphereCenter(float x, float y, float z) {
+        this.boundingSphereCenter = new Vector3f(x, y, z);
     }
 
     /**
@@ -124,12 +124,12 @@ public final class Anim {
      *
      * @return cube scale
      */
-    public float getCubeScale() {
-        return cubeScale;
+    public float getBoundingSphereRadius() {
+        return boundingSphereRadius;
     }
 
-    protected void setCubeScale(float cubeScale) {
-        this.cubeScale = cubeScale;
+    protected void setBoundingSphereRadius(float cubeScale) {
+        this.boundingSphereRadius = cubeScale;
     }
 
     public FrameFactorFunction getFrameFactorFunction() {

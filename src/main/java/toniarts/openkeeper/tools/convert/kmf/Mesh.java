@@ -28,8 +28,8 @@ public final class Mesh {
 
     //HEAD
     private String name;
-    private Vector3f pos;
-    private float scale;
+    private Vector3f boundingSphereCenter;
+    private float boundingSphereRadius;
     //CTRL
     private List<MeshControl> controls;
     //SPRS
@@ -45,12 +45,12 @@ public final class Mesh {
         this.name = name;
     }
 
-    public Vector3f getPos() {
-        return pos;
+    public Vector3f getBoundingSphereCenter() {
+        return boundingSphereCenter;
     }
 
-    protected void setPos(float x, float y, float z) {
-        this.pos = new Vector3f(x, y, z);
+    protected void setBoundingSphereCenter(float x, float y, float z) {
+        this.boundingSphereCenter = new Vector3f(x, y, z);
     }
 
     /**
@@ -58,12 +58,12 @@ public final class Mesh {
      *
      * @return cube scale
      */
-    public float getScale() {
-        return scale;
+    public float getBoundingSphereRadius() {
+        return boundingSphereRadius;
     }
 
-    protected void setScale(float scale) {
-        this.scale = scale;
+    protected void setBoundingSphereRadius(float scale) {
+        this.boundingSphereRadius = scale;
     }
 
     public List<MeshControl> getControls() {

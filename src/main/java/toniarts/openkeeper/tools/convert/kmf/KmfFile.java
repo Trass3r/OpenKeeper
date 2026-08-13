@@ -236,8 +236,8 @@ public final class KmfFile {
 
         int sprsCount = rawKmf.readUnsignedInteger();
         int geomCount = rawKmf.readUnsignedInteger();
-        m.setPos(rawKmf.readFloat(), rawKmf.readFloat(), rawKmf.readFloat());
-        m.setScale(rawKmf.readFloat());
+        m.setBoundingSphereCenter(rawKmf.readFloat(), rawKmf.readFloat(), rawKmf.readFloat());
+        m.setBoundingSphereRadius(rawKmf.readFloat());
         int lodCount = rawKmf.readUnsignedInteger();
 
         //Controls
@@ -401,8 +401,8 @@ public final class KmfFile {
         int indexCount = rawKmf.readUnsignedInteger();
         int geomCount = rawKmf.readUnsignedInteger();
         a.setFrameFactorFunction(Anim.FrameFactorFunction.toFrameFactorFunction(rawKmf.readUnsignedInteger()));
-        a.setPos(rawKmf.readFloat(), rawKmf.readFloat(), rawKmf.readFloat());
-        a.setCubeScale(rawKmf.readFloat());
+        a.setBoundingSphereCenter(rawKmf.readFloat(), rawKmf.readFloat(), rawKmf.readFloat());
+        a.setBoundingSphereRadius(rawKmf.readFloat());
         a.setScale(rawKmf.readFloat());
         int lodCount = rawKmf.readUnsignedInteger();
         a.setFrames(frameCount);

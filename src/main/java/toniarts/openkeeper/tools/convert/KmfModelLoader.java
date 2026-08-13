@@ -178,7 +178,8 @@ public final class KmfModelLoader implements AssetLoader {
     private Node handleMesh(toniarts.openkeeper.tools.convert.kmf.Mesh sourceMesh, List<List<Material>> materials) {
 
         var node = new Node(sourceMesh.getName());
-        node.setLocalTranslation(new Vector3f(sourceMesh.getPos().x, -sourceMesh.getPos().z, sourceMesh.getPos().y));
+        // this is not how it works
+        //node.setLocalTranslation(new Vector3f(sourceMesh.getBoundingSphereCenter().x, -sourceMesh.getBoundingSphereCenter().z, sourceMesh.getBoundingSphereCenter().y));
 
         int index = 0;
         for (var subMesh : sourceMesh.getSprites()) {
@@ -243,7 +244,7 @@ public final class KmfModelLoader implements AssetLoader {
 
         var node = new Node(anim.getName());
         node.setUserData(FRAME_FACTOR_FUNCTION, anim.getFrameFactorFunction().name());
-        node.setLocalTranslation(new Vector3f(anim.getPos().x, -anim.getPos().z, anim.getPos().y));
+        //node.setLocalTranslation(new Vector3f(anim.getBoundingSphereCenter().x, -anim.getBoundingSphereCenter().z, anim.getBoundingSphereCenter().y));
 
         // Create pose tracks for each mesh index
         List<PoseTrack> poseTracks = new ArrayList<>(anim.getSprites().size());

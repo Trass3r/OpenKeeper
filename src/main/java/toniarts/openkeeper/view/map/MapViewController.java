@@ -612,7 +612,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
             if (terrain.getFlags().contains(Terrain.TerrainFlag.SOLID)) {
                 model = terrain.getTopResource();
             }
-            spatial = loadModel(model.getName(), model);
+            spatial = loadModel(model.getName(), model); // TODO: this also resets setLocalTranslation!
         }
 
         // Random texture must run before AO: setRandomTexture may replace
