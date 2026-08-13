@@ -39,6 +39,7 @@ jobs:
           7z x DungeonKeeper2Demo.exe
           unshield x disk1/data1.cab
           mv Program_Files DK2
+          mv DK2/Data/Text/English DK2/Data/Text/Default
           echo "DungeonKeeperIIFolder(string)=$PWD/DK2/"  > openkeeper.properties
           mkdir -p ~/.OpenKeeper
           echo "MusicEnabled(bool)=false"  > ~/.OpenKeeper/openkeeper.properties
