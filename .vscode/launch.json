@@ -6,11 +6,33 @@
 	"configurations": [
 		{
 			"type": "java",
+			"name": "AssetsConverter",
+			"request": "launch",
+			"mainClass": "toniarts.openkeeper.tools.convert.AssetsConverter",
+			"projectName": "OpenKeeper"
+		},
+		{
+			"type": "java",
 			"name": "Launch Game",
 			"request": "launch",
 			"projectName": "OpenKeeper",
 			"mainClass": "toniarts.openkeeper.Main",
-			"args": "-nomovies -level mpd4 -debug",
+			"preLaunchTask": "gradle: compileJava",
+			"args": "-nomovies -debug -level devtest2",
+			"vmArgs": "-XX:+PrintCommandLineFlags -XX:+CrashOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${env:TEMP} -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+PrintStringTableStatistics -XX:+UnlockDiagnosticVMOptions -XX:+UseVectorCmov -XX:+UseZGC -Xlog:gc",
+			"console": "internalConsole",
+			"internalConsoleOptions": "openOnSessionStart",
+			//"vmArgs": "-Djava.util.logging.config.file=C:\\Code\\OpenKeeper\\logging.properties\\logging.properties",
+		},
+		{
+			"type": "java",
+			"name": "Profile Game",
+			"request": "launch",
+			"projectName": "OpenKeeper",
+			"mainClass": "toniarts.openkeeper.Main",
+			"preLaunchTask": "gradle: compileJava",
+			"args": "-nomovies -level devtest",
+			"vmArgs": "-XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+UseZGC -XX:+UnlockDiagnosticVMOptions -XX:+UseVectorCmov -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=1s,maxsize=10M,disk=false,dumponexit=true,filename=recording.jfr,settings=profile,jdk.CPUTimeSample#enabled=true,path-to-gc-roots=true", // 'profile.jfr' enables more, the default is meant for continuous recording      duration=180s
 			"console": "internalConsole",
 			"internalConsoleOptions": "openOnSessionStart",
 		},
@@ -20,8 +42,81 @@
 			"request": "launch",
 			"projectName": "OpenKeeper",
 			"mainClass": "toniarts.openkeeper.tools.modelviewer.ModelViewer",
+			"preLaunchTask": "gradle: compileJava",
 			"console": "internalConsole",
 			"internalConsoleOptions": "openOnSessionStart",
 		},
+		{
+			"type": "java",
+			"name": "Launch Modelviewer with Model",
+			"request": "launch",
+			"mainClass": "toniarts.openkeeper.tools.convert.KmfModelLoader",
+			"projectName": "OpenKeeper",
+			"console": "internalConsole",
+			"internalConsoleOptions": "openOnSessionStart",
+			"preLaunchTask": "gradle: compileJava",
+			"vmArgs": "-XX:+UnlockDiagnosticVMOptions -XX:+PrintCompilation2 -XX:+PrintIntrinsics",
+			//"vmArgs": "-XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints -XX:StartFlightRecording=delay=5s,disk=false,dumponexit=true,duration=180s,filename=recording.jfr,settings=profile,path-to-gc-roots=true",
+			//"cwd": "${workspaceFolder}/assets/Converted",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\3DFE_GemHolder.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Fai-drink.kmf"
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Wiz-Drunk.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Arc-Getup.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Bile_Demon-Happy.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Imp_Idle1.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\REA3_PickUpGem4.kmf",
+			"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Vam-Dance.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Imp_Run.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Imp_PullStart.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Piranha_Swim.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\IMP-Dig2.kmf",
+			//"args": "C:\\Spiele\\DK2GoG\\Data\\Meshes\\Jack_Special-Appear.kmf",
+			//"args": "\"C:\\Spiele\\DK2GoG\\Data\\Meshes\\Gold Pile.kmf\"",
+			//"args": "\"C:\\Spiele\\DK2GoG\\Data\\Meshes\\Gold Chest.kmf\"",
+		},
+		{
+			"name": "Launch Game with VisualVM",
+			"type": "java8+",
+			"request": "launch",
+			"mainClass": "toniarts.openkeeper.Main",
+			"args": "-nomovies -level devtest -debug",
+		},
+		/*
+		{
+			"name": "Launch Model Viewer",
+			"type": "java8+",
+			"request": "launch",
+			//"cwd": "${workspaceFolder}",
+			//"args": "-PrunClassName=toniarts.openkeeper.tools.modelviewer.ModelViewer",
+			//"classPaths": ["toniarts.openkeeper.tools.convert.KmfModelLoader"],
+			//"mainClass": "toniarts.openkeeper.tools.convert.KmfModelLoader", //"${file}",
+			"mainClass": "${workspaceFolder}/src/toniarts/openkeeper/tools/modelviewer/ModelViewer.java",
+			//"args": "-Pargs=C:\\Code\\OpenKeeper\\OpenKeeper\\Piranha_Swim.kmf",
+			"internalConsoleOptions": "openOnSessionStart",
+			//"args": "--warning-mode,all"
+		},
+		{
+			"name": "Launch Game",
+			"type": "java8+",
+			"request": "launch",
+			//"cwd": "${workspaceFolder}",
+			"mainClass": "${workspaceFolder}/src/toniarts/openkeeper/Main.java",
+			"internalConsoleOptions": "openOnSessionStart",
+			//"args": "-Pargs=-level,mpd4,-debug,-nomovies"
+			//"args": "-nomovies -level mpd4 -debug"
+		},
+		{
+			"name": "Attach to Process",
+			"type": "java8+",
+			"request": "attach",
+			"processId": "${command:java.attachDebugger.pickProcess}"
+		},
+		{
+			"name": "Launch Java: Continuous Mode",
+			"type": "java8+",
+			"request": "launch",
+			"launchConfiguration": "Continuous Mode"
+		},
+		*/
 	]
 }

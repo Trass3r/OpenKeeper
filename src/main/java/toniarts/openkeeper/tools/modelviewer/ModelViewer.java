@@ -20,9 +20,9 @@ import com.jme3.anim.AnimComposer;
 import com.jme3.anim.tween.Tweens;
 import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetKey;
 import com.jme3.asset.ModelKey;
-import com.jme3.asset.plugins.FileLocator;
 import com.jme3.audio.AudioNode;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
@@ -36,17 +36,16 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.niftygui.NiftyJmeDisplay;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.opengl.GLRenderer;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
-import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
-import com.jme3.shadow.DirectionalLightShadowRenderer;
-import com.jme3.shadow.EdgeFilteringMode;
+import com.jme3.shadow.*;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.util.mikktspace.MikktspaceTangentGenerator;
 import de.lessvoid.nifty.Nifty;
@@ -60,11 +59,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import jme3tools.savegame.SaveGame;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.audio.plugins.MP2Loader;
 import toniarts.openkeeper.game.data.ISoundable;
@@ -73,17 +69,8 @@ import toniarts.openkeeper.game.sound.*;
 import toniarts.openkeeper.gui.CursorFactory;
 import toniarts.openkeeper.tools.convert.*;
 import toniarts.openkeeper.tools.convert.textures.enginetextures.EngineTextureLoader;
-import toniarts.openkeeper.tools.convert.kmf.KmfFile;
-import toniarts.openkeeper.tools.convert.map.Creature;
-import toniarts.openkeeper.tools.convert.map.Door;
-import toniarts.openkeeper.tools.convert.map.Effect;
-import toniarts.openkeeper.tools.convert.map.GameLevel;
-import toniarts.openkeeper.tools.convert.map.GameObject;
-import toniarts.openkeeper.tools.convert.map.KwdFile;
-import toniarts.openkeeper.tools.convert.map.Room;
-import toniarts.openkeeper.tools.convert.map.Shot;
-import toniarts.openkeeper.tools.convert.map.Terrain;
-import toniarts.openkeeper.tools.convert.map.Trap;
+import toniarts.openkeeper.tools.convert.kmf.*;
+import toniarts.openkeeper.tools.convert.map.*;
 import toniarts.openkeeper.utils.AssetUtils;
 import toniarts.openkeeper.utils.PathUtils;
 import toniarts.openkeeper.view.animation.AnimationLoader;
@@ -126,7 +113,6 @@ public final class ModelViewer extends SimpleApplication {
 
     //private final static float SCALE = 2;
     private static String dkIIFolder;
-    private final Vector3f lightDir = new Vector3f(-1, -1, .5f).normalizeLocal();
     private DirectionalLight dl;
     private NiftyJmeDisplay niftyDisplay;
     private ModelViewerScreenController screen;
@@ -148,28 +134,29 @@ public final class ModelViewer extends SimpleApplication {
     private static final String KEY_MAPPING_SHOW_NORMALS = "show normals";
     private static final String KEY_MAPPING_TOGGLE_WIREFRAME = "toggle wireframe";
     private static final String KEY_MAPPING_TOGGLE_ROTATION = "toggle rotation";
-
+    private static final String KEY_MAPPING_SAVEGAME = "key mapping savegame";
+    private void saveGame() {
+        SaveGame.saveGame("OpenKeeper", "quicksave", this.getRootNode());
+    }
     private EffectManagerState effectManagerState;
     private MapLoaderAppState mapLoaderAppState;
 
-    private final ActionListener actionListener = new ActionListener() {
-        @Override
-        public void onAction(String name, boolean pressed, float tpf) {
+    private final ActionListener actionListener = (name, pressed, tpf) -> {
 
-            // Toggle wireframe
-            if (KEY_MAPPING_TOGGLE_WIREFRAME.equals(name) && !pressed) {
-                wireframe = !wireframe;
-                toggleWireframe();
-            } // Toggle rotation
-            else if (KEY_MAPPING_TOGGLE_ROTATION.equals(name) && !pressed) {
-                rotate = !rotate;
-                toggleRotate();
-            } // Normals
-            else if (KEY_MAPPING_SHOW_NORMALS.equals(name) && !pressed) {
-                showNormals = !showNormals;
-                toggleShowNormals();
-            }
-        }
+        // Toggle wireframe
+        if (KEY_MAPPING_TOGGLE_WIREFRAME.equals(name) && !pressed) {
+            wireframe = !wireframe;
+            toggleWireframe();
+        } // Toggle rotation
+        else if (KEY_MAPPING_TOGGLE_ROTATION.equals(name) && !pressed) {
+            rotate = !rotate;
+            toggleRotate();
+        } // Normals
+        else if (KEY_MAPPING_SHOW_NORMALS.equals(name) && !pressed) {
+            showNormals = !showNormals;
+            toggleShowNormals();
+        } else if (KEY_MAPPING_SAVEGAME.equals(name) && !pressed)
+            saveGame();
     };
 
     public static void main(String[] args) {
@@ -185,9 +172,11 @@ public final class ModelViewer extends SimpleApplication {
         }
 
         var app = new ModelViewer();
+        app.showSettings = false;
         app.settings = Settings.getInstance().getAppSettings();
         if (Main.isAudioDisabled())
             app.settings.setAudioRenderer(null);
+        //BufferUtils.setTrackDirectMemoryEnabled(true);
         app.start();
     }
 
@@ -228,6 +217,9 @@ public final class ModelViewer extends SimpleApplication {
         mapLoaderAppState = new MapLoaderAppState();
         stateManager.attach(mapLoaderAppState);
 
+        // hide stats by default
+        stateManager.getState(StatsAppState.class).toggleStats();
+
         Nifty nifty = getNifty();
         screen = new ModelViewerScreenController(this);
         nifty.registerScreenController(screen);
@@ -263,9 +255,12 @@ public final class ModelViewer extends SimpleApplication {
         inputManager.addMapping(KEY_MAPPING_SHOW_NORMALS, new KeyTrigger(KeyInput.KEY_N));
         inputManager.addListener(actionListener, KEY_MAPPING_SHOW_NORMALS);
 
+        inputManager.addMapping(KEY_MAPPING_SAVEGAME, new KeyTrigger(KeyInput.KEY_F8));
+        inputManager.addListener(actionListener, KEY_MAPPING_SAVEGAME);
+
         setupLighting();
-        setupFloor();
-        setupDebug();
+        //setupFloor();
+        //setupDebug();
 
         // Open a KMF model if set
         if (false && kmfModel == null) {
@@ -282,6 +277,13 @@ public final class ModelViewer extends SimpleApplication {
                 KmfModelLoader loader = new KmfModelLoader();
                 KmfAssetInfo asset = new KmfAssetInfo(assetManager, new AssetKey(kmfModel.toString()), kmf, false);
                 Node node = (Node) loader.load(asset);
+                if (false) {
+                    var exporter = com.jme3.export.binary.BinaryExporter.getInstance();
+                    try (var out = Files.newOutputStream(Path.of("modelviewerfile.j3o"));
+                            var bout = new java.io.BufferedOutputStream(out)) {
+                        exporter.save(node, bout);
+                    }
+                }
                 setupModel(node, false);
             } catch (Exception e) {
                 logger.log(Level.ERROR, "Failed to handle: " + kmfModel, e);
@@ -319,7 +321,7 @@ public final class ModelViewer extends SimpleApplication {
 
         // To make shadows, sun
         dl = new DirectionalLight();
-        dl.setDirection(lightDir);
+        dl.setDirection(new Vector3f(-1, -1, -1));
         dl.setColor(ColorRGBA.White);
         rootNode.addLight(dl);
 
@@ -329,13 +331,23 @@ public final class ModelViewer extends SimpleApplication {
         rootNode.addLight(al);
 
         /* Drop shadows */
-        final int SHADOWMAP_SIZE = 1024;
-        DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(getAssetManager(), SHADOWMAP_SIZE, 3);
-        dlsr.setLight(dl);
-        dlsr.setLambda(0.55f);
-        dlsr.setShadowIntensity(0.6f);
-        dlsr.setEdgeFilteringMode(EdgeFilteringMode.PCF8);
-        getViewPort().addProcessor(dlsr);
+        final int SHADOWMAP_SIZE = 512;
+        if (true) {
+        } else if (false) {
+            var dlsr = new DirectionalLightShadowRenderer(assetManager, SHADOWMAP_SIZE, 2);
+            dlsr.setLight(dl);
+            //dlsr.setLambda(0.55f);
+            //dlsr.setShadowIntensity(0.6f);
+            dlsr.setEdgeFilteringMode(EdgeFilteringMode.Bilinear);
+            viewPort.addProcessor(dlsr);
+        } else {
+            var fpp = new FilterPostProcessor(assetManager);
+            var dlsf = new DirectionalLightShadowFilter(assetManager, SHADOWMAP_SIZE, 2);
+            dlsf.setLight(dl);
+            dlsf.setEnabled(true);
+            fpp.addFilter(dlsf);
+            viewPort.addProcessor(fpp);
+        }
 
         // Default light probe
         Spatial probeHolder = assetManager.loadModel("Models/ModelViewer/studio.j3o");
@@ -379,25 +391,20 @@ public final class ModelViewer extends SimpleApplication {
     private void toggleWireframe() {
         Spatial spat = rootNode.getChild(ModelViewer.NODE_NAME);
         if (spat != null) {
-            spat.depthFirstTraversal(new SceneGraphVisitor() {
-                @Override
-                public void visit(Spatial spatial) {
-                    if (spatial instanceof Geometry) {
-                        ((Geometry) spatial).getMaterial().getAdditionalRenderState().setWireframe(wireframe);
-                    }
+            spat.depthFirstTraversal(spatial -> {
+                if (spatial instanceof Geometry) {
+                    ((Geometry) spatial).getMaterial().getAdditionalRenderState().setWireframe(wireframe);
                 }
             });
         }
     }
 
     private void toggleRotate() {
-        Spatial spat = rootNode.getChild(ModelViewer.NODE_NAME);
-        if (spat != null) {
+        rootNode.depthFirstTraversal(spat -> {
             RotatorControl rotator = spat.getControl(RotatorControl.class);
-            if (rotator != null) {
+            if (rotator != null)
                 rotator.setEnabled(rotate);
-            }
-        }
+        });
     }
 
     private void toggleShowNormals() {
@@ -414,22 +421,19 @@ public final class ModelViewer extends SimpleApplication {
                 // Generate
                 final Node nodeNormals = new Node(ModelViewer.NODE_NAME_NORMALS);
 
-                spat.depthFirstTraversal(new SceneGraphVisitor() {
-                    @Override
-                    public void visit(Spatial spatial) {
-                        if (spatial instanceof Geometry g) {
-                            Mesh normalMesh = TangentBinormalGenerator.genTbnLines(g.getMesh(), 0.1f);
-                            Geometry normalGeometry = new Geometry(g.getName() + "Normal", normalMesh);
-                            Material mat = new Material(assetManager,
-                                    "Common/MatDefs/Misc/Unshaded.j3md");
-                            mat.setColor("Color", ColorRGBA.Red);
-                            normalGeometry.setMaterial(mat);
-                            nodeNormals.attachChild(normalGeometry);
+                spat.depthFirstTraversal(spatial -> {
+                    if (spatial instanceof Geometry g) {
+                        Mesh normalMesh = TangentBinormalGenerator.genTbnLines(g.getMesh(), 0.1f);
+                        Geometry normalGeometry = new Geometry(g.getName() + "Normal", normalMesh);
+                        Material mat = new Material(assetManager,
+                                "Common/MatDefs/Misc/Unshaded.j3md");
+                        mat.setColor("Color", ColorRGBA.Red);
+                        normalGeometry.setMaterial(mat);
+                        nodeNormals.attachChild(normalGeometry);
 
-                            if (!g.isGrouped()) {
-                                g.setMaterial(new Material(assetManager,
-                                        "Common/MatDefs/Misc/ShowNormals.j3md"));
-                            }
+                        if (!g.isGrouped()) {
+                            g.setMaterial(new Material(assetManager,
+                                    "Common/MatDefs/Misc/ShowNormals.j3md"));
                         }
                     }
                 });
@@ -581,7 +585,7 @@ public final class ModelViewer extends SimpleApplication {
         }
 
         // Hide the floor on maps
-        floorGeom.setCullHint(!isMap ? Spatial.CullHint.Never : Spatial.CullHint.Always);
+        //floorGeom.setCullHint(!isMap ? Spatial.CullHint.Never : Spatial.CullHint.Always);
 
         // Shadows
         spat.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
@@ -591,6 +595,17 @@ public final class ModelViewer extends SimpleApplication {
 
         // Attach the new model
         rootNode.attachChild(spat);
+        for (int i = 1; i <= 0; i++) {
+            var clone = spat.clone(true);
+            clone.setName(NODE_NAME + " clone " + i);
+            clone.setLocalTranslation(i, 0, 0);
+            clone.depthFirstTraversal(spatial -> {
+                if (spatial instanceof Geometry geom) {
+                    geom.setMesh(geom.getMesh().clone());
+                }
+            });
+            rootNode.attachChild(clone);
+        }
 
         // Wireframe status
         toggleWireframe();
@@ -599,7 +614,9 @@ public final class ModelViewer extends SimpleApplication {
         toggleShowNormals();
 
         // Animate!
-        spat.depthFirstTraversal((Spatial spatial) -> {
+        rootNode.depthFirstTraversal((Spatial spatial) -> {
+            //logger.log(Level.INFO, "spatial {0} {1}", spatial.getName(), spatial.getShadowMode());
+            spatial.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
             var animComposer = spatial.getControl(AnimComposer.class);
             if (animComposer != null) {
                 animComposer.setGlobalSpeed(0.5f);
@@ -608,6 +625,7 @@ public final class ModelViewer extends SimpleApplication {
                 if (AnimationLoader.getLoopModeOnChannel(spatial) == LoopMode.Cycle) {
                     animComposer.addAction("cyclinganim", new BaseAction(Tweens.cycle(action)));
                     animComposer.setCurrentAction("cyclinganim");
+                    animComposer.getLayer(AnimComposer.DEFAULT_LAYER).setTime(new Random().nextFloat() * action.getLength());
                 }
             }
         });

@@ -7,6 +7,12 @@ plugins {
     id 'maven-publish'
     id 'idea'
     id 'com.gradleup.shadow' version '9.0.0'
+    id 'de.aaschmid.cpd' version '3.5'
+}
+
+cpd {
+    failOnError = false
+    failOnViolation = false
 }
 
 ext {
@@ -81,6 +87,8 @@ dependencies {
     implementation "com.simsilica:sio2:1.8.0"
     implementation "com.simsilica:sim-ethereal:1.8.0"
 
+    //implementation fileTree(dir: 'jmeCapture', include: ['*.jar'])
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
@@ -91,6 +99,7 @@ dependencies {
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
+        //vendor = JvmVendorSpec.GRAAL_VM
     }
 }
 
@@ -117,7 +126,21 @@ shadowJar {
 
 eclipse {
     classpath {
+        //exclude './assets/**'
         downloadSources=true
+        //baseSourceOutputDir = file('build/classes/java')
+        //defaultOutputDir = file("build")
+  /*defaultOutputDir = file("build/default")
+  file.whenMerged { cp ->
+    cp.entries.forEach { cpe ->
+      if (cpe instanceof org.gradle.plugins.ide.eclipse.model.SourceFolder) {
+        cpe.output = cpe.output.replace "bin/", "build/classes/java/"
+      }
+      if (cpe instanceof org.gradle.plugins.ide.eclipse.model.Output) {
+        cpe.path = cpe.path.replace "bin/", "build/"
+      }
+    }
+  }*/
     }
     project {
         natures 'org.springsource.ide.eclipse.gradle.core.nature'
@@ -141,7 +164,19 @@ compileJava {
 test {
     useJUnitPlatform()
 }
+run {
+    if (project.hasProperty('appWorkingDir')) {
+        workingDir = file(project.property('appWorkingDir'))
+    }
+}
 
 wrapper {
     gradleVersion = '9.6.1'
 }
+
+/*
+task writeClasspath << {
+    buildDir.mkdirs()
+    new File(buildDir, "classpath.txt").text = configurations.runtime.asPath + "\n"
+}
+*/

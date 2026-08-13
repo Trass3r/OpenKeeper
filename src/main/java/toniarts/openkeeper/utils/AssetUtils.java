@@ -99,6 +99,9 @@ public final class AssetUtils {
      * (water bed etc.)
      * @return a cloned instance from the cache
      */
+    // Callers:
+    //  - the other 2 overloads which are always cached
+    //  - ThreeByThreeConstructor/HeroGateTwoByTwoConstructor/HeroGateThreeByOneConstructor/HeroGateFrontEndConstructor/HeroGateConstructor, they all call (false, true) which is nonsense
     public static Spatial loadModel(final AssetManager assetManager, String modelName,
             ArtResource artResource, final boolean useCache, final boolean useWeakCache) {
 
@@ -110,6 +113,9 @@ public final class AssetUtils {
 
             // Set the correct asset cache
             final AssetCache cache = (useWeakCache) ? WEAK_ASSET_CACHE : ASSET_CACHE;
+
+            // TODO: why doesn't it use assetManager's cache? AssetKey.getCacheType()
+            // it would auto-clone all CloneableSmartAssets
 
             // Get the model from cache
             Spatial model = cache.getFromCache(assetKey);
@@ -126,6 +132,10 @@ public final class AssetUtils {
         return result;
     }
 
+    // Callers: This private loader is used internally by this class. Called by:
+    //  - AssetUtils.loadModel(AssetManager, String, ArtResource, boolean, boolean)
+    //  - AssetUtils.loadAsset(AssetManager, String, ArtResource)
+    // SO: core function to load a model, cached or not
     private static Spatial loadModel(final AssetManager assetManager, ModelKey assetKey, ArtResource artResource) {
         Spatial model = assetManager.loadModel(assetKey);
         resetSpatial(model);
@@ -160,13 +170,7 @@ public final class AssetUtils {
         });
     }
 
-    /**
-     * Only for ModelViewer
-     *
-     * @param assetManager
-     * @param modelName
-     * @return
-     */
+    // only for ModelViewer
     public static Spatial loadAsset(final AssetManager assetManager, String modelName, ArtResource artResource) {
 
         String filename = AssetsConverter.MODELS_FOLDER + modelName + ".j3o";
@@ -177,12 +181,30 @@ public final class AssetUtils {
         return result;
     }
 
-    public static Spatial loadModel(final AssetManager assetManager, String resourceName,
-            final boolean useWeakCache) {
-
+    // load model cached, no animated textures
+    // - AssetUtils.prewarmArtResouces
+    //     for room tile construction (so no animated textures), weak=false
+    // - SingleTileConstructor.loadAsset
+    //   - from SingleQuadConstructor.construct, weak=false
+    //   - from WaterConstructor.construct, weak=true
+    public static Spatial loadModel(final AssetManager assetManager, String resourceName, boolean useWeakCache) {
         return loadModel(assetManager, resourceName, null, true, useWeakCache);
     }
 
+    // load model using permanent cache
+    //
+    // Callers: Many parts of the view/loader/constructor code invoke this overload
+    // to load a model given an optional ArtResource. Notable callers include:
+    //  - AssetUtils.prewarmArtResouces for most ArtResourceTypes
+    //  - view.animation.AnimationLoader.loadModel
+    //  - view.map.MapViewController.loadModel
+    //  - view.map.construction.RoomConstructor.loadModel
+    //  - view.loader.ObjectLoader (various methods)
+    //  - view.loader.TrapLoader (various methods)
+    //  - view.loader.DoorLoader (various methods)
+    //  - view.effect.VisualEffect (model creation code)
+    //  - view.control.DoorViewControl (lockSpatial assignment)
+    //  - various room/constructor classes under view.map.construction
     public static Spatial loadModel(final AssetManager assetManager, String resourceName, ArtResource artResource) {
         return loadModel(assetManager, resourceName, artResource, true, false);
     }
@@ -224,12 +246,15 @@ public final class AssetUtils {
      */
     public static void assignMapsToMaterial(AssetManager assetManager, Material material) {
 
+        //material.setBoolean("VertexLighting", true);
+        //material.getAdditionalRenderState().setWireframe(true);
+
         // Unharmed texture
         String diffuseTexture = ((Texture) material.getParam("DiffuseMap").getValue()).getKey().getName();
 
-        assignMapToMaterial(assetManager, material, "NormalMap", getNormalMapName(diffuseTexture));
-        assignMapToMaterial(assetManager, material, "SpecularMap", getSpecularMapName(diffuseTexture));
-        assignMapToMaterial(assetManager, material, "ParallaxMap", getDisplacementMapName(diffuseTexture));
+        //assignMapToMaterial(assetManager, material, "NormalMap", getNormalMapName(diffuseTexture));
+        //assignMapToMaterial(assetManager, material, "SpecularMap", getSpecularMapName(diffuseTexture));
+        //assignMapToMaterial(assetManager, material, "ParallaxMap", getDisplacementMapName(diffuseTexture));
     }
 
     private static void assignMapToMaterial(AssetManager assetManager, Material material, String paramName, String textureName) {
@@ -505,7 +530,7 @@ public final class AssetUtils {
                                     for (int i = 0; i < 5; i++) {
                                         if (terrain.getFlags().contains(Terrain.TerrainFlag.OWNABLE)) {
                                             for (int y = 0; y < 7; y++) {
-                                                models.add(loadModel(assetManager, artResource.getName() + y + "_" + i, artResource, true, false));
+                                                models.add(loadModel(assetManager, artResource.getName() + y + "_" + i, artResource));
                                             }
                                         } else {
                                             models.add(loadModel(assetManager, artResource.getName() + i, artResource));
@@ -550,6 +575,7 @@ public final class AssetUtils {
                                     }
                                 }
                                 for (int i = start; i < count; i++) {
+                                    // no animated textures overload
                                     models.add(loadModel(assetManager, artResource.getName() + i, false));
                                 }
                             }

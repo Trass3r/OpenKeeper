@@ -28,7 +28,7 @@ import toniarts.openkeeper.tools.convert.textures.Dk2TextureDecoder;
  */
 public final class EngineTextureDecoder extends Dk2TextureDecoder {
 
-    private static final short[] jump_table_7af4e0 = {0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
+    private static final short[] huffman_decoding_table_7af4e0 = {0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
         0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
         0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
         0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
@@ -117,7 +117,7 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
         value = 0;
         jt_index = (int) bs_read(bs_pos, 8);
 
-        jt_value = jump_table_7af4e0[jt_index];
+        jt_value = huffman_decoding_table_7af4e0[jt_index];
         bs_pos += jt_value & 0xf;
         jt_value >>= 4;
         if (jt_value != 0) {
@@ -158,7 +158,7 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
         value = 0;
         jt_index = (int) bs_read(bs_pos, 8);
 
-        jt_value = jump_table_7af4e0[jt_index];
+        jt_value = huffman_decoding_table_7af4e0[jt_index];
         bs_pos += jt_value & 0xf;
         jt_value >>= 4;
         if (jt_value != 0) {
@@ -199,7 +199,7 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
         value = 0;
         jt_index = (int) bs_read(bs_pos, 8);
 
-        jt_value = jump_table_7af4e0[jt_index];
+        jt_value = huffman_decoding_table_7af4e0[jt_index];
         bs_pos += jt_value & 0xf;
         jt_value >>= 4;
         if (jt_value != 0) {
@@ -243,7 +243,7 @@ public final class EngineTextureDecoder extends Dk2TextureDecoder {
         value = 0;
         jt_index = (int) bs_read(bs_pos, 8);
 
-        jt_value = jump_table_7af4e0[jt_index];
+        jt_value = huffman_decoding_table_7af4e0[jt_index];
         bs_pos += jt_value & 0xf;
         jt_value >>= 4;
         if (jt_value != 0) {

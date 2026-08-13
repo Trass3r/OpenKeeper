@@ -28,6 +28,7 @@ import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.input.event.TouchEvent;
 import com.jme3.math.Vector2f;
+import com.jme3.scene.Spatial;
 import com.simsilica.es.EntityId;
 import java.lang.System.Logger;
 import toniarts.openkeeper.Main;
@@ -97,7 +98,11 @@ public abstract class PossessionInteractionState extends AbstractPauseAwareState
                     stateManager.getState(PossessionCameraState.class).setEnabled(true);
                 }
             };
-            //target.getSpatial().addControl(pcc);
+            // Attach to the entity spatial if available
+            Spatial targetSpatial = stateManager.getState(PlayerEntityViewState.class).getEntitySpatial(target);
+            if (targetSpatial != null) {
+                targetSpatial.addControl(pcc);
+            }
         } else {
             stateManager.getState(PossessionCameraState.class).setEnabled(false);
             app.getInputManager().removeRawInputListener(inputListener);
@@ -111,7 +116,12 @@ public abstract class PossessionInteractionState extends AbstractPauseAwareState
                     PossessionInteractionState.this.onExit();
                 }
             };
-            //target.getSpatial().addControl(pcc);
+            // Attach to the entity spatial if available and set lookAt
+            Spatial targetSpatial = stateManager.getState(PlayerEntityViewState.class).getEntitySpatial(target);
+            if (targetSpatial != null) {
+                pc.setLookAt(targetSpatial.getLocalTranslation());
+                targetSpatial.addControl(pcc);
+            }
             target = null;
         }
     }

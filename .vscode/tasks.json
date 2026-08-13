@@ -4,11 +4,76 @@
 		{
 			"label": "build",
 			"type": "shell",
-			"command": "gradlew compileJava --parallel --no-daemon --warning-mode all",
-			"problemMatcher": "$gradle",
+			// gradle build -x test // exclude
+			"command": "gradlew :assets:build compileJava compileTestJava test --parallel --no-daemon --warning-mode all",
+			"problemMatcher": "$gcc",
 			"group": {
 				"kind": "build",
 				"isDefault": true
+			},
+		},
+		{
+			"label": "Flamegraph",
+			"type": "shell",
+			"command": "wsl ~/async-profiler-linux-x64/bin/jfrconv --title 'CPU' --cpu --threads -s runnable --classify --simple --dot --total --highlight 'GL' --exclude '.+SwapBuffers.*' recording.jfr recording.html", // --lines
+			"problemMatcher": [],
+		},
+		{
+			"label": "Flamegraph 2",
+			"type": "shell",
+			"command": "wsl ~/async-profiler-linux-x64/bin/jfrconv --threads --dot --reverse -X \".+glfwSwapBuffers|.+emitEvent\" --total --simple --highlight \"State[.$]|Control|System\" --title 'Time spent' recording.jfr",
+			"problemMatcher": [],
+		},
+		{
+			"label": "Flamegraph Allocs",
+			"type": "shell",
+			"command": "wsl ~/async-profiler-linux-x64/bin/jfrconv -t --dot --lines --total --simple --highlight \"State[.$]|Control|System\" --title 'Allocations' --alloc recording.jfr allocations.html",
+			"problemMatcher": [],
+		},
+		{
+			"label": "Heatmap",
+			"type": "shell",
+			"command": "wsl ~/async-profiler-linux-x64/bin/jfrconv -t --dot --lines --total --simple --highlight \"State[.$]|Control|System\" --exclude '.+SwapBuffers.*' -o heatmap recording.jfr",
+			"problemMatcher": [],
+		},
+		/*
+		{
+			"type": "gradle",
+			"id": "c:\\Code\\OpenKeeperbuildOpenKeeper",
+			"script": "build",
+			"description": "Assembles and tests this project.",
+			"group": "build",
+			"project": "OpenKeeper",
+			"buildFile": "C:\\Code\\OpenKeeper\\build.gradle",
+			"rootProject": "OpenKeeper",
+			"projectFolder": "c:\\Code\\OpenKeeper",
+			"workspaceFolder": "c:\\Code\\OpenKeeper",
+			"args": "--parallel --warning-mode all",
+			"javaDebug": false,
+			"problemMatcher": [
+				"$gradle"
+			],
+			"label": "gradle: build",
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "echo done", //copy /Y build\\libs\\OpenKeeper.jar OpenKeeper\\lib",
+			"problemMatcher": "$gcc",
+			"dependsOn": "gradle: build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+		}
+		*/
+		{
+			"label": "cpd",
+			"type": "shell",
+			"command": "gradlew cpd --parallel --no-daemon --warning-mode all",
+			"problemMatcher": "$gradle",
+			"group": {
+				"kind": "build",
 			},
 		},
 	]

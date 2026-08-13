@@ -16,10 +16,7 @@
  */
 package toniarts.openkeeper.view.map;
 
-import com.jme3.asset.AssetInfo;
-import com.jme3.asset.AssetKey;
-import com.jme3.asset.AssetManager;
-import com.jme3.asset.TextureKey;
+import com.jme3.asset.*;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -200,6 +197,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                     roomInstance = roomCoordinates.get(surroundingPoint);
                     if (roomInstance != null) {
                         removeRoomInstances(roomInstance);
+                        //pointsToUpdate.add(surroundingPoint);
                     }
                 }
             }
@@ -270,6 +268,24 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 }
 
                 Material material = ((Geometry) spatial).getMaterial();
+                //material.setFloat("NormalType", 1f); // OpenGL convention for normal maps
+                /*
+                if (material.getMaterialDef().getAssetName() != "MatDefs/Lighting.j3md") {
+                    material = new Material(assetManager, "MatDefs/Lighting.j3md");
+                    geom.setMaterial(material);
+                }
+                */
+                //material.clone();
+                //System.out.println("material: " + material.getName());
+                //material.setFloat("NormalType", 1f); // OpenGL convention for normal maps
+                /*
+                if (material.getMaterialDef().getAssetName() != "MatDefs/Lighting.j3md") {
+                    material = new Material(assetManager, "MatDefs/Lighting.j3md");
+                    geom.setMaterial(material);
+                }
+                */
+                //material.clone();
+                //System.out.println("material: " + material.getName());
 
                 // Decay
                 if (terrain.getFlags().contains(Terrain.TerrainFlag.DECAY)) {
@@ -326,7 +342,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                 Node page = new Node(x + "_" + y);
 
                 // Create batch nodes for ceiling, floor and walls
-                BatchNode floor = new BatchNode("floor");
+                BatchNode floor = new BatchNode("floor"); // TODO: consider SimpleBatchNode
                 floor.setShadowMode(RenderQueue.ShadowMode.Receive); // Floors don't cast
                 generateTileNodes(floor, x, y);
                 page.attachChild(floor);
@@ -431,8 +447,8 @@ public abstract class MapViewController implements ILoader<KwdFile> {
                         String asset = m.getAssetName();
 
                         // Load new material
-                        AssetInfo newMaterialInfo = assetManager.locateAsset(new AssetKey<>(asset.substring(0,
-                                asset.lastIndexOf(KmfModelLoader.MATERIAL_ALTERNATIVE_TEXTURE_SUFFIX_SEPARATOR) + 1).concat(tex + ".j3m")));
+                        var key = new MaterialKey(asset.substring(0, asset.lastIndexOf(KmfModelLoader.MATERIAL_ALTERNATIVE_TEXTURE_SUFFIX_SEPARATOR) + 1) + tex + ".j3m");
+                        var newMaterialInfo = assetManager.locateAsset(key);
                         if (newMaterialInfo != null) {
                             try {
                                 Material newMaterial = assetManager.loadMaterial(newMaterialInfo.getKey().getName());
@@ -931,6 +947,7 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         }
         material.setColor("Diffuse", ColorRGBA.White);
         material.setBoolean("UseMaterialColors", false); // Hmm...
+        //material.setBoolean("VertexLighting", true);
     }
 
     /**

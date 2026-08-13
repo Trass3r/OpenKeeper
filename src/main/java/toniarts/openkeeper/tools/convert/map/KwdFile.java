@@ -683,6 +683,9 @@ public final class KwdFile {
         artResource.setName(reader.readString(64).trim().replace('\\', '/'));
         artResource.setFlags(reader.readIntegerAsFlag(ArtResource.ArtResourceFlag.class));
 
+        if (!artResource.getFlags().isEmpty())
+            ;//logger.log(Level.INFO, "ArtResource {0}: {1}", artResource.getName(), artResource.getFlags());
+
         reader.mark();
         reader.position(reader.position() + 12);
         artResource.setType(reader.readByteAsEnum(ArtResource.ArtResourceType.class));
@@ -3003,7 +3006,7 @@ public final class KwdFile {
      * @return the terrain
      */
     public Terrain getTerrain(short id) {
-        return terrainTiles.get(id);
+        return terrainTiles.get(id); // TODO: why not List? just index id-1
     }
 
     /**

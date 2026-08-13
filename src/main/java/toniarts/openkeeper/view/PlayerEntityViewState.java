@@ -353,6 +353,17 @@ public class PlayerEntityViewState extends AbstractAppState {
         }
     }
 
+        /**
+         * Get the Spatial representing the entity's view model, or null if not present.
+         *
+         * @param entityId the entity id
+         * @return spatial or null
+         */
+        public Spatial getEntitySpatial(EntityId entityId) {
+            var control = entityViewControls.get(entityId);
+            return control != null ? control.getSpatial() : null;
+        }
+
     /**
      * Contains the static(ish) objects...
      */

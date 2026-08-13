@@ -27,12 +27,18 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.scene.Spatial;
+import com.jme3.math.Quaternion;
+import com.simsilica.es.EntityData;
 import com.simsilica.es.EntityId;
 import java.lang.System.Logger;
 import toniarts.openkeeper.Main;
 import toniarts.openkeeper.game.FunnyCameraContol;
 import toniarts.openkeeper.game.data.Settings;
+import toniarts.openkeeper.game.component.CreatureComponent;
+import toniarts.openkeeper.game.component.Position;
 import toniarts.openkeeper.game.state.AbstractPauseAwareState;
+import toniarts.openkeeper.game.state.PlayerState;
 import toniarts.openkeeper.tools.convert.map.Creature;
 
 /**
@@ -45,6 +51,7 @@ public final class PossessionCameraState extends AbstractPauseAwareState impleme
     
     private Main app;
     private InputManager inputManager;
+    private AppStateManager stateManager;
 
     private EntityId target;
     private Creature creature;
@@ -102,6 +109,7 @@ public final class PossessionCameraState extends AbstractPauseAwareState impleme
         super.initialize(stateManager, app);
 
         this.app = (Main) app;
+        this.stateManager = stateManager;
         inputManager = this.app.getInputManager();
     }
 
@@ -114,7 +122,13 @@ public final class PossessionCameraState extends AbstractPauseAwareState impleme
             camera = new PossessionCamera(app.getCamera(), creature.getAttributes().getSpeed(), creature.getFirstPersonOscillateScale());
             loadCameraStartLocation();
 
-            FunnyCameraContol fcc = new FunnyCameraContol(app.getCamera(), null/*target.getSpatial()*/);
+            Spatial targetSpatial = app.getStateManager().getState(PlayerEntityViewState.class).getEntitySpatial(target);
+            FunnyCameraContol fcc;
+            if (targetSpatial != null) {
+                fcc = new FunnyCameraContol(app.getCamera(), targetSpatial);
+            } else {
+                fcc = new FunnyCameraContol(app.getCamera());
+            }
             fcc.setLookAtOffset(new Vector3f(0, creature.getAttributes().getEyeHeight(), 0));
             fcc.setHeight(creature.getAttributes().getHeight());
             fcc.setDistance(1.5f);
@@ -123,7 +137,10 @@ public final class PossessionCameraState extends AbstractPauseAwareState impleme
             registerInput();
         } else {
             unregisterInput();
-            //target.getSpatial().removeControl(FunnyCameraContol.class);
+            Spatial targetSpatial = app.getStateManager().getState(PlayerEntityViewState.class).getEntitySpatial(target);
+            if (targetSpatial != null) {
+                targetSpatial.removeControl(FunnyCameraContol.class);
+            }
             target = null;
         }
     }
@@ -132,11 +149,20 @@ public final class PossessionCameraState extends AbstractPauseAwareState impleme
      * Load the initial camera position
      */
     private void loadCameraStartLocation() {
-        //Point p = target.getCreatureCoordinates();
-        //Vector3f startLocation = new Vector3f(p.x, target.getHeight(), p.y);
         Camera cam = app.getCamera();
-        //cam.setLocation(startLocation.addLocal(0, creature.getAttributes().getEyeHeight(), 0));
-        //cam.setFrustumPerspective(45, cam.getWidth() / cam.getHeight(), 0.1f, creature.getDistanceCanSee() * 10);
+        if (target != null && creature != null) {
+            PlayerState ps = app.getStateManager().getState(PlayerState.class);
+            if (ps != null) {
+                EntityData ed = ps.getEntityData();
+                Position pos = ed.getComponent(target, Position.class);
+                if (pos != null) {
+                    cam.setLocation(pos.position.add(0, creature.getAttributes().getEyeHeight(), 0));
+                    cam.setRotation(new Quaternion().fromAngles(0, pos.rotation, 0));
+                    cam.setFrustumPerspective(45, cam.getWidth() / cam.getHeight(), 0.1f, creature.getAttributes().getDistanceCanSee() * 10);
+                    return;
+                }
+            }
+        }
         cam.setAxes(Vector3f.UNIT_X, Vector3f.UNIT_Y, Vector3f.UNIT_Z);
     }
 
@@ -231,6 +257,35 @@ public final class PossessionCameraState extends AbstractPauseAwareState impleme
 
     public void setTarget(EntityId target) {
         this.target = target;
-        //creature = this.target.getCreature();
+        this.creature = null;
+        if (target == null) {
+            return;
+        }
+        // Get entity data and creature definition
+        PlayerState ps = app.getStateManager().getState(PlayerState.class);
+        if (ps == null) {
+            logger.log(System.Logger.Level.WARNING, "PlayerState not available when setting possession target");
+            return;
+        }
+        EntityData ed = ps.getEntityData();
+        CreatureComponent cc = ed.getComponent(target, CreatureComponent.class);
+        if (cc == null) {
+            logger.log(System.Logger.Level.WARNING, "CreatureComponent missing for entity " + target);
+            return;
+        }
+        Creature c = ps.getKwdFile().getCreature(cc.creatureId);
+        if (c == null) {
+            logger.log(System.Logger.Level.WARNING, "Creature definition not found for id " + cc.creatureId);
+            return;
+        }
+        this.creature = c;
+
+        // Try to set initial camera location/rotation from the entity Position
+        Position pos = ed.getComponent(target, Position.class);
+        if (pos != null) {
+            Camera cam = app.getCamera();
+            cam.setLocation(pos.position.add(0, creature.getAttributes().getEyeHeight(), 0));
+            cam.setRotation(new Quaternion().fromAngles(0, pos.rotation, 0));
+        }
     }
 }

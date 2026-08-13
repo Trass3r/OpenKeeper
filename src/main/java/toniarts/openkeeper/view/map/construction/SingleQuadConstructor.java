@@ -58,9 +58,27 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
         if (terrain.getFlags().contains(Terrain.TerrainFlag.OWNABLE) && terrain.getTerrainId() != 35) {
             IMapTileInformation tile = mapData.getTile(x, y);
             modelName += tile.getOwnerId() - 1 + "_";
+            /*
+            (Good) Claimed Top0 -> T_Claimed_Top0 (white player, same as T_Claimed_TopGood)
+            Claimed Top1 -> T_Claimed_TopNeutral (no player)
+            Claimed Top2 -> T_Claimed_Top1 (red player)
+            Claimed Top3 -> T_Claimed_Top2 (blue player)
+            Claimed Top4 -> T_Claimed_Top5 (2nd green player) // Top3 is normal green
+            Claimed Top5 -> T_Claimed_Top4 (yellow player)
+            Claimed Top6 -> T_Claimed_Top6 (purple player)
+
+            (Good) Claimed Floor0 -> T_Claimed_Good (white player)
+            Claimed Floor1 -> T_Claimed_Neutral (no player)
+            Claimed Floor2 -> T_Claimed_Path1 (red player)
+            Claimed Floor3 -> T_Claimed_Path2 + T_Claimed_Path2_64 (blue player)
+            Claimed Floor4 -> T_Claimed_Path3 (green player)
+            Claimed Floor5 -> T_Claimed_Path4 (yellow player) // Path5 doesn't even exist
+            Claimed Floor6 -> T_Claimed_Path6 (purple player)
+            */
         }
 
         // It needs to be parsed together from tiles
+        // SOLID = Impenetrable Rock, Rock, Gold, Gems, Reinforced Wall
         boolean solid = terrain.getFlags().contains(Terrain.TerrainFlag.SOLID);
 
         // Piece selection: same-terrain neighbors, or (if solid) any solid neighbor.
@@ -80,20 +98,20 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
         for (int i = 0; i < 2; i++) {
             for (int k = 0; k < 2; k++) {
 
-                int pieceNumber = 0;
+                int pieceNumber = 0; // only 1 edge
                 float yAngle;
                 Vector3f movement;
 
                 // Determine the piece
                 if (i == 0 && k == 0) { // North west corner
                     if (N && W && NW) {
-                        pieceNumber = 3;
+                        pieceNumber = 3; // open corner
                     } else if (N && W && !NW) {
-                        pieceNumber = 2;
+                        pieceNumber = 2; // small inner corner
                     } else if (!N && !W) {
-                        pieceNumber = 1;
+                        pieceNumber = 1; // full corner
                     } else if (N && !W) {
-                        pieceNumber = 4;
+                        pieceNumber = 4; // only 1 edge
                     }
 
                     yAngle = FastMath.PI;
@@ -146,7 +164,7 @@ public final class SingleQuadConstructor extends SingleTileConstructor {
                 Spatial part = loadAsset(assetManager, modelName + pieceNumber, false);
 
                 part.rotate(0, yAngle, 0);
-                part.move(movement);
+                part.move(movement); // intra-quad movement
                 model.attachChild(part);
             }
         }

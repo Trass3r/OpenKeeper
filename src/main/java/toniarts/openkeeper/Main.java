@@ -36,6 +36,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.opengl.GLRenderer;
 import com.jme3.system.AppSettings;
 import com.jme3.system.JmeSystem;
+import com.jme3.util.BufferUtils;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.render.batch.BatchRenderConfiguration;
 import java.awt.event.WindowAdapter;
@@ -112,7 +113,6 @@ public final class Main extends SimpleApplication {
     }
 
     public static void main(String[] args) throws InvocationTargetException, InterruptedException {
-
         // Create main application instance
         parseArguments(args);
         debug = params.containsKey("debug");
@@ -124,9 +124,24 @@ public final class Main extends SimpleApplication {
         initSettings(app);
         if (debug)
             app.settings.putBoolean("RendererDebug", true); // create a debug GL context
+        // app.settings.setGraphicsDebug(true); // wraps all GL calls AND enables debug callback AND GLRenderer debug names
+
+        // more expensive checks like buffer object binding state check, buffer capacity checks for texture images, etc.
+        System.setProperty("org.lwjgl.util.Debug", "true");
+        // debug mode for the MemoryUtil explicit memory management API, leaks will be reported on JVM exit
+        //System.setProperty("org.lwjgl.util.DebugAllocator", "true");
+        //System.setProperty("org.lwjgl.util.DebugAllocator.internal", "false");
+        // skip stacktrace generation on each tracked allocation
+        //System.setProperty("org.lwjgl.util.DebugAllocator.fast", "true");
 
         // set a better logging format
         System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tF %1$tT %4$s %2$s - %5$s%6$s%n");
+
+        if (debug)
+            BufferUtils.setTrackDirectMemoryEnabled(true);
+
+        // JmeSystem.setSystemDelegate(new AurellemSystemDelegate());
+        // app.settings.setAudioRenderer("Send");
 
         // Finally start it if everything went ok
         if (checkSetup(app)) {
@@ -353,11 +368,15 @@ public final class Main extends SimpleApplication {
         if (debug) {
             ((GLRenderer)renderer).setDebugEnabled(true); // get debug names for GL objects
             if (GL.getCapabilities().OpenGL43) {
+                //GL11.glEnable(GL43C.GL_DEBUG_OUTPUT);
+                //GL11.glEnable(GL43C.GL_DEBUG_OUTPUT_SYNCHRONOUS);
                 GLUtil.setupDebugMessageCallback();
                 GL43C.glDebugMessageControl(GL43C.GL_DONT_CARE, GL43C.GL_DEBUG_TYPE_PUSH_GROUP, GL43C.GL_DONT_CARE, (int[]) null, false);
                 GL43C.glDebugMessageControl(GL43C.GL_DONT_CARE, GL43C.GL_DEBUG_TYPE_POP_GROUP,  GL43C.GL_DONT_CARE, (int[]) null, false);
                 final int[] noisyIds = {
                     0x20071, // Nvidia: BO resides in VIDEO memory
+                    //0x20092, // Shader recompiled due to glGetUniform Location calls or state changes
+                    //0x20052, // Pixel transfer / texture formatting performance warnings
                 };
                 GL43C.glDebugMessageControl(GL43C.GL_DEBUG_SOURCE_API, GL43C.GL_DEBUG_TYPE_OTHER, GL43C.GL_DONT_CARE, noisyIds, false);
             }
@@ -722,7 +741,7 @@ public final class Main extends SimpleApplication {
             config.atlasWidth = 2048;
             config.fillRemovedImagesInAtlas = false;
             config.disposeImagesBetweenScreens = false;
-            config.useHighQualityTextures = true;
+            config.useHighQualityTextures = false;
 
             // Init Nifty
             niftyDisplay = NiftyJmeDisplay.newNiftyJmeDisplay(assetManager,

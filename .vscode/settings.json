@@ -4,25 +4,52 @@
 		"source.organizeImports": "never",
 		"source.addMissingImports": "explicit"
 	},
+	//"files.autoSave": "afterDelay",
+	//"editor.formatOnSave": true,
 	"editor.formatOnSaveMode": "modifications",
+	"java.format.settings.url": "./eclipse-java-style.xml",
+	"java.format.settings.profile": "LegacyNoBracesProfile",
 	"java.autobuild.enabled": true,
-	"java.cleanup.actionsOnSave": [
+	"java.cleanup.actions": [
 		"addOverride",
-		//"invertEquals",
 		"instanceofPatternMatch",
-		"lambdaExpression",
-		//"switchExpression",
 		"tryWithResource",
+		//"lambdaExpression",
+		//"lambdaExpressionFromAnonymousClass"
+		//"organizeImports"
 	],
+	"java.sources.organizeImports.starThreshold": 3,
+	"java.sources.organizeImports.staticStarThreshold": 3,
+	//"java.jdt.ls.java.home": "/usr/lib/jvm/java-25-openjdk-amd64",
+	"java.jdt.ls.java.home": "C:\\GraalVM\\",
 	"java.completion.importOrder": [""], // sort imports alphabetically
 	"java.compile.nullAnalysis.mode": "automatic",
 	"java.debug.settings.hotCodeReplace": "auto",
 	"java.debug.settings.stepping.skipClasses": [
 		"$JDK",
-		"$Libraries",
+		//"$Libraries",
+		/*
+		"java.*",
+		"javax.*",
+		"junit.*",
+		*/
 	],
 	"java.debug.settings.stepping.skipStaticInitializers": true,
 	"java.debug.settings.stepping.skipSynthetics": true,
 	"java.debug.settings.stepping.skipConstructors": false,
+	"java.completion.matchCase": "off",
+	"java.edit.smartSemicolonDetection.enabled": true,
+	"java.referencesCodeLens.enabled": true,
+	"java.typeHierarchy.lazyLoad": true,
+	"java.signatureHelp.description.enabled": true,
 	"java.references.includeDecompiledSources": true,
+	"java.configuration.updateBuildConfiguration": "automatic",
+	"gradle.debug": true,
+	"markdown-mermaid.maxTextSize": 45000,
+	"github.copilot.chat.agentDebugLog.fileLogging.enabled": true,
+	"chat.tools.terminal.autoApprove": {
+		".\\gradlew": true
+	},
+	"shader-validator.glsl.targetClient": "OpenGL450",
+	"shader-validator.severity": "hint",
 }

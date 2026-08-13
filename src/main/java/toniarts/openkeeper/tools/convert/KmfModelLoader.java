@@ -114,7 +114,12 @@ public final class KmfModelLoader implements AssetLoader {
             dkIIFolder = PathUtils.fixFilePath(args[1]);
         }
 
-        ModelViewer app = new ModelViewer(Paths.get(args[0]), dkIIFolder);
+        var app = new ModelViewer(Paths.get(args[0]), dkIIFolder);
+        app.setShowSettings(false);
+        var settings = toniarts.openkeeper.game.data.Settings.getInstance().getAppSettings();
+        //settings.setGraphicsDebug(true);
+        app.setSettings(settings);
+        //BufferUtils.setTrackDirectMemoryEnabled(true);
         app.start();
     }
 

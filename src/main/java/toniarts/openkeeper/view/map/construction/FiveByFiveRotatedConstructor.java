@@ -69,27 +69,27 @@ public final class FiveByFiveRotatedConstructor extends RoomConstructor {
             int piece = -1;
             // Corners
             if (x == 0 && y == 0) { // Top left corner
-                piece = 3;
+                piece = 3; // DHeartFlrcorner
                 yAngle = FastMath.HALF_PI;
             } else if (x == 4 && y == 0) { // Top right corner
-                piece = 3;
+                piece = 3; // DHeartFlrcorner
             } else if (x == 0 && y == 4) { // Lower left corner
-                piece = 3;
+                piece = 3; // DHeartFlrcorner
                 yAngle = -FastMath.PI;
             } else if (x == 4 && y == 4) { // Lower right corner
-                piece = 3;
+                piece = 3; // DHeartFlrcorner
                 yAngle = -FastMath.HALF_PI;
             } // Outer layer sides
             else if (x == 0) { // Left side
-                piece = 2;
+                piece = 2; // DHeartFlr
                 yAngle = -FastMath.PI;
             } else if (x == 4) { // Right side
-                piece = 2;
+                piece = 2; // DHeartFlr
             } else if (y == 0) { // Top side
-                piece = 2;
+                piece = 2; // DHeartFlr
                 yAngle = FastMath.HALF_PI;
             } else if (y == 4) { // Bottom side
-                piece = 2;
+                piece = 2; // DHeartFlr
                 yAngle = -FastMath.HALF_PI;
             } // The inner ring, corners
             else if (x == 1 && y == 1) { // Top left
