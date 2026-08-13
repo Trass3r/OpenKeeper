@@ -91,7 +91,7 @@ public final class KmfModelLoader implements AssetLoader {
      * &lt;material&gt;&lt;this suffix&gt;&lt;texture index&gt;. Texture index
      * is 0-based
      */
-    public static final String MATERIAL_ALTERNATIVE_TEXTURE_SUFFIX_SEPARATOR = "_";
+    public static final char MATERIAL_ALTERNATIVE_TEXTURE_SUFFIX_SEPARATOR = '_';
     /**
      * If this user meta data is found from the geometry, it has alternative
      * material possibilities
@@ -125,7 +125,7 @@ public final class KmfModelLoader implements AssetLoader {
         boolean generateMaterialFile = false;
         if (assetInfo instanceof KmfAssetInfo) {
             kmfFile = ((KmfAssetInfo) assetInfo).getKmfFile();
-            generateMaterialFile = ((KmfAssetInfo) assetInfo).isGenerateMaterialFile();
+            generateMaterialFile = ((KmfAssetInfo) assetInfo).isGenerateMaterialFile(); // conversion or ModelViewer
         } else {
             kmfFile = new KmfFile(assetInfo.openStream());
         }
@@ -135,7 +135,7 @@ public final class KmfModelLoader implements AssetLoader {
         if (kmfFile.getType() == KmfFile.Type.MESH || kmfFile.getType() == KmfFile.Type.ANIM) {
 
             // Get the materials first
-            Map<Integer, List<Material>> materials = getMaterials(kmfFile, generateMaterialFile, assetInfo);
+            var materials = getMaterials(kmfFile, generateMaterialFile, assetInfo);
 
             if (kmfFile.getType() == KmfFile.Type.MESH)
                 root.attachChild(handleMesh(kmfFile.getMesh(), materials));
@@ -175,7 +175,7 @@ public final class KmfModelLoader implements AssetLoader {
      * @param materials materials map
      * @param root the root node
      */
-    private Node handleMesh(toniarts.openkeeper.tools.convert.kmf.Mesh sourceMesh, Map<Integer, List<Material>> materials) {
+    private Node handleMesh(toniarts.openkeeper.tools.convert.kmf.Mesh sourceMesh, List<List<Material>> materials) {
 
         var node = new Node(sourceMesh.getName());
         node.setLocalTranslation(new Vector3f(sourceMesh.getPos().x, -sourceMesh.getPos().z, sourceMesh.getPos().y));
@@ -239,7 +239,7 @@ public final class KmfModelLoader implements AssetLoader {
      * @param materials materials map
      * @param root the root node
      */
-    private Node handleAnim(Anim anim, Map<Integer, List<Material>> materials) {
+    private Node handleAnim(Anim anim, List<List<Material>> materials) {
 
         var node = new Node(anim.getName());
         node.setUserData(FRAME_FACTOR_FUNCTION, anim.getFrameFactorFunction().name());
@@ -516,7 +516,7 @@ public final class KmfModelLoader implements AssetLoader {
      * @param materialIndex the material index
      * @return
      */
-    private Geometry createGeometry(int subMeshIndex, String meshName, Mesh mesh, Map<Integer, List<Material>> materials, int materialIndex) {
+    private Geometry createGeometry(int subMeshIndex, String meshName, Mesh mesh, List<List<Material>> materials, int materialIndex) {
 
         //Create geometry
         var geom = new Geometry(meshName + '_' + subMeshIndex, mesh);
@@ -570,7 +570,7 @@ public final class KmfModelLoader implements AssetLoader {
      * @param material material to modify
      * @param kmfMaterial the KMF material entry
      */
-    private void setMaterialFlags(Material material, toniarts.openkeeper.tools.convert.kmf.Material kmfMaterial) {
+    private static void setMaterialFlags(Material material, toniarts.openkeeper.tools.convert.kmf.Material kmfMaterial) {
 
         // Read the flags & stuff
         if (kmfMaterial.getFlag().contains(MaterialFlag.HAS_ALPHA)) {
@@ -594,168 +594,117 @@ public final class KmfModelLoader implements AssetLoader {
 
     /**
      * <i>Extracts</i> the materials from the KMF file
-     *
-     * @param kmfFile the KMF file
-     * @param generateMaterialFile should we create J3M material file (in total
-     * conversion always yes)
-     * @param assetInfo the asset info
-     * @param engineTextureFile instance of engine textures file
-     * @return returns materials by the material index
-     * @throws IOException may fail
      */
-    private Map<Integer, List<Material>> getMaterials(KmfFile kmfFile, boolean generateMaterialFile, AssetInfo assetInfo) throws IOException {
+    private List<List<Material>> getMaterials(KmfFile kmfFile, boolean generateMaterialFile, AssetInfo assetInfo) throws IOException {
 
-        //
-        // Create the materials
-        //
-        Map<Integer, List<Material>> materials = HashMap.newHashMap(kmfFile.getMaterials().size());
-        int i = 0;
-        for (toniarts.openkeeper.tools.convert.kmf.Material mat : kmfFile.getMaterials()) {
+        List<List<Material>> materials = new ArrayList<>(kmfFile.getMaterials().size());
+        for (var kmfmat : kmfFile.getMaterials()) {
+            String texture = fixTextureName(kmfmat.getTextures().get(0));
+            String baseMaterialFileName = getMaterialFileName(kmfmat, 0);
+            String baseMaterialKey = getMaterialKey(baseMaterialFileName);
+            Path baseMaterialLocation = getMaterialLocation(baseMaterialFileName);
+
             Material material = null;
+            if (generateMaterialFile)
+                material = loadExistingMaterial(kmfmat, baseMaterialKey, baseMaterialLocation, assetInfo);
+            if (material == null)
+                material = createMaterial(assetInfo, kmfmat, texture);
+            setMaterialFlags(material, kmfmat);
+            material.setKey(new MaterialKey(baseMaterialKey)); // for MapViewController.setRandomTexture
 
-            // Get the texture, the first one
-            // There is a list of possible alternative textures
-            String texture = mat.getTextures().get(0);
-            if (textureFixes.containsKey(texture)) {
-
-                //Fix the texture entry
-                texture = textureFixes.get(texture);
-            }
-
-            // See if the material is found already on the cache
-            String materialLocation = null;
-            String materialKey = null;
-            String fileName;
-            if (generateMaterialFile) {
-                materialKey = materialCache.get(mat);
-                if (materialKey != null) {
-                    material = assetInfo.getManager().loadMaterial(materialKey);
-                    setMaterialFlags(material, mat);
-                    List<Material> materialList = new ArrayList<>(mat.getTextures().size());
-                    materialList.add(material);
-
-                    // Multiple textures
-                    addAlternativeTextures(mat, assetInfo, material, materialList);
-
-                    materials.put(i, materialList);
-                    i++;
-                    continue;
-                } else {
-
-                    // Ok, it it not in the cache yet, but maybe it has been already generated, so use it and update the defaults in it
-                    fileName = PathUtils.stripFileName(mat.getName());
-
-                    // If there are multiple texture options, add a suffix to the material file name
-                    if (mat.getTextures().size() > 1) {
-                        fileName = fileName.concat(MATERIAL_ALTERNATIVE_TEXTURE_SUFFIX_SEPARATOR).concat("0");
-                    }
-
-                    materialKey = AssetsConverter.MATERIALS_FOLDER + fileName + ".j3m";
-                    materialLocation = AssetsConverter.getAssetsFolder() + materialKey;
-
-                    // See if it exists
-                    Path file = Paths.get(materialLocation);
-                    if (Files.exists(file)) {
-                        file = file.toRealPath();
-                        if (!file.getFileName().toString().equals(fileName.concat(".j3m"))) {
-
-                            // Case sensitivity issue
-                            materialKey = AssetsConverter.MATERIALS_FOLDER + file.getFileName().toString();
-                            materialLocation = AssetsConverter.getAssetsFolder() + materialKey;
-                        }
-                        material = assetInfo.getManager().loadMaterial(materialKey);
-                    }
-                }
-            }
-
-            // Create the material
-            if (material == null) {
-                material = new Material(assetInfo.getManager(), "Common/MatDefs/Light/Lighting.j3md");
-                material.setName(mat.getName());
-            }
-
-            //Load up the texture and create the material
-            Texture tex = loadTexture(texture, assetInfo);
-            material.setTexture("DiffuseMap", tex);
-            material.setColor("Specular", ColorRGBA.Orange); // Dungeons are lit only with fire...? Experimental
-            material.setColor("Diffuse", ColorRGBA.White); // Experimental
-            material.setFloat("Shininess", mat.getShininess());
-
-            // Set some flags
-            setMaterialFlags(material, mat);
-
-            // Add material to list and create the possible alternatives
-            List<Material> materialList = new ArrayList<>(mat.getTextures().size());
+            List<Material> materialList = new ArrayList<>(kmfmat.getTextures().size());
             materialList.add(material);
-            addAlternativeTextures(mat, assetInfo, material, materialList);
+            addAlternativeTextures(kmfmat, assetInfo, material, materialList);
 
-            // See if we should save the materials
-            if (generateMaterialFile) {
-                for (int k = 0; k < materialList.size(); k++) {
+            if (generateMaterialFile)
+                saveMaterials(kmfmat, materialList, assetInfo);
 
-                    Material m = materialList.get(k);
-
-                    // If there are multiple textures / material options, alter the key and location
-                    if (materialList.size() > 1) {
-                        materialKey = materialKey.substring(0, materialKey.lastIndexOf(MATERIAL_ALTERNATIVE_TEXTURE_SUFFIX_SEPARATOR) + 1).concat(k + "").concat(materialKey.substring(materialKey.lastIndexOf(".")));
-                        materialLocation = materialLocation.substring(0, materialLocation.lastIndexOf(MATERIAL_ALTERNATIVE_TEXTURE_SUFFIX_SEPARATOR) + 1).concat(k + "").concat(materialLocation.substring(materialLocation.lastIndexOf(".")));
-                    }
-
-                    // Set the material so that it realizes that it is a J3M file
-                    m.setKey(new MaterialKey(materialKey));
-
-                    // Save
-                    J3MExporter exporter = new J3MExporter();
-                    try (OutputStream out = Files.newOutputStream(Paths.get(materialLocation));
-                            BufferedOutputStream bout = new BufferedOutputStream(out)) {
-                        exporter.save(m, bout);
-                    }
-
-                    // Put the first one to the cache
-                    if (k == 0) {
-                        materialCache.put(mat, materialKey);
-                    }
-                }
-            }
-
-            materials.put(i, materialList);
-            i++;
+            materials.add(materialList);
         }
         return materials;
     }
 
-    private void addAlternativeTextures(toniarts.openkeeper.tools.convert.kmf.Material mat, AssetInfo assetInfo, Material material, List<Material> materialList) {
-        for (int k = 1; k < mat.getTextures().size(); k++) {
-            
-            // Get the texture
-            String alternativeTexture = mat.getTextures().get(k);
-            if (textureFixes.containsKey(alternativeTexture)) {
-                
-                //Fix the texture entry
-                alternativeTexture = textureFixes.get(alternativeTexture);
+    private static Material createMaterial(AssetInfo assetInfo, toniarts.openkeeper.tools.convert.kmf.Material kmfMaterial, String texture) {
+        var material = new Material(assetInfo.getManager(), "Common/MatDefs/Light/Lighting.j3md");
+        material.setName(getMaterialFileName(kmfMaterial, 0));
+
+        Texture tex = loadTexture(texture, assetInfo);
+        material.setTexture("DiffuseMap", tex);
+        material.setColor("Specular", ColorRGBA.Orange);
+        material.setColor("Diffuse", ColorRGBA.White);
+        material.setFloat("Shininess", kmfMaterial.getShininess());
+
+        return material;
+    }
+
+    private static String fixTextureName(String texture) {
+        return textureFixes.getOrDefault(texture, texture);
+    }
+
+    private static String getMaterialFileName(toniarts.openkeeper.tools.convert.kmf.Material kmfMaterial, int textureIndex) {
+        String baseName = PathUtils.stripFileName(kmfMaterial.getName());
+        if (kmfMaterial.getTextures().size() > 1)
+            return baseName + MATERIAL_ALTERNATIVE_TEXTURE_SUFFIX_SEPARATOR + Integer.toString(textureIndex);
+        return baseName;
+    }
+
+    private static Path getMaterialLocation(String fileName) {
+        return Paths.get(AssetsConverter.getAssetsFolder(), getMaterialKey(fileName));
+    }
+
+    private static String getMaterialKey(String fileName) {
+        return AssetsConverter.MATERIALS_FOLDER + fileName + ".j3m";
+    }
+
+    private static Material loadExistingMaterial(toniarts.openkeeper.tools.convert.kmf.Material kmfMaterial, String materialKey, Path materialLocation, AssetInfo assetInfo) throws IOException {
+        materialKey = materialCache.get(kmfMaterial);
+        if (materialKey != null)
+            return assetInfo.getManager().loadMaterial(materialKey);
+        if (!Files.exists(materialLocation))
+            return null;
+
+        Path realFile = materialLocation.toRealPath();
+        String actualFileName = realFile.getFileName().toString();
+        String resolvedKey = materialKey;
+        String expectedFileName = getMaterialFileName(kmfMaterial, 0) + ".j3m";
+        if (!actualFileName.equals(expectedFileName))
+            resolvedKey = getMaterialKey(actualFileName.substring(0, actualFileName.length() - 4));
+
+        return assetInfo.getManager().loadMaterial(resolvedKey);
+    }
+
+    private static void saveMaterials(toniarts.openkeeper.tools.convert.kmf.Material kmfMaterial, List<Material> materialList, AssetInfo assetInfo) throws IOException {
+        var exporter = new J3MExporter();
+        for (int k = 0; k < materialList.size(); ++k) {
+            String materialFileName = getMaterialFileName(kmfMaterial, k);
+            Path materialLocation = getMaterialLocation(materialFileName);
+
+            try (var out = Files.newOutputStream(materialLocation);
+                 var bout = new BufferedOutputStream(out)) {
+                exporter.save(materialList.get(k), bout);
             }
+            // Put the first one to the cache
+            if (k == 0)
+                materialCache.put(kmfMaterial, getMaterialKey(materialFileName));
+        }
+    }
+
+    private static void addAlternativeTextures(toniarts.openkeeper.tools.convert.kmf.Material mat, AssetInfo assetInfo, Material material, List<Material> materialList) {
+        for (int k = 1; k < mat.getTextures().size(); k++) {
+            String alternativeTexture = fixTextureName(mat.getTextures().get(k));
             Texture alternativeTex = loadTexture(alternativeTexture, assetInfo);
-            
-            // Clone the original material, set texture and add to list
+
             Material alternativeMaterial = material.clone();
+            alternativeMaterial.setName(getMaterialFileName(mat, k));
             alternativeMaterial.setTexture("DiffuseMap", alternativeTex);
             materialList.add(alternativeMaterial);
         }
     }
 
-    /**
-     * Loads a JME texture of the texture name
-     *
-     * @param texture the texture name
-     * @param assetInfo the assetInfo
-     * @return texture file
-     */
-    private Texture loadTexture(String texture, AssetInfo assetInfo) {
-
-        // Load the texture
+    // loads a JME texture of the texture name
+    private static Texture loadTexture(String texture, AssetInfo assetInfo) {
         var textureKey = new TextureKey(AssetUtils.getCanonicalAssetKey(AssetsConverter.TEXTURES_FOLDER + texture + ".png"), false);
-        Texture tex = assetInfo.getManager().loadTexture(textureKey);
-        return tex;
+        return assetInfo.getManager().loadTexture(textureKey);
     }
 
     private static final class TextureSorter implements Comparator<String> {
