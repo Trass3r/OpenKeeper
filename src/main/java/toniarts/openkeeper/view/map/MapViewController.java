@@ -707,6 +707,13 @@ public abstract class MapViewController implements ILoader<KwdFile> {
         setTileMaterialToGeometries(tile, sideTileNode);
     }
 
+    private boolean isSolid(int x, int y) {
+        IMapTileInformation tile = getMapData().getTile(x, y);
+        if (tile == null)
+            return false;
+        return getTerrain(tile).getFlags().contains(Terrain.TerrainFlag.SOLID);
+    }
+
     public void flashTile(boolean enabled, List<Point> points) {
         if (enabled) {
             flashedTiles.addAll(points);
