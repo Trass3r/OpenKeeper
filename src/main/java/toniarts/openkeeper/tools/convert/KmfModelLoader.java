@@ -125,7 +125,7 @@ public final class KmfModelLoader implements AssetLoader {
         boolean generateMaterialFile = false;
         if (assetInfo instanceof KmfAssetInfo) {
             kmfFile = ((KmfAssetInfo) assetInfo).getKmfFile();
-            generateMaterialFile = ((KmfAssetInfo) assetInfo).isGenerateMaterialFile(); // conversion or ModelViewer
+            generateMaterialFile = ((KmfAssetInfo) assetInfo).isGenerateMaterialFile();
         } else {
             kmfFile = new KmfFile(assetInfo.openStream());
         }
@@ -604,9 +604,7 @@ public final class KmfModelLoader implements AssetLoader {
             String baseMaterialKey = getMaterialKey(baseMaterialFileName);
             Path baseMaterialLocation = getMaterialLocation(baseMaterialFileName);
 
-            Material material = null;
-            if (generateMaterialFile)
-                material = loadExistingMaterial(kmfmat, baseMaterialKey, baseMaterialLocation, assetInfo);
+            Material material = loadExistingMaterial(kmfmat, baseMaterialKey, baseMaterialLocation, assetInfo);
             if (material == null)
                 material = createMaterial(assetInfo, kmfmat, texture);
             setMaterialFlags(material, kmfmat);
